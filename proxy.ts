@@ -17,7 +17,6 @@ const PAGE_KEY_BY_PREFIX: [string, string][] = [
   ["/dashboard/hr/sections", "manage_sections"],
   ["/dashboard/hr/holidays", "manage_holidays"],
   ["/dashboard/hr/leave-report", "leave_report"],
-  ["/dashboard/profile", "user_profile"],
   ["/dashboard/approval-requests/history", "supervisor_history"],
   ["/dashboard/approval-requests/hr", "hr_approval"],
   ["/dashboard/approval-requests", "supervisor_approval"],

@@ -6,7 +6,7 @@ import { useUser } from "@/lib/user-context";
 import {
   GitBranch, LayoutDashboard, ShieldCheck, History, Users, UserPlus, Upload,
   BarChart3, Building2, Briefcase, Tags, Menu, ChevronDown, ChevronRight, Plus, UserCog,
-  ClipboardList, X, CaseSensitive, Shield, CalendarDays, FileText, User,
+  ClipboardList, X, CaseSensitive, Shield, CalendarDays, FileText,
 } from "lucide-react";
 import {
   Sidebar as SidebarRoot,
@@ -88,7 +88,6 @@ export function SidebarMenu() {
     staffRoles: pathname.startsWith("/dashboard/hr/staff-roles"),
     sections: pathname.startsWith("/dashboard/hr/sections"),
     holidays: pathname.startsWith("/dashboard/hr/holidays"),
-    profile: pathname.startsWith("/dashboard/profile"),
     leaveReport: pathname.startsWith("/dashboard/hr/leave-report"),
     workflows: pathname.startsWith("/dashboard/hr/workflows"),
     supervisorApproval: pathname === "/dashboard/approval-requests",
@@ -514,16 +513,6 @@ export function SidebarMenu() {
               >
                 <History className={iconClass(activePaths.leaveHistory)} />
                 {open && <span>ประวัติการลา</span>}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                className={cn(btnClass(activePaths.profile), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                onClick={() => handleNav("/dashboard/profile")}
-                tooltip={open ? undefined : "โปรไฟล์"}
-              >
-                <User className={iconClass(activePaths.profile)} />
-                {open && <span>โปรไฟล์</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenuList>

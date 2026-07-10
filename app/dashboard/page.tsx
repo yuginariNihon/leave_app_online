@@ -1,6 +1,5 @@
 import React from "react";
 import { requireSessionUser } from "@/lib/auth";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
 import { DashboardIntro } from "@/components/DashboardIntro";
 import { LeaveStatsCards } from "@/components/LeaveStatsCards";
 import { QuickActions } from "@/components/QuickActions";
@@ -32,7 +31,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] flex flex-col font-sans">
-      <SidebarMenu />
       <main className="flex-grow p-4 space-y-6 max-w-[1200px] mx-auto w-full">
         <DashboardIntro userName={profile.name} />
         
