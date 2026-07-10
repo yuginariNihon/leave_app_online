@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Leave Request Details - Online Leave System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#020027",
+                        "on-tertiary-fixed-variant": "#92001f",
+                        "on-error": "#ffffff",
+                        "background": "#fcf8fc",
+                        "surface-container-low": "#f6f2f6",
+                        "on-secondary-fixed": "#002106",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#1c1b1e",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e5e1e5",
+                        "on-primary-fixed": "#17173d",
+                        "on-primary-fixed-variant": "#43436b",
+                        "inverse-surface": "#313033",
+                        "surface-container-high": "#ebe7eb",
+                        "secondary-fixed-dim": "#66df75",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e5e1e5",
+                        "on-tertiary-fixed": "#410008",
+                        "on-secondary-container": "#007327",
+                        "secondary-fixed": "#83fc8e",
+                        "on-primary-container": "#8382af",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#f0edf1",
+                        "on-surface": "#1c1b1e",
+                        "inverse-on-surface": "#f3eff4",
+                        "on-tertiary-container": "#f24653",
+                        "inverse-primary": "#c3c2f2",
+                        "outline-variant": "#c8c5cf",
+                        "primary-fixed-dim": "#c3c2f2",
+                        "tertiary-container": "#46000a",
+                        "surface": "#fcf8fc",
+                        "tertiary": "#150001",
+                        "primary-fixed": "#e2dfff",
+                        "on-surface-variant": "#47464e",
+                        "surface-bright": "#fcf8fc",
+                        "surface-dim": "#dcd9dd",
+                        "secondary": "#006e25",
+                        "tertiary-fixed": "#ffdad9",
+                        "outline": "#78767f",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb3b2",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#5a5a84",
+                        "primary-container": "#1a1a40",
+                        "secondary-container": "#80f98b",
+                        "on-secondary-fixed-variant": "#00531a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "40px",
+                        "xl": "64px",
+                        "container-max": "1200px",
+                        "sm": "12px",
+                        "md": "24px",
+                        "base": "8px",
+                        "gutter": "24px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "status-label": ["Sarabun"],
+                        "title-sm": ["Sarabun"],
+                        "label-caps": ["Sarabun"],
+                        "body-sm": ["Sarabun"],
+                        "body-base": ["Sarabun"],
+                        "headline-md": ["Sarabun"],
+                        "display-lg": ["Sarabun"]
+                    },
+                    "fontSize": {
+                        "status-label": ["13px", {"lineHeight": "1.0", "fontWeight": "600"}],
+                        "title-sm": ["18px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-base": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "display-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #fcf8fc; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .detail-card { background: #ffffff; border: 1px solid #E2E2E9; border-left: 4px solid #020027; }
+        .pending-badge { background-color: rgba(26, 26, 64, 0.1); color: #1a1a40; }
+        .hero-pattern { background-image: radial-gradient(#e2e2e9 0.5px, transparent 0.5px); background-size: 16px 16px; }
+    </style>
+</head>
+<body class="text-on-surface">
+<main class="max-w-container-max mx-auto px-lg py-xl min-h-screen flex flex-col justify-center">
+<!-- Header Actions -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-xl">
+<div>
+<button class="flex items-center gap-xs text-primary hover:underline mb-sm group font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform" data-icon="arrow_back">arrow_back</span>
+                    กลับไปที่ประวัติการลา
+                </button>
+<h1 class="font-headline-md text-headline-md text-primary">รายละเอียดคำขอลาหยุด</h1>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-sm bg-surface border border-primary text-primary font-body-sm text-body-sm hover:bg-surface-container-high transition-all flex items-center gap-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="close">close</span>
+                    Cancel Request
+                </button>
+<button class="px-md py-sm bg-primary text-on-primary font-body-sm text-body-sm hover:opacity-90 transition-all flex items-center gap-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                    Export PDF
+                </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Main Content Column -->
+<div class="lg:col-span-8 space-y-gutter">
+<!-- Summary Card -->
+<div class="detail-card p-md shadow-sm">
+<div class="flex justify-between items-start mb-md">
+<div>
+<span class="font-label-caps text-label-caps text-outline uppercase">Request ID: #LVE-2023-0842</span>
+<h2 class="font-title-sm text-title-sm text-primary mt-xs">ลาพักร้อน (Annual Leave)</h2>
+</div>
+<div class="px-md py-base pending-badge font-title-sm text-title-sm flex items-center gap-sm rounded-full bg-primary-container text-primary-fixed border border-primary-fixed/20">
+<span class="material-symbols-outlined text-[24px]" data-icon="schedule">schedule</span>
+    รอการอนุมัติ
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-md border-t border-outline-variant pt-md">
+<div>
+<p class="font-label-caps text-label-caps text-outline">วันที่เริ่มต้น</p>
+<p class="font-body-base text-body-base font-bold">15 ต.ค. 2566</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-outline">วันที่สิ้นสุด</p>
+<p class="font-body-base text-body-base font-bold">17 ต.ค. 2566</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-outline">จำนวนวัน</p>
+<p class="font-body-base text-body-base font-bold">3.0 วัน</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-outline">ประเภทเวลา</p>
+<p class="font-body-base text-body-base font-bold">เต็มวัน</p>
+</div>
+</div>
+</div>
+<!-- Details Section -->
+<div class="bg-white border border-outline-variant p-md">
+<h3 class="font-title-sm text-title-sm text-primary mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+                        รายละเอียดและเหตุผล
+                    </h3>
+<div class="space-y-md">
+<div>
+<p class="font-label-caps text-label-caps text-outline mb-xs">เหตุผลการลา</p>
+<p class="font-body-base text-body-base text-on-surface">เดินทางไปต่างจังหวัดกับครอบครัวเพื่อพักผ่อนประจำปีที่จังหวัดเชียงใหม่ในช่วงฤดูหนาว</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-outline mb-xs">ผู้รับผิดชอบงานแทน</p>
+<div class="flex items-center gap-sm p-sm bg-surface-container-low border border-outline-variant w-fit">
+<img alt="Covering Person" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5h4g6paz4A24bNLHniV9OFRmqBsx7bPQIG0JpHO9P8fFqssrS30f35tJl140S04JpcrPLBYXBAqxhdpwdW9tHlxJWPfEK2O-Tju3Sr5Cbl16fpU5bJcDdrh5AYWUBC_tDHHckza-xLnoIjkqjrP_SbyT9WEoJd9IrCxF_T50PTO7XETxUSu150brquD5n2M0dOnChBnhm0EgM_hObJfCJVJBRJYFvYXyhVS10QuYwFSNzScJ8-l7bHTZM6J5N-mZ7DGY-znvBOS0"/>
+<span class="font-body-sm text-body-sm font-semibold">กัญญาณี จิตใจดี (Junior Developer)</span>
+</div>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-outline mb-xs">เอกสารแนบ</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic">ไม่มีเอกสารแนบ</p>
+</div>
+</div>
+</div>
+<!-- Approval Section -->
+<div class="bg-white border border-outline-variant p-md">
+<h3 class="font-title-sm text-title-sm text-primary mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="fact_check">fact_check</span>
+                        การพิจารณาคำขอ
+                    </h3>
+<div class="flex flex-col items-center justify-center py-xl border-2 border-dashed border-outline-variant bg-surface-container-low">
+<span class="material-symbols-outlined text-outline text-[48px] mb-sm" data-icon="hourglass_empty">hourglass_empty</span>
+<p class="font-body-base text-body-base text-on-surface-variant font-semibold">อยู่ระหว่างการพิจารณา</p>
+<p class="font-body-sm text-body-sm text-outline">หัวหน้าแผนกกำลังตรวจสอบข้อมูลคำขอของคุณ</p>
+</div>
+</div>
+</div>
+<!-- Sidebar Info -->
+<div class="lg:col-span-4 space-y-gutter">
+<!-- Leave Quota Summary -->
+<div class="bg-primary text-on-primary p-md relative overflow-hidden">
+<div class="absolute top-0 right-0 p-md opacity-10">
+<span class="material-symbols-outlined text-[120px]" data-icon="analytics">analytics</span>
+</div>
+<div class="relative z-10">
+<h3 class="font-title-sm text-title-sm mb-md">โควตาการลาคงเหลือ</h3>
+<div class="space-y-sm">
+<div class="flex justify-between items-center border-b border-white/20 pb-sm">
+<span class="font-body-sm text-body-sm opacity-80">สิทธิการลาพักร้อนทั้งหมด</span>
+<span class="font-body-base text-body-base font-bold">15.0 วัน</span>
+</div>
+<div class="flex justify-between items-center border-b border-white/20 pb-sm">
+<span class="font-body-sm text-body-sm opacity-80">ใช้ไปแล้ว (รวมคำขอนี้)</span>
+<span class="font-body-base text-body-base font-bold">6.0 วัน</span>
+</div>
+<div class="flex justify-between items-center pt-xs">
+<span class="font-body-sm text-body-sm opacity-80">คงเหลือสุทธิ</span>
+<span class="font-display-lg text-display-lg font-bold text-secondary-container">9.0 วัน</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Calendar Mini View -->
+<div class="bg-white border border-outline-variant p-md">
+<h3 class="font-title-sm text-title-sm text-primary mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="calendar_month">calendar_month</span>
+                        ปฏิทินเดือนตุลาคม
+                    </h3>
+<div class="grid grid-cols-7 gap-xs text-center text-label-caps text-outline mb-sm">
+<div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
+</div>
+<div class="grid grid-cols-7 gap-xs">
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm opacity-30">1</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm opacity-30">2</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">3</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">4</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">5</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">6</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">7</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">8</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">9</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">10</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">11</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">12</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm bg-surface-container-high">13</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm bg-surface-container-high">14</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm bg-primary text-on-primary">15</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm bg-primary text-on-primary">16</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm bg-primary text-on-primary border-r-2 border-primary">17</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">18</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">19</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">20</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm bg-surface-container-high">21</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm bg-surface-container-high">22</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">23</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">24</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">25</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">26</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">27</div>
+<div class="aspect-square flex items-center justify-center font-body-sm text-body-sm">28</div>
+</div>
+<div class="mt-md flex items-center gap-sm">
+<div class="w-3 h-3 bg-primary"></div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">ช่วงเวลาที่ลา (รอดำเนินการ)</span>
+</div>
+</div>
+<!-- Audit Log -->
+<div class="bg-white border border-outline-variant p-md">
+<h3 class="font-title-sm text-title-sm text-primary mb-md">กิจกรรมล่าสุด</h3>
+<div class="relative space-y-md before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-outline-variant">
+<div class="relative pl-lg">
+<div class="absolute left-0 top-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-4 border-white">
+<div class="w-2 h-2 bg-white rounded-full"></div>
+</div>
+<p class="font-body-sm text-body-sm font-semibold">ส่งคำขอลาหยุด</p>
+<p class="font-label-caps text-[10px] text-outline uppercase">2 ต.ค. 2566 • 09:15 น.</p>
+</div>
+<div class="relative pl-lg">
+<div class="absolute left-0 top-1 w-6 h-6 bg-surface-container-high rounded-full flex items-center justify-center border-4 border-white">
+<div class="w-2 h-2 bg-outline rounded-full"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">รอการพิจารณาจากหัวหน้างาน</p>
+<p class="font-label-caps text-[10px] text-outline uppercase">ปัจจุบัน</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

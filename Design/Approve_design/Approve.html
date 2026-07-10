@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html class="light" lang="th"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#020027",
+                    "on-tertiary-fixed-variant": "#92001f",
+                    "on-error": "#ffffff",
+                    "background": "#fcf8fc",
+                    "surface-container-low": "#f6f2f6",
+                    "on-secondary-fixed": "#002106",
+                    "on-secondary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-background": "#1c1b1e",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#e5e1e5",
+                    "on-primary-fixed": "#17173d",
+                    "on-primary-fixed-variant": "#43436b",
+                    "inverse-surface": "#313033",
+                    "surface-container-high": "#ebe7eb",
+                    "secondary-fixed-dim": "#66df75",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e5e1e5",
+                    "on-tertiary-fixed": "#410008",
+                    "on-secondary-container": "#007327",
+                    "secondary-fixed": "#83fc8e",
+                    "on-primary-container": "#8382af",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f0edf1",
+                    "on-surface": "#1c1b1e",
+                    "inverse-on-surface": "#f3eff4",
+                    "on-tertiary-container": "#f24653",
+                    "inverse-primary": "#c3c2f2",
+                    "outline-variant": "#c8c5cf",
+                    "primary-fixed-dim": "#c3c2f2",
+                    "tertiary-container": "#46000a",
+                    "surface": "#fcf8fc",
+                    "tertiary": "#150001",
+                    "primary-fixed": "#e2dfff",
+                    "on-surface-variant": "#47464e",
+                    "surface-bright": "#fcf8fc",
+                    "surface-dim": "#dcd9dd",
+                    "secondary": "#006e25",
+                    "tertiary-fixed": "#ffdad9",
+                    "outline": "#78767f",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb3b2",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#5a5a84",
+                    "primary-container": "#1a1a40",
+                    "secondary-container": "#80f98b",
+                    "on-secondary-fixed-variant": "#00531a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "lg": "40px",
+                    "xl": "64px",
+                    "container-max": "1200px",
+                    "sm": "12px",
+                    "md": "24px",
+                    "base": "8px",
+                    "gutter": "24px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "status-label": ["Sarabun"],
+                    "title-sm": ["Sarabun"],
+                    "label-caps": ["Sarabun"],
+                    "body-sm": ["Sarabun"],
+                    "body-base": ["Sarabun"],
+                    "headline-md": ["Sarabun"],
+                    "display-lg": ["Sarabun"]
+            },
+            "fontSize": {
+                    "status-label": ["13px", {"lineHeight": "1.0", "fontWeight": "600"}],
+                    "title-sm": ["18px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-base": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .decorative-corner-tr {
+            background-image: radial-gradient(circle at top right, #e2dfff 0%, transparent 70%);
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body class="bg-background font-body-base text-on-background min-h-screen flex flex-col items-center justify-center">
+<main class="w-full max-w-container-max mx-auto px-lg py-xl">
+<!-- Navigation / Breadcrumb -->
+<div class="mb-lg flex items-center gap-sm">
+<button class="flex items-center gap-xs text-primary font-title-sm hover:underline transition-all">
+<span class="material-symbols-outlined">arrow_back</span>
+<span>Back to History</span>
+</button>
+</div>
+<!-- Main Content Area (Level 1 Container) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg relative overflow-hidden shadow-sm">
+<!-- Subtle Graphic Accent -->
+<div class="absolute top-0 right-0 w-32 h-32 decorative-corner-tr -mr-16 -mt-16 pointer-events-none"></div>
+<!-- Content Grid: Header Section -->
+<div class="p-lg border-b border-outline-variant flex flex-col md:flex-row md:items-center justify-between gap-md">
+<div>
+<h1 class="font-headline-md text-headline-md text-primary mb-xs">รายละเอียดคำขอลา</h1>
+<p class="text-body-sm text-on-surface-variant">รหัสอ้างอิง: #LV-2023-0842</p>
+</div>
+<div class="flex items-center">
+<span class="rounded-full bg-secondary/10 text-secondary border border-secondary/20 flex items-center gap-xs font-status-label px-xl py-md text-title-sm">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        ได้รับการอนุมัติ
+                    </span>
+</div>
+</div>
+<!-- Content Grid: Details Bento-like Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3">
+<!-- Left Column: Primary Details -->
+<div class="lg:col-span-2 p-lg border-r border-outline-variant space-y-xl">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl">
+<!-- Leave Type -->
+<div class="space-y-xs">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">ประเภทการลา</label>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed">beach_access</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">ลาพักร้อน (Annual Leave)</span>
+</div>
+</div>
+<!-- Date Requested -->
+<div class="space-y-xs">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">วันที่ยื่นคำขอ</label>
+<div class="font-body-base text-on-surface py-base">15 ตุลาคม 2566</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl bg-surface-container-low p-md rounded-lg">
+<!-- Dates -->
+<div class="space-y-xs">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">ระยะเวลา</label>
+<div class="flex items-center gap-md font-body-base text-primary">
+<div class="text-center">
+<div class="text-on-surface-variant text-[12px]">เริ่มต้น</div>
+<div class="font-bold">20 ต.ค. 66</div>
+</div>
+<span class="material-symbols-outlined text-outline">trending_flat</span>
+<div class="text-center">
+<div class="text-on-surface-variant text-[12px]">สิ้นสุด</div>
+<div class="font-bold">23 ต.ค. 66</div>
+</div>
+</div>
+</div>
+<!-- Duration -->
+<div class="space-y-xs">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">จำนวนวัน</label>
+<div class="flex items-baseline gap-xs py-base">
+<span class="font-display-lg text-display-lg text-primary">4</span>
+<span class="font-title-sm text-title-sm text-on-surface-variant">วัน</span>
+</div>
+</div>
+</div>
+<!-- Reason -->
+<div class="space-y-sm">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">เหตุผลการลา</label>
+<div class="p-md border border-outline-variant bg-surface-bright rounded text-body-base text-on-surface">
+                            ต้องการใช้เวลาพักผ่อนกับครอบครัวในช่วงปิดเทอม และเดินทางไปต่างจังหวัดเพื่อเยี่ยมญาติผู้ใหญ่
+                        </div>
+</div>
+<!-- Attachments -->
+<div class="space-y-sm">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">เอกสารแนบ</label>
+<div class="flex items-center gap-md p-sm border border-outline-variant border-dashed rounded bg-surface hover:bg-surface-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-outline group-hover:text-primary">description</span>
+<div class="flex-grow">
+<div class="text-body-sm font-semibold text-primary">itinerary_file_2023.pdf</div>
+<div class="text-[12px] text-on-surface-variant">1.2 MB • PDF Document</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary">download</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Approval Sidebar -->
+<div class="bg-surface-container-low/50 p-lg">
+<div class="sticky top-md space-y-lg">
+<div>
+<h2 class="font-title-sm text-title-sm text-primary border-l-2 border-primary pl-sm mb-lg">การพิจารณาคำขอ</h2>
+<div class="space-y-md">
+<div class="flex items-start gap-md">
+<div class="relative">
+<img alt="Approver Avatar" class="w-12 h-12 rounded-full object-cover grayscale" data-alt="A portrait of a male corporate manager, Jhon Smith, in a professional setting. He is wearing a dark suit with a subtle pattern, looking confident and reliable. The background is a blurred office environment with cool blue and white tones, maintaining the minimalist corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfjouRxKOBSekVZwyQWIPBT9IeIToRPCIw2vnHA_z8lnXOpTSXy4N5BcH0l_6wCTH5jBoXqtVPGqfzYgZ5OVNKyk5lL9bHorgI7LZKbZeXgvmP14vFhD661ShbW87fpC1TEATLoSXkeF2j421nTLzbP8IS4ZJdstiam3cJ3nisQEO8PlcoJydlr3TvPFbCHWZurv-wr40WfSQO3JMWFgDc6kT5DLLIwzrbOI-DLY1PDGrOxI5KX5kgNKXBhVDSwiECugDejwJ8Ln8"/>
+<div class="absolute bottom-0 right-0 w-4 h-4 bg-secondary rounded-full border-2 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[10px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+<div>
+<div class="font-title-sm text-title-sm text-primary">Jhon Smith</div>
+<div class="text-body-sm text-on-surface-variant">IT Manager</div>
+</div>
+</div>
+<div class="pt-md border-t border-outline-variant space-y-md">
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant">สถานะ:</span>
+<span class="font-semibold text-secondary">อนุมัติแล้ว</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant">เมื่อวันที่:</span>
+<span class="font-semibold text-on-surface">16 ต.ค. 66 | 09:42 น.</span>
+</div>
+</div>
+<div class="p-md bg-surface-container-high rounded border-l-4 border-secondary italic text-body-sm text-on-surface-variant">
+                                    "รับทราบแผนการลาพักร้อน ขอให้พักผ่อนอย่างเต็มที่ครับ"
+                                </div>
+</div>
+</div>
+<!-- Quick Summary Widget -->
+<div class="bg-primary-container p-md rounded-lg text-on-primary-fixed">
+<div class="font-label-caps text-label-caps text-on-primary-container mb-sm">โควตาที่เหลือหลังอนุมัติ</div>
+<div class="flex items-baseline gap-xs">
+<span class="text-headline-md font-bold text-white">6</span>
+<span class="text-body-sm opacity-80">จาก 10 วัน</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="mt-xl flex justify-center">
+<button class="bg-primary text-white px-xl py-md rounded-lg font-title-sm hover:opacity-90 active:scale-95 transition-all shadow-lg flex items-center gap-md">
+<span class="material-symbols-outlined">print</span>
+                พิมพ์รายละเอียดคำขอ
+            </button>
+</div>
+</main>
+</body></html>

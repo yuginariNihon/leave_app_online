@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html lang="th"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#020027",
+                        "on-tertiary-fixed-variant": "#92001f",
+                        "on-error": "#ffffff",
+                        "background": "#fcf8fc",
+                        "surface-container-low": "#f6f2f6",
+                        "on-secondary-fixed": "#002106",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#1c1b1e",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e5e1e5",
+                        "on-primary-fixed": "#17173d",
+                        "on-primary-fixed-variant": "#43436b",
+                        "inverse-surface": "#313033",
+                        "surface-container-high": "#ebe7eb",
+                        "secondary-fixed-dim": "#66df75",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e5e1e5",
+                        "on-tertiary-fixed": "#410008",
+                        "on-secondary-container": "#007327",
+                        "secondary-fixed": "#83fc8e",
+                        "on-primary-container": "#8382af",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#f0edf1",
+                        "on-surface": "#1c1b1e",
+                        "inverse-on-surface": "#f3eff4",
+                        "on-tertiary-container": "#f24653",
+                        "inverse-primary": "#c3c2f2",
+                        "outline-variant": "#c8c5cf",
+                        "primary-fixed-dim": "#c3c2f2",
+                        "tertiary-container": "#46000a",
+                        "surface": "#fcf8fc",
+                        "tertiary": "#150001",
+                        "primary-fixed": "#e2dfff",
+                        "on-surface-variant": "#47464e",
+                        "surface-bright": "#fcf8fc",
+                        "surface-dim": "#dcd9dd",
+                        "secondary": "#006e25",
+                        "tertiary-fixed": "#ffdad9",
+                        "outline": "#78767f",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb3b2",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#5a5a84",
+                        "primary-container": "#1a1a40",
+                        "secondary-container": "#80f98b",
+                        "on-secondary-fixed-variant": "#00531a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "40px",
+                        "xl": "64px",
+                        "container-max": "1200px",
+                        "sm": "12px",
+                        "md": "24px",
+                        "base": "8px",
+                        "gutter": "24px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "status-label": ["Sarabun"],
+                        "title-sm": ["Sarabun"],
+                        "label-caps": ["Sarabun"],
+                        "body-sm": ["Sarabun"],
+                        "body-base": ["Sarabun"],
+                        "headline-md": ["Sarabun"],
+                        "display-lg": ["Sarabun"]
+                    },
+                    "fontSize": {
+                        "status-label": ["13px", {"lineHeight": "1.0", "fontWeight": "600"}],
+                        "title-sm": ["18px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-base": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "display-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .leave-status-rejected {
+            background-color: #ffdad6; /* Matches error-container for better prominence */
+            color: #ba1a1a;
+            border: 2px solid #ba1a1a;
+        }
+        .active-card-accent {
+            border-left: 2px solid #020027;
+        }
+    </style>
+</head>
+<body class="bg-background font-body-base text-on-background min-h-screen">
+<main class="max-w-container-max mx-auto px-lg py-xl">
+<!-- Navigation / Header Section -->
+<div class="mb-lg flex flex-col md:flex-row md:items-center justify-between gap-md">
+<div>
+<button class="flex items-center gap-xs text-primary font-title-sm text-title-sm hover:underline transition-all group mb-sm">
+<span class="material-symbols-outlined">arrow_back</span>
+                    Back to History
+                </button>
+<h2 class="font-headline-md text-headline-md text-primary">รายละเอียดการขอลา (Leave Request Details)</h2>
+</div>
+<div class="leave-status-rejected px-xl py-md rounded-xl flex items-center gap-md self-start md:self-center shadow-md">
+<span class="material-symbols-outlined !text-[32px]">cancel</span>
+<span class="font-headline-md text-headline-md">ไม่ได้รับการอนุมัติ</span>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Side: Leave Info -->
+<div class="lg:col-span-8 space-y-gutter">
+<!-- Main Details Card -->
+<div class="bg-white border border-outline-variant p-md rounded-lg active-card-accent shadow-sm">
+<div class="flex items-center gap-sm mb-md text-primary">
+<span class="material-symbols-outlined">description</span>
+<h3 class="font-title-sm text-title-sm">ข้อมูลการลา</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="space-y-sm">
+<label class="font-label-caps text-label-caps text-on-surface-variant block">ประเภทการลา</label>
+<p class="font-body-base text-body-base text-on-surface">ลากิจ (Personal Leave)</p>
+</div>
+<div class="space-y-sm">
+<label class="font-label-caps text-label-caps text-on-surface-variant block">วันที่ยื่นคำขอ</label>
+<p class="font-body-base text-body-base text-on-surface">15 ตุลาคม 2566</p>
+</div>
+<div class="space-y-sm">
+<label class="font-label-caps text-label-caps text-on-surface-variant block">วันที่เริ่มต้น - สิ้นสุด</label>
+<p class="font-body-base text-body-base text-on-surface">20 ต.ค. 2566 - 21 ต.ค. 2566</p>
+</div>
+<div class="space-y-sm">
+<label class="font-label-caps text-label-caps text-on-surface-variant block">จำนวนวันลา</label>
+<p class="font-body-base text-body-base text-on-surface">2 วัน</p>
+</div>
+<div class="md:col-span-2 space-y-sm">
+<label class="font-label-caps text-label-caps text-on-surface-variant block">เหตุผลการลา</label>
+<p class="font-body-base text-body-base text-on-surface leading-relaxed">
+                                ติดต่อเดินเรื่องเอกสารทางราชการที่ภูมิลำเนาเดิม และมีความจำเป็นต้องเดินทางด้วยรถส่วนตัวซึ่งใช้ระยะเวลานาน
+                            </p>
+</div>
+</div>
+</div>
+<!-- Approval Section -->
+<div class="bg-white border border-outline-variant p-md rounded-lg shadow-sm">
+<div class="flex items-center gap-sm mb-md text-primary">
+<span class="material-symbols-outlined">assignment_ind</span>
+<h3 class="font-title-sm text-title-sm">การพิจารณาคำขอ</h3>
+</div>
+<div class="space-y-md">
+<div class="flex flex-col md:flex-row md:items-center gap-md border-b border-outline-variant pb-md">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+<div>
+<label class="font-label-caps text-label-caps text-on-surface-variant block">ผู้อนุมัติ</label>
+<p class="font-body-base text-body-base text-on-surface">สมชาย สายเสมอ (Manager)</p>
+</div>
+<div class="md:ml-auto">
+<label class="font-label-caps text-label-caps text-on-surface-variant block">วันที่พิจารณา</label>
+<p class="font-body-base text-body-base text-on-surface">16 ตุลาคม 2566</p>
+</div>
+</div>
+<div class="p-md bg-error-container rounded-lg border border-error/20">
+<label class="font-label-caps text-label-caps text-on-error-container block mb-xs">เหตุผลที่ไม่ได้รับการอนุมัติ</label>
+<p class="font-body-base text-body-base text-on-error-container">
+                                ช่วงเวลาดังกล่าวมีพนักงานในแผนกลาพร้อมกันหลายท่าน ทำให้กำลังคนไม่เพียงพอต่อภารกิจเร่งด่วนของบริษัท กรุณาพิจารณาเลื่อนวันหรือสลับวันลาหากเป็นไปได้
+                            </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Side: Supplemental Info -->
+<div class="lg:col-span-4 space-y-gutter">
+<!-- Summary Card -->
+<div class="bg-primary text-white p-md rounded-lg shadow-md relative overflow-hidden">
+<div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+<h3 class="font-title-sm text-title-sm mb-md flex items-center gap-sm relative z-10">
+<span class="material-symbols-outlined">analytics</span>
+                        สรุปโควตาคงเหลือ
+                    </h3>
+<div class="space-y-md relative z-10">
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm opacity-80">สิทธิ์การลาทั้งหมด</span>
+<span class="font-title-sm text-title-sm">6 วัน</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm opacity-80">ใช้ไปแล้ว</span>
+<span class="font-title-sm text-title-sm">2 วัน</span>
+</div>
+<div class="pt-sm border-t border-white/20 flex justify-between items-center">
+<span class="font-body-base text-body-base font-bold">คงเหลือ</span>
+<span class="text-display-lg font-display-lg">4 วัน</span>
+</div>
+</div>
+</div>
+<!-- Calendar View Context -->
+<div class="bg-white border border-outline-variant p-md rounded-lg shadow-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-md uppercase tracking-wider">ปฏิทินเดือน ตุลาคม</h3>
+<div class="grid grid-cols-7 gap-xs text-center mb-xs">
+<div class="text-[10px] font-bold text-outline uppercase">M</div>
+<div class="text-[10px] font-bold text-outline uppercase">T</div>
+<div class="text-[10px] font-bold text-outline uppercase">W</div>
+<div class="text-[10px] font-bold text-outline uppercase">T</div>
+<div class="text-[10px] font-bold text-outline uppercase">F</div>
+<div class="text-[10px] font-bold text-outline uppercase">S</div>
+<div class="text-[10px] font-bold text-outline uppercase">S</div>
+</div>
+<div class="grid grid-cols-7 gap-xs">
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">16</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">17</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">18</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">19</div>
+<div class="h-8 flex items-center justify-center text-xs bg-error text-white rounded-sm">20</div>
+<div class="h-8 flex items-center justify-center text-xs bg-error text-white rounded-sm">21</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">22</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">23</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">24</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">25</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">26</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">27</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">28</div>
+<div class="h-8 flex items-center justify-center text-xs text-on-surface-variant">29</div>
+</div>
+<p class="mt-md text-[11px] text-on-surface-variant italic">* แสดงวันลาที่ยื่นขอในหน้าจอรายละเอียดนี้</p>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,508 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =========================
+// ENUMS
+// =========================
+
+// Constrains staff lifecycle values to known states.
+enum EmploymentStatus {
+  active
+  inactive
+  probation
+  terminated
+}
+
+// Constrains leave request workflow states.
+enum LeaveStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+// Constrains each approval workflow state.
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+  cancelled
+  skipped
+}
+
+// 
+enum LeavePeriod {
+  full_day
+  morning
+  afternoon
+}
+
+enum ApproverType {
+  Supervisor
+  Senior_Supervisor
+  Supervisor_or_Senior_Supervisor
+  Assistant_Manager
+  Department_Manager
+  General_Manager
+  Director
+  HR
+  Specific_Person
+}
+
+// =========================
+// MASTER DATA
+// =========================
+
+model Department {
+  department_id   String @id @default(uuid()) @db.Uuid
+  department_code String @unique @db.VarChar(20)
+  department_name String @db.VarChar(100)
+
+  is_active Boolean @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  sections Section[]
+  staffs   StaffInfo[]
+}
+
+model Section {
+  section_id    String @id @default(uuid()) @db.Uuid
+  section_code  String @unique @db.VarChar(20)
+  section_name  String @db.VarChar(100)
+  department_id String @db.Uuid
+
+  is_active Boolean @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  department Department @relation(fields: [department_id], references: [department_id], onDelete: Cascade, onUpdate: Cascade)
+
+  staffs StaffInfo[]
+
+  @@index([department_id])
+}
+
+model Position {
+  position_id    String @id @default(uuid()) @db.Uuid
+  position_name  String @unique @db.VarChar(100)
+  position_level Int?
+
+  is_active Boolean @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  staffs StaffInfo[]
+  workflow LeaveWorkflow?
+}
+
+model Role {
+  role_id   String @id @default(uuid()) @db.Uuid
+  role_name String @unique @db.VarChar(50)
+
+  is_active Boolean @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  staffRoles StaffRole[]
+  pageRolePermissions PageRolePermission[]
+}
+
+model LeaveType {
+  leave_type_id   String @id @default(uuid()) @db.Uuid
+  leave_type_name String @unique @db.VarChar(100)
+
+  max_days_per_year Int?
+
+  is_paid             Boolean @default(true)
+  requires_attachment Boolean @default(false)
+  is_active           Boolean @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  leaves      DataLeave[]
+  leaveLimits UserLeaveLimit[]
+  leaveCases  LeaveCase[]
+}
+
+model LeaveCase {
+  leave_case_id String @id @default(uuid()) @db.Uuid
+
+  leave_type_id String @db.Uuid
+
+  case_name String @db.VarChar(50)
+
+  is_active Boolean @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  leaveType LeaveType @relation(fields: [leave_type_id], references: [leave_type_id], onDelete: Restrict, onUpdate: Cascade)
+
+  leaves DataLeave[]
+
+  @@unique([leave_type_id, case_name])
+  @@index([leave_type_id])
+}
+
+// =========================
+// STAFF
+// =========================
+
+model StaffInfo {
+  staff_id String @id @default(uuid()) @db.Uuid
+
+  staff_code String @unique @db.VarChar(20)
+
+  name String @db.VarChar(100)
+
+  date_of_birth DateTime? @map("Date_Of_Birth") @db.Date
+
+  department_id      String  @db.Uuid
+  position_id        String  @db.Uuid
+  section_id         String? @db.Uuid
+  employment_type_id String? @db.Uuid
+
+  phoneNumber String? @db.VarChar(10)
+
+  start_date DateTime? @db.Date
+
+  employment_status EmploymentStatus @default(active)
+
+  is_active Boolean @default(true)
+
+  terminated_at DateTime? @db.Timestamp(6)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  department Department @relation(fields: [department_id], references: [department_id], onDelete: Restrict, onUpdate: Cascade)
+
+  position Position @relation(fields: [position_id], references: [position_id], onDelete: Restrict, onUpdate: Cascade)
+
+  section Section? @relation(fields: [section_id], references: [section_id], onDelete: Restrict, onUpdate: Cascade)
+
+  employmentType EmploymentType? @relation(fields: [employment_type_id], references: [employment_type_id], onDelete: Restrict, onUpdate: Cascade)
+
+  staffRoles  StaffRole[]
+  leaves      DataLeave[]
+  approvals   LeaveApproval[]  @relation("Approver")
+  leaveLimits UserLeaveLimit[]
+
+  supervisors StaffSupervisor[] @relation("StaffMember")
+
+  subordinates StaffSupervisor[] @relation("Supervisor")
+
+  user User?
+
+  @@index([position_id])
+  @@index([section_id])
+  @@index([employment_status])
+}
+
+// =========================
+// STAFF ROLE
+// =========================
+
+model StaffRole {
+  staff_role_id String @id @default(uuid()) @db.Uuid
+
+  staff_id String @db.Uuid
+  role_id  String @db.Uuid
+
+  staff StaffInfo @relation(fields: [staff_id], references: [staff_id], onDelete: Cascade, onUpdate: Cascade)
+
+  role Role @relation(fields: [role_id], references: [role_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([staff_id, role_id])
+  @@index([role_id])
+}
+
+// =========================
+// LEAVE
+// =========================
+
+model DataLeave {
+  leave_id String @id @default(uuid()) @db.Uuid
+
+  staff_id      String @db.Uuid
+  leave_type_id String @db.Uuid
+  leave_case_id String @db.Uuid
+
+  start_date DateTime? @db.Date
+  end_date   DateTime? @db.Date
+
+  total_days Decimal? @db.Decimal(5, 2)
+
+  reason String? @db.VarChar(500)
+
+  leave_status LeaveStatus @default(pending)
+
+  current_approval_level Int @default(1)
+
+  cancelled_at DateTime? @db.Timestamp(6)
+
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  requested_at DateTime @default(now()) @db.Timestamp(6)
+
+  leave_period LeavePeriod @default(full_day)
+
+  staff StaffInfo @relation(fields: [staff_id], references: [staff_id], onDelete: Restrict, onUpdate: Cascade)
+
+  leaveType LeaveType @relation(fields: [leave_type_id], references: [leave_type_id], onDelete: Restrict, onUpdate: Cascade)
+
+  leaveCase LeaveCase @relation(fields: [leave_case_id], references: [leave_case_id], onDelete: Restrict, onUpdate: Cascade)
+
+  approvals   LeaveApproval[]
+  attachments LeaveAttachment[]
+
+  @@index([staff_id])
+  @@index([leave_type_id])
+  @@index([leave_case_id])
+  @@index([leave_status])
+  @@index([start_date, end_date])
+}
+
+model LeaveApproval {
+  approval_id String @id @default(uuid()) @db.Uuid
+
+  leave_id    String  @db.Uuid
+  approver_id String? @db.Uuid
+
+  approval_level Int
+
+  approval_status ApprovalStatus @default(pending)
+
+  approval_comment String? @db.VarChar(200)
+
+  acted_at DateTime? @db.Timestamp(6) /* Approve at and Rejected at**/
+
+  leave DataLeave @relation(fields: [leave_id], references: [leave_id], onDelete: Cascade, onUpdate: Cascade)
+
+  approver StaffInfo? @relation("Approver", fields: [approver_id], references: [staff_id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([leave_id, approval_level])
+  @@index([approver_id])
+  @@index([approval_status])
+}
+
+model LeaveAttachment {
+  attachment_id String @id @default(uuid()) @db.Uuid
+
+  leave_id String @db.Uuid
+
+  file_name String @db.VarChar(255)
+
+  file_path String @db.VarChar(500)
+
+  mime_type String? @db.VarChar(100)
+
+  file_size Int?
+
+  uploaded_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  archived_at DateTime? @db.Timestamp(6)
+
+  leave DataLeave @relation(fields: [leave_id], references: [leave_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([leave_id])
+}
+
+model UserLeaveLimit {
+  limit_id String @id @default(uuid()) @db.Uuid
+
+  staff_id      String @db.Uuid
+  leave_type_id String @db.Uuid
+
+  year Int
+
+  max_days  Decimal @default(0) @db.Decimal(5, 2)
+  used_days Decimal @default(0) @db.Decimal(5, 2)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  staff StaffInfo @relation(fields: [staff_id], references: [staff_id], onDelete: Restrict, onUpdate: Cascade)
+
+  leaveType LeaveType @relation(fields: [leave_type_id], references: [leave_type_id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([staff_id, leave_type_id, year])
+  @@index([leave_type_id])
+}
+
+model EmploymentType {
+  employment_type_id String @id @default(uuid()) @db.Uuid
+
+  code String @unique @db.VarChar(20)
+  name String @unique @db.VarChar(100)
+  thainame String? @unique @db.VarChar(100)
+
+  description String? @db.Text
+
+  is_active Boolean @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  staffs StaffInfo[]
+
+  @@index([code])
+}
+
+model User {
+  user_id String @id @default(uuid()) @db.Uuid
+
+  staff_id String @unique @db.Uuid
+
+  email String? @unique @db.VarChar(255)
+
+  password_hash String? @db.Text
+
+  force_change_password Boolean @default(true)
+
+  supabase_auth_id String? @unique @db.Uuid
+
+  is_active Boolean @default(true)
+
+  last_login_at DateTime? @db.Timestamp(6)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  staff StaffInfo @relation(fields: [staff_id], references: [staff_id], onDelete: Cascade, onUpdate: Cascade)
+
+  loginHistories LoginHistory[]
+  sessions       Session[]
+
+  @@index([staff_id])
+}
+
+model Session {
+  session_id String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  token      String   @unique
+  expires_at DateTime @db.Timestamp(6)
+  ip_address String?  @db.VarChar(50)
+  user_agent String?  @db.Text
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([token])
+}
+
+model LoginHistory {
+  login_history_id String @id @default(uuid()) @db.Uuid
+
+  user_id String @db.Uuid
+
+  device_info String? @db.Text
+
+  login_method String  @db.VarChar(20)
+  is_success   Boolean @default(true)
+
+  login_at DateTime @default(now()) @db.Timestamp(6)
+
+  ip_address String? @db.VarChar(50)
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model StaffSupervisor {
+  staff_supervisor_id String @id @default(uuid()) @db.Uuid
+
+  staff_id      String @db.Uuid
+  supervisor_id String @db.Uuid
+
+  staff      StaffInfo @relation("StaffMember", fields: [staff_id], references: [staff_id], onDelete: Cascade, onUpdate: Cascade)
+  supervisor StaffInfo @relation("Supervisor", fields: [supervisor_id], references: [staff_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([staff_id, supervisor_id])
+}
+
+model LeaveWorkflow {
+  workflow_id String @id @default(uuid()) @db.Uuid
+
+  position_id   String @db.Uuid
+
+  workflow_name String @db.VarChar(100)
+
+  is_active Boolean @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  position Position @relation(fields: [position_id], references: [position_id], onDelete: Cascade)
+
+  steps LeaveWorkflowStep[]
+
+  @@unique([position_id])
+}
+
+model LeaveWorkflowStep {
+  workflow_step_id String @id @default(uuid()) @db.Uuid
+
+  workflow_id String @db.Uuid
+
+  approval_level Int
+
+  approver_type ApproverType
+
+  is_required Boolean @default(true)
+
+  workflow LeaveWorkflow @relation(fields: [workflow_id], references: [workflow_id])
+
+  @@unique([workflow_id, approval_level])
+}
+
+model PageResource {
+  page_resource_id String @id @default(uuid()) @db.Uuid
+  page_key         String @unique @db.VarChar(100)   // เช่น "leave_report", "manage_roles"
+  page_name        String @db.VarChar(200)            // เช่น "รายงานการลา"
+  group_name       String @db.VarChar(100)            // เช่น "HR", "จัดการระบบ"
+  is_active        Boolean @default(true)
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  rolePermissions PageRolePermission[]
+}
+
+// ── กำหนดว่า Role ไหน เข้าหน้าไหนได้บ้าง ──
+model PageRolePermission {
+  page_role_permission_id String @id @default(uuid()) @db.Uuid
+  page_resource_id        String @db.Uuid
+  role_id                 String @db.Uuid
+
+  pageResource PageResource @relation(fields: [page_resource_id], references: [page_resource_id], onDelete: Cascade, onUpdate: Cascade)
+  role Role @relation(fields: [role_id], references: [role_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([page_resource_id, role_id])
+  @@index([role_id])
+}
+
+/**
+ * Notes:
+ * Uses PostgreSQL as the datasource.
+ * UUID values are represented as `String @db.Uuid`.
+ * Timestamps use `DateTime @db.Timestamp(6)`.
+ * The supervisor self relation uses the `StaffSupervisor` relation name.
+ * `date_of_birth` maps to the existing `Date_Of_Birth` column.
+ */

@@ -1,0 +1,313 @@
+<!DOCTYPE html><html lang="th" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>รายละเอียดการยื่นขอลา - Corporate Precision System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#410007",
+                        "surface-container-low": "#f5f2ff",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#ffb3b1",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#fcf8ff",
+                        "surface-container-high": "#e8e6ff",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "on-tertiary-fixed": "#191c1d",
+                        "surface-tint": "#575a8c",
+                        "surface": "#fcf8ff",
+                        "on-secondary-fixed-variant": "#92001c",
+                        "tertiary": "#000000",
+                        "surface-container-highest": "#e2dfff",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "primary-fixed": "#e0e0ff",
+                        "outline": "#777680",
+                        "on-background": "#181934",
+                        "tertiary-fixed": "#e1e3e4",
+                        "on-secondary": "#ffffff",
+                        "surface-variant": "#e2dfff",
+                        "secondary-container": "#db313f",
+                        "primary-fixed-dim": "#bfc2fb",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#7c80b4",
+                        "on-surface-variant": "#46464f",
+                        "primary-container": "#131645",
+                        "primary": "#000000",
+                        "inverse-on-surface": "#f2efff",
+                        "inverse-surface": "#2d2e4a",
+                        "error": "#ba1a1a",
+                        "secondary": "#b7102a",
+                        "secondary-fixed": "#ffdad8",
+                        "on-surface": "#181934",
+                        "on-primary-fixed": "#131645",
+                        "surface-bright": "#fcf8ff",
+                        "tertiary-container": "#191c1d",
+                        "on-tertiary-container": "#828485",
+                        "on-primary-fixed-variant": "#3f4273",
+                        "outline-variant": "#c7c5d0",
+                        "surface-dim": "#d8d7fb",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#efecff",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#fffbff",
+                        "inverse-primary": "#bfc2fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem",
+                        "card": "12px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "margin-desktop": "40px",
+                        "container-max": "1440px",
+                        "stack-sm": "4px",
+                        "stack-md": "16px",
+                        "base": "8px",
+                        "stack-lg": "32px"
+                    },
+                    "fontFamily": {
+                        "headline": ["IBM Plex Sans", "sans-serif"],
+                        "body": ["IBM Plex Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'IBM Plex Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .status-badge {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            box-shadow: 0 4px 14px 0 rgba(255, 167, 38, 0.2);
+        }
+        .sidebar-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #131645 0%, #2d2e4a 100%);
+        }
+        .timeline-line {
+            width: 2px;
+            background: #e2dfff;
+            position: absolute;
+            left: 7px;
+            top: 20px;
+            bottom: -20px;
+        }
+        .timeline-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #131645;
+            background: white;
+            z-index: 10;
+        }
+        .timeline-dot.active {
+            background: #131645;
+        }
+    </style>
+</head>
+<body class="bg-[#F8F9FD] text-on-surface min-h-screen">
+<div class="max-w-[1200px] mx-auto p-6 md:p-10 space-y-6">
+<!-- Top Navigation -->
+<div class="flex items-center justify-between">
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-medium">
+<span class="material-symbols-outlined text-xl">arrow_back</span>
+<span class="">กลับหน้ารายการคำขอลา</span>
+</button>
+<div class="status-badge px-6 py-4 rounded-card flex items-center gap-3">
+<span class="material-symbols-outlined text-[#E65100]" style="font-variation-settings: 'FILL' 1;">schedule</span>
+<span class="text-[#E65100] font-bold text-lg">รอการอนุมัติ</span>
+</div>
+</div>
+<!-- Header -->
+<div class="mb-8">
+<h1 class="text-3xl font-bold text-[#131645] mb-1">รายละเอียดคำขอลา</h1>
+<p class="text-on-surface-variant text-sm">รหัสอ้างอิง: #NFT-22225265</p>
+</div>
+<!-- Main Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left: Main Content Area -->
+<div class="lg:col-span-2 space-y-6">
+<!-- Data Card -->
+<div class="bg-white rounded-card shadow-sm border border-outline-variant/30 p-8 space-y-8">
+<!-- Section: Leave Type & Date -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-4">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 block">ประเภทการลา</label>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-white">beach_access</span>
+</div>
+<span class="text-xl font-bold text-[#131645]">ลาพักร้อน</span>
+</div>
+</div>
+<div class="space-y-4">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 block">วันที่ยื่นคำขอ</label>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">event_note</span>
+</div>
+<span class="text-xl font-bold text-[#131645]">11 พฤษภาคม 2568</span>
+</div>
+</div>
+</div>
+<!-- Section: Duration & Balance -->
+<div class="bg-[#F1F3FB] rounded-card p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-2">
+<label class="text-xs font-bold text-on-surface-variant/60 uppercase">ระยะเวลา</label>
+<div class="flex items-center gap-4">
+<div class="text-center">
+<p class="text-[10px] text-on-surface-variant mb-1 uppercase font-semibold">เริ่มต้น</p>
+<p class="text-lg font-bold text-[#131645]">12 มิ.ย. 68</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant">arrow_forward</span>
+<div class="text-center">
+<p class="text-[10px] text-on-surface-variant mb-1 uppercase font-semibold">สิ้นสุด</p>
+<p class="text-lg font-bold text-[#131645]">16 มิ.ย. 68</p>
+</div>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-on-surface-variant/60 uppercase">จำนวนวันลา</label>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-bold text-[#131645]">4</span>
+<span class="text-lg font-medium text-[#131645]">วัน</span>
+</div>
+</div>
+</div>
+<!-- Section: Reason -->
+<div class="space-y-4">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">info</span>
+                            เหตุผลการลา
+                        </label>
+<div class="p-6 bg-white border border-outline-variant/40 rounded-xl">
+<p class="text-on-surface leading-relaxed">ไปงานศพของญาติ</p>
+</div>
+</div>
+<!-- Section: Employee Info -->
+<div class="space-y-4">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">person</span>
+                            ข้อมูลพนักงาน
+                        </label>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 bg-surface-container-lowest border border-outline-variant/20 rounded-xl">
+<p class="text-xs font-semibold text-on-surface-variant/60 mb-1">ชื่อ - นามสกุล</p>
+<p class="text-lg font-bold text-on-surface">Mr.John Doe</p>
+</div>
+<div class="p-4 bg-surface-container-lowest border border-outline-variant/20 rounded-xl"><p class="text-xs font-semibold text-on-surface-variant/60 mb-1">รหัสพนักงาน</p><p class="text-lg font-bold text-on-surface">NFT22225265</p></div>
+<div class="p-4 bg-surface-container-lowest border border-outline-variant/20 rounded-xl"><p class="text-xs font-semibold text-on-surface-variant/60 mb-1">แผนก</p><p class="text-lg font-bold text-on-surface">Production</p></div>
+<div class="p-4 bg-surface-container-lowest border border-outline-variant/20 rounded-xl"><p class="text-xs font-semibold text-on-surface-variant/60 mb-1">ตำแหน่ง</p><p class="text-lg font-bold text-on-surface">Staff</p></div>
+</div>
+</div>
+<!-- Section: Attachments -->
+<div class="space-y-4">
+<label class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60">เอกสารแนบ</label>
+<div class="flex items-center justify-between p-4 border border-outline-variant/30 rounded-xl bg-white hover:border-primary transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-[#E8E6FF] flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container">description</span>
+</div>
+<div>
+<p class="text-sm font-bold text-[#131645]">dummy file.png</p>
+<p class="text-[10px] text-on-surface-variant">PNG IMAGE • 1.2 MB</p>
+</div>
+</div>
+<button class="flex items-center gap-2 text-xs font-bold text-primary group-hover:underline">
+                                ดาวน์โหลด
+                                <span class="material-symbols-outlined text-sm">download</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="flex items-center justify-end gap-4 pt-4">
+<button class="px-8 py-4 bg-white border-2 border-secondary text-secondary rounded-xl font-bold flex items-center gap-2 hover:bg-secondary hover:text-white transition-all">
+<span class="material-symbols-outlined">close</span>
+                        ไม่อนุมัติ
+                    </button>
+<button class="px-8 py-4 bg-primary-container text-white rounded-xl font-bold flex items-center gap-2 hover:bg-black transition-all shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        อนุมัติคำขอ
+                    </button>
+</div>
+</div>
+<!-- Right: Sidebar Area -->
+<div class="space-y-6">
+<!-- Status/Approval Section -->
+<div class="bg-white rounded-card shadow-sm border border-outline-variant/30 p-6 space-y-6">
+<h3 class="font-bold text-[#131645] flex items-center gap-2 border-l-4 border-[#131645] pl-3">การพิจารณาคำขอ</h3>
+<div class="p-8 border-2 border-dashed border-outline-variant/40 rounded-xl bg-[#FBFBFF] flex flex-col items-center text-center space-y-4">
+<div class="w-16 h-16 rounded-full bg-[#FFF3E0] flex items-center justify-center">
+<span class="material-symbols-outlined text-[#E65100] text-3xl">schedule</span>
+</div>
+<div class="space-y-1">
+<p class="font-bold text-on-surface">อยู่ระหว่างการพิจารณา</p>
+<p class="text-xs text-on-surface-variant">หัวหน้าแผนกกำลังตรวจสอบข้อมูลคำขอของคุณ</p>
+</div>
+</div>
+</div>
+<!-- Timeline Section -->
+<div class="bg-white rounded-card shadow-sm border border-outline-variant/30 p-6 space-y-6">
+<h3 class="font-bold text-[#131645] flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">format_list_bulleted</span>
+                        กิจกรรมล่าสุด
+                    </h3>
+<div class="space-y-8 pl-2">
+<div class="relative flex gap-6">
+<div class="timeline-line"></div>
+<div class="timeline-dot"></div>
+<div class="space-y-1">
+<p class="text-sm font-bold text-on-surface">ส่งคำขอลาหยุด</p>
+<p class="text-[10px] text-on-surface-variant">11 พฤษภาคม 2568 • 14:26 น.</p>
+</div>
+</div>
+<div class="relative flex gap-6">
+<div class="timeline-dot active"></div>
+<div class="space-y-1">
+<p class="text-sm font-bold text-[#131645]">รอการพิจารณาจากหัวหน้างาน</p>
+<p class="text-[10px] text-primary-container font-bold">ปัจจุบัน</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Summary Card -->
+
+</div>
+</div>
+<!-- Bottom Hint -->
+<p class="text-center text-on-surface-variant text-[10px] opacity-40 mt-12 uppercase tracking-widest">
+            ระบบจัดเก็บประวัติการลาพนักงาน ประจำปีงบประมาณ 2568
+        </p>
+</div>
+<script>
+        // Simple click feedback
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.add('scale-95');
+                setTimeout(() => this.classList.remove('scale-95'), 100);
+            });
+        });
+    </script>
+
+
+
+
+
+
+</body></html>

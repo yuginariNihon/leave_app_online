@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html lang="th"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Confirm Cancellation - Leave Request</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style data-purpose="typography">
+    /* Using a standard sans-serif stack that renders well on iOS */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+<style data-purpose="animations">
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-gray-200 flex items-center justify-center min-h-screen p-4">
+<!-- BEGIN: ModalOverlay -->
+<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" data-purpose="modal-overlay">
+<!-- BEGIN: CancellationModal - Updated to rectangular dialog -->
+<div class="bg-white w-full max-w-md rounded-lg overflow-hidden shadow-2xl animate-fade-in" data-purpose="cancellation-dialog">
+<!-- BEGIN: ModalHeader - Red background preserved -->
+<header class="bg-red-600 px-6 py-4 flex justify-between items-center" data-purpose="modal-header">
+<h1 class="text-white text-lg font-bold">ยืนยันยกเลิกคำขอลา</h1>
+<button aria-label="Close" class="text-white/80 hover:text-white transition-colors" id="btn-close-header">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</header>
+<!-- END: ModalHeader -->
+<!-- BEGIN: ModalBody -->
+<main class="p-6" data-purpose="modal-body">
+<!-- Status Icon and Warning -->
+<div class="flex flex-col items-center mb-6 text-center">
+<div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 border border-red-100">
+<svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<p class="text-gray-600 font-medium">คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำขอนี้?</p>
+</div>
+<!-- BEGIN: LeaveDetailsCard - Rectangular style -->
+<section class="bg-gray-50 rounded-lg p-5 mb-6 border border-gray-200" data-purpose="leave-info-container">
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<span class="text-gray-500 text-sm">ประเภทการลา</span>
+<span class="text-gray-900 font-semibold">ลากิจ</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-gray-500 text-sm">ช่วงวันที่ลา</span>
+<span class="text-gray-900 font-semibold text-sm">12-05-2025 – 16-05-2025</span>
+</div>
+<div class="flex justify-between items-center border-t border-gray-200 pt-3 mt-1">
+<span class="text-gray-500 text-sm font-medium">จำนวนวันลา</span>
+<span class="text-red-600 font-bold text-lg">4 วัน</span>
+</div>
+</div>
+</section>
+<!-- END: LeaveDetailsCard -->
+<!-- Warning Message -->
+<div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-2 rounded-r" data-purpose="warning-message">
+<div class="flex">
+<div class="flex-shrink-0">
+<svg class="h-5 w-5 text-amber-500" fill="currentColor" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" fill-rule="evenodd"></path>
+</svg>
+</div>
+<div class="ml-3">
+<p class="text-xs text-amber-800 font-semibold">
+                **** เมื่อยกเลิกแล้ว คำขอนี้จะไม่ถูกส่งให้ผู้อนุมัติ
+              </p>
+</div>
+</div>
+</div>
+</main>
+<!-- END: ModalBody -->
+<!-- BEGIN: ModalFooter -->
+<footer class="px-6 pb-6 pt-0 flex gap-3" data-purpose="modal-actions">
+<button class="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3 rounded-lg transition-all active:scale-[0.98]" id="btn-close">
+          ปิด
+        </button>
+<button class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition-all active:scale-[0.98] flex-1" id="btn-confirm">
+          ยืนยัน
+        </button>
+</footer>
+<!-- END: ModalFooter -->
+</div>
+<!-- END: CancellationModal -->
+</div>
+<!-- END: ModalOverlay -->
+<script data-purpose="event-handlers">
+    // Minimal interaction logic for demo purposes
+    const closeActions = () => {
+      alert('ปิดหน้าต่าง');
+    };
+    
+    document.getElementById('btn-close').addEventListener('click', closeActions);
+    document.getElementById('btn-close-header').addEventListener('click', closeActions);
+
+    document.getElementById('btn-confirm').addEventListener('click', () => {
+      alert('ยืนยันการยกเลิกเรียบร้อยแล้ว');
+    });
+  </script>
+</body></html>

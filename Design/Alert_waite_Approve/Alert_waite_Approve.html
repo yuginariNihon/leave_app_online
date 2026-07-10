@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html lang="th"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-error": "#ffffff",
+                "on-tertiary-fixed-variant": "#6d3830",
+                "error-container": "#ffdad6",
+                "primary-fixed-dim": "#bfc2fb",
+                "tertiary-fixed": "#ffdad4",
+                "surface-container": "#f0edf2",
+                "background": "#fcf8fd",
+                "on-primary-fixed": "#131645",
+                "surface-container-high": "#eae7ec",
+                "on-background": "#1b1b1f",
+                "on-tertiary-container": "#b47369",
+                "tertiary-fixed-dim": "#ffb4a8",
+                "on-surface": "#1b1b1f",
+                "secondary-fixed": "#77ff61",
+                "surface-variant": "#e5e1e6",
+                "inverse-surface": "#303034",
+                "surface-tint": "#575a8c",
+                "outline": "#777680",
+                "on-secondary": "#ffffff",
+                "primary-fixed": "#e0e0ff",
+                "surface-bright": "#fcf8fd",
+                "surface-container-highest": "#e5e1e6",
+                "secondary-container": "#00f900",
+                "on-primary-container": "#7c80b4",
+                "surface-container-low": "#f6f2f7",
+                "inverse-on-surface": "#f3eff4",
+                "on-primary-fixed-variant": "#3f4273",
+                "on-secondary-container": "#026d00",
+                "on-tertiary": "#ffffff",
+                "secondary-fixed-dim": "#02e600",
+                "surface": "#fcf8fd",
+                "tertiary": "#000000",
+                "tertiary-container": "#370e09",
+                "on-error-container": "#93000a",
+                "surface-container-lowest": "#ffffff",
+                "on-secondary-fixed": "#002200",
+                "primary": "#000000",
+                "on-tertiary-fixed": "#370e09",
+                "outline-variant": "#c7c5d0",
+                "surface-dim": "#dcd9de",
+                "primary-container": "#131645",
+                "on-surface-variant": "#46464f",
+                "on-primary": "#ffffff",
+                "on-secondary-fixed-variant": "#015300",
+                "secondary": "#026e00",
+                "error": "#ba1a1a",
+                "inverse-primary": "#bfc2fb"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "gutter": "16px",
+                "stack-md": "16px",
+                "stack-sm": "8px",
+                "card-padding": "24px",
+                "base": "8px",
+                "stack-lg": "32px",
+                "margin-mobile": "20px"
+            },
+            "fontFamily": {
+                "headline-md": ["Inter"],
+                "body-lg": ["Inter"],
+                "label-sm": ["Inter"],
+                "body-md": ["Inter"],
+                "label-bold": ["Inter"],
+                "display": ["Inter"],
+                "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                "display": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                "headline-lg": ["20px", {"lineHeight": "28px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .success-shadow {
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface min-h-screen flex items-center justify-center p-4">
+<!-- Modal Container -->
+<div class="w-full max-w-lg bg-surface-container-lowest rounded-lg overflow-hidden success-shadow">
+<!-- TopAppBar: Derived from Shared Component JSON Logic -->
+<header class="flex items-center justify-between px-margin-mobile h-16 w-full bg-primary-container text-on-primary">
+<h1 class="font-headline-lg text-headline-lg">ยื่นคำขอลาเรียบร้อย</h1>
+<button aria-label="Close" class="flex items-center justify-center hover:opacity-80 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-primary" data-icon="close">close</span>
+</button>
+</header>
+<!-- Content Canvas -->
+<div class="p-card-padding">
+<div class="flex flex-col md:flex-row items-center md:items-start gap-stack-lg py-stack-lg">
+<!-- Success Status Indicator -->
+<div class="flex-shrink-0">
+<div class="w-24 h-24 bg-secondary-container rounded-full flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-on-secondary-container text-[64px]" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Text Content -->
+<div class="flex flex-col gap-stack-sm text-center md:text-left">
+<h2 class="font-display text-display text-on-surface">ยื่นคำขอลาเรียบร้อย</h2>
+<div class="mt-stack-sm space-y-1">
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center justify-center md:justify-start gap-2">
+<span class="font-label-bold text-label-bold text-on-surface">ยื่นคำขอเมื่อ :</span>
+<span class="text-on-surface-variant">15-01-2026 เวลา 14:32 น.</span>
+</p>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center justify-center md:justify-start gap-2">
+<span class="font-label-bold text-label-bold text-on-surface">สถานะ :</span>
+<span class="text-secondary font-semibold">รอการอนุมัติ</span>
+</p>
+</div>
+</div>
+</div>
+<!-- Visual Separation -->
+<div class="w-full h-px bg-outline-variant my-stack-md"></div>
+<!-- Action Section -->
+<div class="flex justify-center md:justify-end py-stack-sm">
+<button class="min-h-[48px] px-10 rounded-lg border border-primary bg-surface-container-lowest text-primary font-label-bold text-label-bold hover:bg-surface-container-low transition-colors active:scale-[0.98]">
+                    ปิด
+                </button>
+</div>
+</div>
+</div>
+<!-- Background Decoration (Optional Aesthetic) -->
+<div class="fixed inset-0 -z-10 opacity-40">
+<img alt="Professional modern office environment with minimalist clean lines and soft lighting" class="w-full h-full object-cover grayscale" data-alt="A wide-angle shot of a highly professional and modern office interior with minimalist architecture. The environment features clean white surfaces, deep navy blue accents, and lush green indoor plants. Large windows allow soft, diffused natural daylight to fill the space, creating a serene and trustworthy corporate atmosphere that emphasizes clarity and efficiency." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPaz4G7L1ipGOe2n3hna5nJTME50F2AfYI0sFWSztaBcTcYpXlt2BJI-_9bWaQzZcJ2Ym7FBCzGw1xmHy6YVYk6eHFCiECdZeX729Uy_wMKMY9ruj9B92P46IotLz5ua-f44UzUVWETRvAv1ldHI2m5z47OigRPMPZcLcr4xywLQqhhiYefEQLhAxR9T5vC_cPuwVibK7k693kom54HARU9YY70sEKDRjkkeX35V-Nlohzftgzn3GrhxURzf-aojPzKPIU6TECbew"/>
+</div>
+</body></html>

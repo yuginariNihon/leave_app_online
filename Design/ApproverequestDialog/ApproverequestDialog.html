@@ -1,0 +1,210 @@
+<!DOCTYPE html><html class="light" lang="th" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ยืนยันการอนุมัติ - ProcureFlow Enterprise</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#005235",
+                        "on-primary-fixed": "#171837",
+                        "surface-bright": "#f7f9fb",
+                        "on-surface": "#191c1e",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#5b5b7e",
+                        "outline-variant": "#c8c5ce",
+                        "tertiary-fixed": "#dde1ff",
+                        "tertiary": "#00031b",
+                        "on-tertiary-container": "#5b7bff",
+                        "outline": "#77767e",
+                        "on-secondary-container": "#00714b",
+                        "surface": "#f7f9fb",
+                        "secondary-container": "#55fbb4",
+                        "surface-container": "#eceef0",
+                        "on-primary-container": "#8383a8",
+                        "on-background": "#191c1e",
+                        "on-tertiary-fixed-variant": "#0036bc",
+                        "secondary-fixed": "#58feb7",
+                        "surface-variant": "#e0e3e5",
+                        "primary": "#020220",
+                        "on-primary-fixed-variant": "#434465",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-fixed": "#001355",
+                        "secondary-fixed-dim": "#2fe19c",
+                        "surface-container-low": "#f2f4f6",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#002113",
+                        "secondary": "#006c48",
+                        "inverse-on-surface": "#eff1f3",
+                        "tertiary-container": "#00155a",
+                        "primary-fixed": "#e1e0ff",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "tertiary-fixed-dim": "#b8c4ff",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#c3c3eb",
+                        "background": "#f7f9fb",
+                        "on-surface-variant": "#47464e",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#c3c3eb",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#1a1b3a",
+                        "inverse-surface": "#2d3133"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "8px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "gutter": "20px",
+                        "sm": "12px",
+                        "margin": "24px",
+                        "xl": "32px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .modal-blur {
+            backdrop-filter: blur(8px);
+            background-color: rgba(25, 28, 30, 0.4);
+        }
+        .approval-card {
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+        }
+        .step-pill {
+            background-color: #F1F5F9;
+            border: 1px solid #E2E8F0;
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen flex items-center justify-center p-margin">
+<!-- Modal Overlay -->
+<div class="fixed inset-0 modal-blur flex items-center justify-center z-50">
+<!-- Redesigned Confirmation Modal -->
+<div class="bg-surface-container-lowest w-full max-w-[480px] rounded-xl overflow-hidden shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant approval-card scale-100" style="opacity: 1; transform: scale(1) translateY(0px); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
+<!-- Top Color Bar (Subtle Brand Identity) -->
+<div class="h-1 bg-secondary"></div>
+<div class="p-xl">
+<!-- Header Section -->
+<div class="flex items-start gap-md mb-lg">
+<div class="flex-shrink-0 w-12 h-12 bg-secondary-container rounded-full flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined !text-[28px]" style="font-variation-settings: 'FILL' 0, 'wght' 600;">check_circle</span>
+</div>
+<div class="flex-grow pt-base">
+<h1 class="text-headline-md font-headline-md text-primary mb-xs">ยืนยันการอนุมัติคำขอลา 3 รายการ?</h1>
+<p class="text-body-md font-body-md text-on-surface-variant">
+                            การยืนยันนี้จะทำให้การขอจัดซื้อเข้าสู่ขั้นตอนถัดไปในระบบโดยทันที
+                        </p>
+</div>
+</div>
+<!-- Bento-style Summary Grid (High-end Detail) -->
+
+<!-- Item Preview -->
+<div class="space-y-sm mb-xl max-h-[240px] overflow-y-auto pr-2"><div class="flex items-center justify-between p-sm border-b border-outline-variant"><div class="flex items-center gap-sm"><span class="material-symbols-outlined text-on-surface-variant">event_available</span><span class="text-body-md font-body-md text-primary">ลาพักร้อน - นายสมชาย วิริยะ</span></div><span class="text-label-md font-label-md text-on-surface-variant">2 วัน (15-16 พ.ค.)</span></div><div class="flex items-center justify-between p-sm border-b border-outline-variant"><div class="flex items-center gap-sm"><span class="material-symbols-outlined text-on-surface-variant">event_note</span><span class="text-body-md font-body-md text-primary">ลากิจ - นางสาวนภา ใจดี</span></div><span class="text-label-md font-label-md text-on-surface-variant">1 วัน (18 พ.ค.)</span></div><div class="flex items-center justify-between p-sm border-b border-outline-variant"><div class="flex items-center gap-sm"><span class="material-symbols-outlined text-on-surface-variant">medical_services</span><span class="text-body-md font-body-md text-primary">ลาป่วย - นายวิชัย เรียนรู้</span></div><span class="text-label-md font-label-md text-on-surface-variant">0.5 วัน (14 พ.ค.)</span></div></div>
+<!-- Actions -->
+<div class="flex flex-col sm:flex-row items-center gap-sm">
+<button class="w-full sm:w-1/2 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-primary font-label-md text-label-md bg-surface-container-lowest hover:bg-surface-container-high transition-colors duration-200 active:scale-95">
+                        ปิด
+                    </button>
+<button class="w-full sm:w-1/2 h-10 flex items-center justify-center rounded-lg bg-secondary text-on-secondary font-label-md text-label-md hover:bg-on-secondary-container transition-all duration-200 shadow-sm active:scale-95">
+                        ยืนยันการอนุมัติ
+                    </button>
+</div>
+</div>
+<!-- Modal Footer Information -->
+<div class="bg-surface-container-low px-xl py-sm flex justify-between items-center border-t border-outline-variant">
+<span class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined !text-[14px]">lock</span>
+                    ตรวจสอบโดยระบบความปลอดภัยขั้นสูง
+                </span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">
+                    ID: 29384-AX
+                </span>
+</div>
+</div>
+</div>
+<!-- Background Content Placeholder (To give context to the modal) -->
+<div class="w-full max-w-6xl mx-auto opacity-20 pointer-events-none select-none">
+<div class="grid grid-cols-12 gap-lg">
+<div class="col-span-3 space-y-md">
+<div class="h-8 bg-surface-variant rounded w-3/4"></div>
+<div class="space-y-sm">
+<div class="h-10 bg-surface-variant rounded"></div>
+<div class="h-10 bg-surface-variant rounded"></div>
+<div class="h-10 bg-surface-variant rounded"></div>
+</div>
+</div>
+<div class="col-span-9 space-y-lg">
+<div class="h-12 bg-surface-variant rounded w-1/4"></div>
+<div class="grid grid-cols-3 gap-md">
+<div class="h-32 bg-surface-variant rounded"></div>
+<div class="h-32 bg-surface-variant rounded"></div>
+<div class="h-32 bg-surface-variant rounded"></div>
+</div>
+<div class="h-96 bg-surface-variant rounded"></div>
+</div>
+</div>
+</div>
+<script>
+        // Simple micro-interaction for the modal entrance
+        document.addEventListener('DOMContentLoaded', () => {
+            const card = document.querySelector('.approval-card');
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95) translateY(10px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1) translateY(0)';
+            }, 100);
+        });
+
+        // Toggle hover effect on primary button
+        const confirmBtn = document.querySelector('.bg-secondary');
+        confirmBtn.addEventListener('mouseenter', () => {
+            confirmBtn.style.boxShadow = '0 10px 15px -3px rgba(0, 108, 72, 0.2)';
+        });
+        confirmBtn.addEventListener('mouseleave', () => {
+            confirmBtn.style.boxShadow = 'none';
+        });
+    </script>
+
+
+</body></html>
