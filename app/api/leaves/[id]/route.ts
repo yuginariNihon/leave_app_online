@@ -108,6 +108,7 @@ export async function PATCH(
       endDate: parsed.data.endDate,
       reason: parsed.data.reason,
       totalDays: parsed.data.totalDays,
+      leavePeriod: parsed.data.leavePeriod,
     });
 
     return NextResponse.json({ success: true });

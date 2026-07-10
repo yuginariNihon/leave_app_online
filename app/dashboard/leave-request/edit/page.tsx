@@ -54,6 +54,7 @@ export default function EditLeavePage() {
       startDate: "",
       endDate: "",
       reason: "",
+      leavePeriod: "full_day",
     },
   });
 
@@ -95,6 +96,7 @@ export default function EditLeavePage() {
             startDate: dateOnly(detail.startDate),
             endDate: dateOnly(detail.endDate),
             reason: detail.reason ?? "",
+            leavePeriod: detail.leavePeriod ?? "full_day",
           });
         }
       } catch (err) {
@@ -120,12 +122,15 @@ export default function EditLeavePage() {
   // Watch form values
   const startDate = form.watch("startDate");
   const endDate = form.watch("endDate");
+  const leavePeriod = form.watch("leavePeriod");
 
   // Calculate leave days
   const dayCount = useMemo(() => {
     if (!startDate || !endDate) return 0;
-    return countInclusiveDays(startDate, endDate);
-  }, [startDate, endDate]);
+    const fullDays = countInclusiveDays(startDate, endDate);
+    if (leavePeriod && leavePeriod !== "full_day") return fullDays / 2;
+    return fullDays;
+  }, [startDate, endDate, leavePeriod]);
 
   // Submit
   const handleSubmit = async (values: LeaveFormValues) => {
@@ -140,14 +145,15 @@ export default function EditLeavePage() {
       const res = await fetch(`/api/leaves/${leaveId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          leaveTypeId: values.leaveTypeId,
-          leaveCaseId: values.leaveCaseId,
-          startDate: values.startDate,
-          endDate: values.endDate,
-          reason: values.reason,
-          totalDays: dayCount,
-        }),
+      body: JSON.stringify({
+        leaveTypeId: values.leaveTypeId,
+        leaveCaseId: values.leaveCaseId,
+        startDate: values.startDate,
+        endDate: values.endDate,
+        reason: values.reason,
+        totalDays: dayCount,
+        leavePeriod: values.leavePeriod,
+      }),
       });
 
       const json = await res.json();

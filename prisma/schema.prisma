@@ -255,6 +255,7 @@ model DataLeave {
   current_approval_level Int @default(1)
 
   cancelled_at DateTime? @db.Timestamp(6)
+  cancel_reason String? @db.VarChar(500)
 
   created_at   DateTime @default(now()) @db.Timestamp(6)
   updated_at   DateTime @default(now()) @updatedAt @db.Timestamp(6)
@@ -496,6 +497,17 @@ model PageRolePermission {
 
   @@unique([page_resource_id, role_id])
   @@index([role_id])
+}
+
+model Holiday {
+  holiday_id    String   @id @default(uuid()) @db.Uuid
+  holiday_name  String   @db.VarChar(200)
+  holiday_date  DateTime @db.Date
+  is_recurring  Boolean  @default(false)
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  @@unique([holiday_date, holiday_name])
 }
 
 /**

@@ -53,6 +53,7 @@ export default function LeaveRequestPage() {
       startDate: "",
       endDate: "",
       reason: "",
+      leavePeriod: "full_day",
     },
   });
 
@@ -83,12 +84,15 @@ export default function LeaveRequestPage() {
   const startDate = form.watch("startDate");
   const endDate = form.watch("endDate");
   const leaveTypeId = form.watch("leaveTypeId");
+  const leavePeriod = form.watch("leavePeriod");
 
   // Calculate leave days
   const dayCount = useMemo(() => {
     if (!startDate || !endDate) return 0;
-    return countInclusiveDays(startDate, endDate);
-  }, [startDate, endDate]);
+    const fullDays = countInclusiveDays(startDate, endDate);
+    if (leavePeriod && leavePeriod !== "full_day") return fullDays / 2;
+    return fullDays;
+  }, [startDate, endDate, leavePeriod]);
 
   // Check if requested days exceed remaining quota
   const totalRemaining = leaveTypeId ? leaveQuota[leaveTypeId]?.remaining ?? Infinity : Infinity;
@@ -112,6 +116,8 @@ export default function LeaveRequestPage() {
       if (start) form.setValue("startDate", start);
       if (end) form.setValue("endDate", end);
       if (reason) form.setValue("reason", reason);
+      const period = searchParams.get("leavePeriod");
+      if (period) form.setValue("leavePeriod", period as "full_day" | "morning" | "afternoon");
     }
   }, [searchParams, form]);
 
@@ -141,6 +147,7 @@ export default function LeaveRequestPage() {
         endDate: values.endDate,
         reason: values.reason,
         totalDays: dayCount,
+        leavePeriod: values.leavePeriod,
       }),
     });
 

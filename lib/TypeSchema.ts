@@ -21,6 +21,7 @@ export const leaveFormSchema = z.object({
   startDate: z.string().min(1, "กรุณาเลือกวันที่เริ่มต้น"),
   endDate: z.string().min(1, "กรุณาเลือกวันที่สิ้นสุด"),
   reason: z.string().min(10, "กรุณากรอกเหตุผลการลาอย่างน้อย 10 ตัวอักษร"),
+  leavePeriod: z.enum(["full_day", "morning", "afternoon"]).optional(),
 });
 
 export type LeaveFormValues = z.infer<typeof leaveFormSchema>;
@@ -33,6 +34,7 @@ export const createLeaveRequestSchema = z.object({
   endDate: z.string().min(1),
   reason: z.string().trim().min(10).optional(),
   totalDays: z.number().positive().optional(),
+  leavePeriod: z.enum(["full_day", "morning", "afternoon"]).optional(),
 });
 
 export type CreateLeaveRequestValues = z.infer<typeof createLeaveRequestSchema>;
@@ -239,4 +241,24 @@ export const createWorkflowSchema = z.object({
 });
 
 export type CreateWorkflowValues = z.infer<typeof createWorkflowSchema>;
+
+// ────────────────────────────────────
+// Section Schemas
+// ────────────────────────────────────
+
+export const createSectionSchema = z.object({
+  sectionCode: z.string().min(1, "กรุณากรอกรหัสส่วนงาน"),
+  sectionName: z.string().min(1, "กรุณากรอกชื่อส่วนงาน"),
+  departmentId: z.string().uuid("กรุณาเลือกแผนก"),
+});
+
+export type CreateSectionValues = z.infer<typeof createSectionSchema>;
+
+export const updateSectionSchema = z.object({
+  sectionCode: z.string().min(1, "กรุณากรอกรหัสส่วนงาน"),
+  sectionName: z.string().min(1, "กรุณากรอกชื่อส่วนงาน"),
+  departmentId: z.string().uuid("กรุณาเลือกแผนก"),
+});
+
+export type UpdateSectionValues = z.infer<typeof updateSectionSchema>;
 

@@ -6,7 +6,7 @@ import { useUser } from "@/lib/user-context";
 import {
   GitBranch, LayoutDashboard, ShieldCheck, History, Users, UserPlus, Upload,
   BarChart3, Building2, Briefcase, Tags, Menu, ChevronDown, ChevronRight, Plus, UserCog,
-  ClipboardList, X, CaseSensitive, Shield,
+  ClipboardList, X, CaseSensitive, Shield, CalendarDays, FileText, User,
 } from "lucide-react";
 import {
   Sidebar as SidebarRoot,
@@ -86,10 +86,17 @@ export function SidebarMenu() {
     adminRoles: pathname.startsWith("/dashboard/admin/roles"),
     adminPagePermissions: pathname.startsWith("/dashboard/admin/page-permissions"),
     staffRoles: pathname.startsWith("/dashboard/hr/staff-roles"),
+    sections: pathname.startsWith("/dashboard/hr/sections"),
+    holidays: pathname.startsWith("/dashboard/hr/holidays"),
+    profile: pathname.startsWith("/dashboard/profile"),
     leaveReport: pathname.startsWith("/dashboard/hr/leave-report"),
     workflows: pathname.startsWith("/dashboard/hr/workflows"),
     supervisorApproval: pathname === "/dashboard/approval-requests",
     supervisorHistory: pathname.startsWith("/dashboard/approval-requests/history"),
+    employeeDashboard: pathname === "/dashboard",
+    leaveRequest: pathname.startsWith("/dashboard/leave-request"),
+    leaveHistory: pathname.startsWith("/dashboard/leave-history"),
+    leaveDetails: pathname.startsWith("/dashboard/leave-details"),
   };
 
   function renderHRSidebar() {
@@ -361,6 +368,30 @@ export function SidebarMenu() {
                       </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      className={cn(btnClass(activePaths.sections), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                      onClick={() => handleNav("/dashboard/hr/sections")}
+                      tooltip={open ? undefined : "จัดการแผนกย่อย"}
+                    >
+                      <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                        <Building2 className={iconClass(activePaths.sections)} />
+                        {open && <span>จัดการแผนกย่อย</span>}
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      className={cn(btnClass(activePaths.holidays), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                      onClick={() => handleNav("/dashboard/hr/holidays")}
+                      tooltip={open ? undefined : "จัดการวันหยุด"}
+                    >
+                      <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                        <CalendarDays className={iconClass(activePaths.holidays)} />
+                        {open && <span>จัดการวันหยุด</span>}
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </>
               )}
               <SidebarMenuItem>
@@ -438,7 +469,70 @@ export function SidebarMenu() {
     );
   }
 
-  if (!isHR && !isApprover) return null;
+  function renderEmployeeSidebar() {
+    const linkClass = (isActive: boolean) => cn(
+      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer border-0 w-full text-left",
+      isActive
+        ? "bg-[#f2f4f6] text-[#0F172A] font-semibold"
+        : "text-slate-600 hover:bg-[#f2f4f6] hover:text-[#0F172A]",
+    );
+
+    return (
+      <SidebarGroup>
+        {open && (
+          <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            เมนูพนักงาน
+          </SidebarGroupLabel>
+        )}
+        <SidebarGroupContent>
+          <SidebarMenuList className="gap-1">
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className={cn(btnClass(activePaths.employeeDashboard), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                onClick={() => handleNav("/dashboard")}
+                tooltip={open ? undefined : "หน้าหลัก"}
+              >
+                <LayoutDashboard className={iconClass(activePaths.employeeDashboard)} />
+                {open && <span>หน้าหลัก</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className={cn(btnClass(activePaths.leaveRequest), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                onClick={() => handleNav("/dashboard/leave-request")}
+                tooltip={open ? undefined : "คำขอลา"}
+              >
+                <FileText className={iconClass(activePaths.leaveRequest)} />
+                {open && <span>คำขอลา</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className={cn(btnClass(activePaths.leaveHistory), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                onClick={() => handleNav("/dashboard/leave-history")}
+                tooltip={open ? undefined : "ประวัติการลา"}
+              >
+                <History className={iconClass(activePaths.leaveHistory)} />
+                {open && <span>ประวัติการลา</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className={cn(btnClass(activePaths.profile), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                onClick={() => handleNav("/dashboard/profile")}
+                tooltip={open ? undefined : "โปรไฟล์"}
+              >
+                <User className={iconClass(activePaths.profile)} />
+                {open && <span>โปรไฟล์</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenuList>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    );
+  }
+
+  const isEmployee = !isHR && !isApprover;
 
   const sidebarContent = (
     <>
@@ -460,7 +554,7 @@ export function SidebarMenu() {
 
       {/* Navigation */}
       <SidebarContent className={cn("py-4 overflow-y-auto transition-all duration-300 ease-in-out ![&::-webkit-scrollbar]:block ![&::-webkit-scrollbar]:w-1.5 ![&::-webkit-scrollbar-thumb]:bg-slate-300 ![&::-webkit-scrollbar-thumb]:rounded-full", !isMobile && open ? "px-3" : "px-2")}>
-        {isHR ? renderHRSidebar() : renderSupervisorSidebar()}
+        {isHR ? renderHRSidebar() : isApprover ? renderSupervisorSidebar() : renderEmployeeSidebar()}
       </SidebarContent>
     </>
   );

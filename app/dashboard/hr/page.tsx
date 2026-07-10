@@ -2,7 +2,7 @@ import React from "react";
 import { requireSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, History, Clock, FileText, Users, Building2, Briefcase, Tags, UserCog, GitBranch, BarChart3, CaseSensitive, Shield, UserPlus } from "lucide-react";
+import { ShieldCheck, History, Clock, FileText, Users, Building2, Briefcase, Tags, UserCog, GitBranch, BarChart3, CaseSensitive, Shield, UserPlus, CalendarDays } from "lucide-react";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import {
   getDashboardKpiData,
@@ -177,6 +177,26 @@ export default async function HrDashboardPage() {
                 <BarChart3 className="w-5 h-5 text-sky-600" />
               </div>
               <p className="font-semibold text-sm text-[#1a1a40]">รายงานการลา</p>
+            </Link>
+
+            <Link
+              href="/dashboard/hr/sections"
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow flex flex-col items-center gap-2 text-center"
+            >
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-indigo-600" />
+              </div>
+              <p className="font-semibold text-sm text-[#1a1a40]">จัดการแผนกย่อย</p>
+            </Link>
+
+            <Link
+              href="/dashboard/hr/holidays"
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow flex flex-col items-center gap-2 text-center"
+            >
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                <CalendarDays className="w-5 h-5 text-amber-600" />
+              </div>
+              <p className="font-semibold text-sm text-[#1a1a40]">จัดการวันหยุด</p>
             </Link>
 
             {user.roles.includes("SUPER_ADMIN") && (

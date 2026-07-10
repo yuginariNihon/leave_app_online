@@ -7,6 +7,7 @@ import { Printer, XCircle, X, AlertTriangle, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
 import { formatShortDate, formatLeaveDateRange } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -25,7 +26,7 @@ type LeaveDetailsActionsProps = {
   durationDays: number;
   reason: string;
   onPrint: () => void;
-  onCancel?: () => void;
+  onCancel?: (cancelReason: string) => void;
   isCancelling?: boolean;
 };
 
@@ -43,11 +44,17 @@ export function LeaveDetailsActions({
   const isPending = status === LeaveStatus.pending;
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (open) setCancelReason("");
+  };
 
   return (
     <div className="mt-10 flex flex-col md:flex-row justify-center gap-4">
       {isPending && (
-        <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <AlertDialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <Button
             variant="outline"
             className="border-red-200 text-red-600 px-10 h-14 rounded-xl font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-all flex items-center gap-3"
@@ -95,6 +102,18 @@ export function LeaveDetailsActions({
                 </div>
               </section>
 
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">เหตุผลในการยกเลิก</label>
+                <Textarea
+                  placeholder="โปรดระบุเหตุผลที่ยกเลิก..."
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full resize-none"
+                  rows={3}
+                  maxLength={500}
+                />
+              </div>
+
               <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-2 rounded-r">
                 <div className="flex">
                   <div className="flex-shrink-0">
@@ -117,7 +136,7 @@ export function LeaveDetailsActions({
                 ปิด
               </AlertDialogCancel>
               <LoadingButton
-                onClick={onCancel}
+                onClick={() => onCancel?.(cancelReason)}
                 isLoading={isCancelling}
                 loadingText="กำลังยกเลิก..."
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 h-auto rounded-lg shadow-md transition-all active:scale-[0.98] mt-3 disabled:opacity-70 disabled:cursor-not-allowed"

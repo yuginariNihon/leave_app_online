@@ -44,6 +44,7 @@ async function buildCreateLeaveRequestInput(
     endDate: input.endDate,
     reason: input.reason,
     totalDays: input.totalDays,
+    leavePeriod: input.leavePeriod,
   };
 }
 
@@ -56,6 +57,7 @@ function serializeDataLeave(leave: Awaited<ReturnType<typeof createLeaveRequest>
     start_date: leave.start_date?.toISOString() ?? null,
     end_date: leave.end_date?.toISOString() ?? null,
     total_days: leave.total_days?.toString() ?? null,
+    leave_period: leave.leave_period,
     reason: leave.reason,
     leave_status: leave.leave_status,
     created_at: leave.created_at.toISOString(),

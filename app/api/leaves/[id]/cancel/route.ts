@@ -14,9 +14,13 @@ export async function PATCH(
   }
 
   const { id } = await params;
+  let body: { cancelReason?: string } = {};
+  try {
+    body = await _request.json();
+  } catch { /* no body */ }
 
   try {
-    await cancelLeaveRequest(id, session.staffId);
+    await cancelLeaveRequest(id, session.staffId, body.cancelReason);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -226,10 +226,48 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
         </div>
       </div>
 
+      {/* ช่วงเวลา */}
+      <div className="space-y-3">
+        <Label className="text-sm font-semibold text-slate-700">
+          ช่วงเวลา
+        </Label>
+        <Controller
+          control={control}
+          name="leavePeriod"
+          render={({ field }) => (
+            <div className="flex flex-wrap gap-6">
+              {[
+                { value: "full_day", label: "เต็มวัน" },
+                { value: "morning", label: "ครึ่งเช้า" },
+                { value: "afternoon", label: "ครึ่งบ่าย" },
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${
+                    (field.value || "full_day") === option.value
+                      ? "border-[#100d41] bg-[#100d41]/5 text-[#100d41] font-semibold"
+                      : "border-gray-200 bg-white text-slate-600 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={option.value}
+                    checked={(field.value || "full_day") === option.value}
+                    onChange={() => field.onChange(option.value)}
+                    className="sr-only"
+                  />
+                  <span className="text-sm">{option.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        />
+      </div>
+
       {/* จำนวนวันลา */}
       <div className="rounded-lg inline-block border border-slate-100">
         <span className="text-[#100d41] font-medium text-lg">
-          จำนวนวันลา : <span className="font-bold text-2xl ml-1">{dayCount.toString()}</span> วัน
+          จำนวนวันลา : <span className="font-bold text-2xl ml-1">{dayCount % 1 === 0 ? dayCount.toString() : dayCount.toFixed(1)}</span> วัน
         </span>
       </div>
       {isQuotaExceeded && (

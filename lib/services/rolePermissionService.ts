@@ -26,6 +26,12 @@ const DEFAULT_PAGES: { pageKey: string; pageName: string; groupName: string; def
   { pageKey: "manage_roles",      pageName: "จัดการบทบาทพนักงาน",      groupName: "จัดการระบบ", defaultRoleNames: ["SUPER_ADMIN"] },
   { pageKey: "manage_staff_roles",pageName: "จัดการสิทธิ์ของพนักงาน",   groupName: "จัดการระบบ", defaultRoleNames: ["SUPER_ADMIN"] },
   { pageKey: "manage_page_permissions", pageName: "จัดการสิทธิ์การเข้าถึงหน้า", groupName: "จัดการระบบ", defaultRoleNames: ["SUPER_ADMIN"] },
+  { pageKey: "manage_sections",    pageName: "จัดการแผนกย่อย",      groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
+  { pageKey: "manage_leave_quota", pageName: "จัดการสิทธิ์วันลา",    groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
+  { pageKey: "manage_holidays",    pageName: "จัดการวันหยุด",       groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
+
+  // Employee pages
+  { pageKey: "user_profile",  pageName: "โปรไฟล์ของฉัน",  groupName: "เมนูพนักงาน", defaultRoleNames: ["STAFF", "Employee", "APPROVER"] },
 
   // Supervisor
   { pageKey: "supervisor_approval", pageName: "อนุมัติคำขอ",              groupName: "เมนูหัวหน้า", defaultRoleNames: ["APPROVER"] },

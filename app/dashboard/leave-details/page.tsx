@@ -113,7 +113,7 @@ export default function LeaveDetailsPage() {
     fetchDetail();
   }, [fetchDetail]);
 
-  const handleCancel = async () => {
+  const handleCancel = async (cancelReason?: string) => {
     if (!leaveId) return;
 
     setCancelling(true);
@@ -121,6 +121,8 @@ export default function LeaveDetailsPage() {
     try {
       const res = await fetch(`/api/leaves/${leaveId}/cancel`, {
         method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cancelReason }),
       });
       const json = await res.json();
 
@@ -192,16 +194,27 @@ export default function LeaveDetailsPage() {
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-3">
-            <LeaveDetailsMainInfo
-              leaveTypeName={detail.leaveTypeName}
-              requestedDate={detail.createdAt}
-              startDate={detail.startDate}
-              endDate={detail.endDate}
-              durationDays={detail.totalDays}
-              reason={detail.reason ?? ""}
-              attachments={detail.attachments}
-              supervisor={detail.supervisor ?? undefined}
-            />
+            <div className="lg:col-span-2">
+              <LeaveDetailsMainInfo
+                leaveTypeName={detail.leaveTypeName}
+                requestedDate={detail.createdAt}
+                startDate={detail.startDate}
+                endDate={detail.endDate}
+                durationDays={detail.totalDays}
+                reason={detail.reason ?? ""}
+                attachments={detail.attachments}
+                supervisor={detail.supervisor ?? undefined}
+              />
+
+              {detail.status === "cancelled" && detail.cancelReason && (
+                <div className="mx-6 md:mx-8 mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                  <label className="text-md font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                    เหตุผลในการยกเลิก
+                  </label>
+                  <p className="text-slate-700">{detail.cancelReason}</p>
+                </div>
+              )}
+            </div>
 
             <LeaveDetailsApprovalSidebar
               approvals={detail.approvals}

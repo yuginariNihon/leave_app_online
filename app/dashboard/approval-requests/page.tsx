@@ -73,8 +73,8 @@ export default function ApprovalRequestsPage() {
         if (res.ok) {
           setLeaveTypeOptions(json.data?.leaveTypes ?? []);
         }
-      } catch {
-        // silently fail
+      } catch (err) {
+        console.warn("Failed to fetch leave type options:", err);
       }
     }
     loadTypeOptions();

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Download, FileText } from "lucide-react";
+import { Search, Download, FileText, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,8 @@ import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
 import { statusTextMap } from "@/components/leave-history/types";
 import { formatDateOnly, formatLeaveDateRange, formatDays, downloadCsv } from "@/lib/utils";
+import { toast } from "sonner";
+import html2canvas from "html2canvas";
 
 type ReportRecord = {
   leaveId: string;
@@ -60,6 +62,7 @@ export default function LeaveReportPage() {
   const [cancelledCount, setCancelledCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const [departmentOptions, setDepartmentOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<Array<{ id: string; label: string }>>([]);
@@ -218,8 +221,28 @@ export default function LeaveReportPage() {
           .join("\n");
 
       downloadCsv(`leave_report_${new Date().toISOString().split("T")[0]}.csv`, csvString);
+    } catch (err) {
+      console.warn("CSV export failed:", err);
+    }
+  };
+
+  const exportPDF = async () => {
+    const input = document.getElementById("leave-report-table");
+    if (!input) return;
+    setPdfLoading(true);
+    try {
+      const canvas = await html2canvas(input);
+      const imgData = canvas.toDataURL("image/png");
+      const PdfClass = (await import("jspdf")).jsPDF;
+      const pdf = new PdfClass("l", "mm", "a4");
+      const imgWidth = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      pdf.save(`leave_report_${new Date().toISOString().split("T")[0]}.pdf`);
     } catch {
-      // silently fail
+      toast.error("Export PDF failed");
+    } finally {
+      setPdfLoading(false);
     }
   };
 
@@ -332,6 +355,15 @@ export default function LeaveReportPage() {
                     <Download className="w-4 h-4" />
                     Export CSV
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={exportPDF}
+                    disabled={pdfLoading}
+                    className="h-11 px-4 flex items-center gap-2 rounded-xl"
+                  >
+                    {pdfLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                    Export PDF
+                  </Button>
                 </div>
               </div>
             </div>
@@ -343,7 +375,7 @@ export default function LeaveReportPage() {
             <div className="flex justify-center items-center py-20 text-red-500">{error}</div>
           ) : (
             <>
-              <Table containerClassName="overflow-auto max-h-[500px]">
+              <Table id="leave-report-table" containerClassName="overflow-auto max-h-[500px]">
                 <TableHeader className="sticky top-0 z-10 bg-[#1e1b4b]">
                   <TableRow className="hover:bg-transparent border-none">
                     <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase whitespace-nowrap">รหัสพนักงาน</TableHead>

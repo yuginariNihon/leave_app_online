@@ -1,4 +1,4 @@
-import { LeaveStatus, ApprovalStatus, Prisma, EmploymentStatus } from "@/lib/generated/prisma/client";
+import { LeaveStatus, ApprovalStatus, Prisma, EmploymentStatus, LeavePeriod } from "@/lib/generated/prisma/client";
 import type { ApproverType } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import type { LeaveFormOptions } from "@/lib/TypeSchema";
@@ -15,6 +15,7 @@ export type CreateLeaveRequestInput = {
   endDate: string | Date;
   reason?: string;
   totalDays?: number;
+  leavePeriod?: string;
 };
 
 /**
@@ -162,6 +163,7 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
         start_date: startDate,
         end_date: endDate,
         total_days: new Prisma.Decimal(totalDays),
+        leave_period: input.leavePeriod as LeavePeriod,
         reason: input.reason,
         leave_status: allAutoApproved
           ? LeaveStatus.approved
@@ -206,6 +208,7 @@ export type UpdateLeaveRequestInput = {
   endDate: string | Date;
   reason?: string;
   totalDays?: number;
+  leavePeriod?: string;
 };
 
 /**
@@ -243,13 +246,14 @@ export async function updateLeaveRequest(
       start_date: startDate,
       end_date: endDate,
       total_days: new Prisma.Decimal(totalDays),
+      leave_period: input.leavePeriod as LeavePeriod | undefined,
       reason: input.reason,
       updated_at: new Date(),
     },
   });
 }
 
-export async function cancelLeaveRequest(leaveId: string, staffId: string) {
+export async function cancelLeaveRequest(leaveId: string, staffId: string, cancelReason?: string) {
   const leave = await prisma.dataLeave.findFirst({
     where: {
       leave_id: leaveId,
@@ -271,6 +275,7 @@ export async function cancelLeaveRequest(leaveId: string, staffId: string) {
       data: {
         leave_status: LeaveStatus.cancelled,
         cancelled_at: new Date(),
+        cancel_reason: cancelReason || null,
         updated_at: new Date(),
       },
     }),
@@ -452,6 +457,7 @@ export type LeaveDetailResponse = {
   createdAt: string;
   startDate: string | null;
   endDate: string | null;
+  leavePeriod: string;
   leaveTypeId: string;
   leaveCaseId: string;
   leaveTypeName: string;
@@ -463,6 +469,7 @@ export type LeaveDetailResponse = {
   positionName: string | null;
   approvals: LeaveApprovalItem[];
   attachments: LeaveAttachmentItem[];
+  cancelReason: string | null;
   supervisor: { name: string; role: string } | null;
   quota: { remaining: number; total: number; percent: number } | null;
 };
@@ -548,6 +555,7 @@ export async function getLeaveDetailById(
     createdAt: leave.created_at.toISOString(),
     startDate: leave.start_date?.toISOString() ?? null,
     endDate: leave.end_date?.toISOString() ?? null,
+    leavePeriod: leave.leave_period ?? "full_day",
     leaveTypeId: leave.leave_type_id,
     leaveCaseId: leave.leave_case_id,
     leaveTypeName: leave.leaveType.leave_type_name,
@@ -598,6 +606,7 @@ export async function getLeaveDetailById(
       fileSize: a.file_size,
       mimeType: a.mime_type,
     })),
+    cancelReason: leave.cancel_reason ?? null,
     supervisor: leave.staff.supervisors[0]?.supervisor
       ? {
           name: leave.staff.supervisors[0].supervisor.name,
@@ -1614,6 +1623,172 @@ export async function togglePositionActive(id: string, isActive: boolean) {
 }
 
 // ────────────────────────────────────
+// Section CRUD
+// ────────────────────────────────────
+
+export type SectionListItem = {
+  sectionId: string;
+  sectionCode: string;
+  sectionName: string;
+  departmentId: string;
+  departmentName: string;
+  isActive: boolean;
+};
+
+export async function getSections(departmentId?: string): Promise<SectionListItem[]> {
+  const where: Record<string, unknown> = {};
+  if (departmentId) {
+    where.department_id = departmentId;
+  }
+
+  const sections = await prisma.section.findMany({
+    where,
+    orderBy: { section_name: "asc" },
+    include: {
+      department: { select: { department_name: true } },
+    },
+  });
+
+  return sections.map((s) => ({
+    sectionId: s.section_id,
+    sectionCode: s.section_code,
+    sectionName: s.section_name,
+    departmentId: s.department_id,
+    departmentName: s.department.department_name,
+    isActive: s.is_active,
+  }));
+}
+
+export async function getSectionById(id: string) {
+  const section = await prisma.section.findUnique({
+    where: { section_id: id },
+    include: {
+      department: { select: { department_id: true, department_name: true } },
+    },
+  });
+  if (!section) return null;
+  return {
+    sectionId: section.section_id,
+    sectionCode: section.section_code,
+    sectionName: section.section_name,
+    departmentId: section.department_id,
+    departmentName: section.department.department_name,
+    isActive: section.is_active,
+  };
+}
+
+export async function createSection(data: {
+  sectionCode: string;
+  sectionName: string;
+  departmentId: string;
+}) {
+  const existing = await prisma.section.findUnique({
+    where: { section_code: data.sectionCode },
+    select: { section_id: true },
+  });
+  if (existing) {
+    throw new Error("รหัสส่วนงานนี้มีอยู่ในระบบแล้ว");
+  }
+
+  const dept = await prisma.department.findUnique({
+    where: { department_id: data.departmentId },
+    select: { department_id: true },
+  });
+  if (!dept) {
+    throw new Error("ไม่พบแผนกที่เลือก");
+  }
+
+  const section = await prisma.section.create({
+    data: {
+      section_code: data.sectionCode,
+      section_name: data.sectionName,
+      department_id: data.departmentId,
+    },
+  });
+
+  return {
+    sectionId: section.section_id,
+    sectionCode: section.section_code,
+    sectionName: section.section_name,
+    departmentId: section.department_id,
+    isActive: section.is_active,
+  };
+}
+
+export async function updateSection(
+  id: string,
+  data: {
+    sectionCode: string;
+    sectionName: string;
+    departmentId: string;
+  },
+) {
+  const existing = await prisma.section.findFirst({
+    where: {
+      section_code: data.sectionCode,
+      section_id: { not: id },
+    },
+    select: { section_id: true },
+  });
+  if (existing) {
+    throw new Error("รหัสส่วนงานนี้มีอยู่ในระบบแล้ว");
+  }
+
+  const dept = await prisma.department.findUnique({
+    where: { department_id: data.departmentId },
+    select: { department_id: true },
+  });
+  if (!dept) {
+    throw new Error("ไม่พบแผนกที่เลือก");
+  }
+
+  const section = await prisma.section.update({
+    where: { section_id: id },
+    data: {
+      section_code: data.sectionCode,
+      section_name: data.sectionName,
+      department_id: data.departmentId,
+      updated_at: new Date(),
+    },
+  });
+
+  return {
+    sectionId: section.section_id,
+    sectionCode: section.section_code,
+    sectionName: section.section_name,
+    departmentId: section.department_id,
+    isActive: section.is_active,
+  };
+}
+
+export async function toggleSectionActive(id: string, isActive: boolean) {
+  const section = await prisma.section.findUnique({
+    where: { section_id: id },
+    select: { section_id: true },
+  });
+  if (!section) {
+    throw new Error("ไม่พบส่วนงาน");
+  }
+
+  if (!isActive) {
+    const staffCount = await prisma.staffInfo.count({
+      where: { section_id: id, is_active: true },
+    });
+    if (staffCount > 0) {
+      throw new Error("ไม่สามารถปิดส่วนงานได้ เนื่องจากยังมีพนักงานที่ใช้งานอยู่ในส่วนงานนี้");
+    }
+  }
+
+  await prisma.section.update({
+    where: { section_id: id },
+    data: {
+      is_active: isActive,
+      updated_at: new Date(),
+    },
+  });
+}
+
+// ────────────────────────────────────
 // LeaveType CRUD
 // ────────────────────────────────────
 
@@ -2510,4 +2685,188 @@ export async function updateStaffRoles(
       })),
     });
   }
+}
+
+// ────────────────────────────────────
+// Holiday CRUD
+// ────────────────────────────────────
+
+export type HolidayItem = {
+  holidayId: string;
+  holidayName: string;
+  holidayDate: string;
+  isRecurring: boolean;
+};
+
+export async function getHolidays(): Promise<HolidayItem[]> {
+  const holidays = await prisma.holiday.findMany({
+    orderBy: { holiday_date: "asc" },
+  });
+
+  return holidays.map((h) => ({
+    holidayId: h.holiday_id,
+    holidayName: h.holiday_name,
+    holidayDate: h.holiday_date.toISOString().split("T")[0],
+    isRecurring: h.is_recurring,
+  }));
+}
+
+export async function createHoliday(data: {
+  holidayName: string;
+  holidayDate: string;
+  isRecurring?: boolean;
+}): Promise<HolidayItem> {
+  const holiday = await prisma.holiday.create({
+    data: {
+      holiday_name: data.holidayName,
+      holiday_date: new Date(data.holidayDate),
+      is_recurring: data.isRecurring ?? false,
+    },
+  });
+
+  return {
+    holidayId: holiday.holiday_id,
+    holidayName: holiday.holiday_name,
+    holidayDate: holiday.holiday_date.toISOString().split("T")[0],
+    isRecurring: holiday.is_recurring,
+  };
+}
+
+export async function updateHoliday(
+  id: string,
+  data: {
+    holidayName: string;
+    holidayDate: string;
+    isRecurring?: boolean;
+  },
+): Promise<HolidayItem> {
+  const holiday = await prisma.holiday.update({
+    where: { holiday_id: id },
+    data: {
+      holiday_name: data.holidayName,
+      holiday_date: new Date(data.holidayDate),
+      is_recurring: data.isRecurring ?? false,
+      updated_at: new Date(),
+    },
+  });
+
+  return {
+    holidayId: holiday.holiday_id,
+    holidayName: holiday.holiday_name,
+    holidayDate: holiday.holiday_date.toISOString().split("T")[0],
+    isRecurring: holiday.is_recurring,
+  };
+}
+
+export async function deleteHoliday(id: string): Promise<void> {
+  await prisma.holiday.delete({
+    where: { holiday_id: id },
+  });
+}
+
+// ──────────────────────────────────────────────
+// Self-Service Profile (Employee)
+// ──────────────────────────────────────────────
+
+export type StaffProfileData = {
+  staffId: string;
+  staffCode: string;
+  name: string;
+  phoneNumber: string | null;
+  email: string | null;
+  departmentName: string | null;
+  positionName: string | null;
+};
+
+export async function getMyProfile(staffId: string): Promise<StaffProfileData | null> {
+  const staff = await prisma.staffInfo.findUnique({
+    where: { staff_id: staffId },
+    select: {
+      staff_id: true,
+      staff_code: true,
+      name: true,
+      phoneNumber: true,
+      department: { select: { department_name: true } },
+      position: { select: { position_name: true } },
+      user: { select: { email: true } },
+    },
+  });
+
+  if (!staff) return null;
+
+  return {
+    staffId: staff.staff_id,
+    staffCode: staff.staff_code,
+    name: staff.name,
+    phoneNumber: staff.phoneNumber ?? null,
+    email: staff.user?.email ?? null,
+    departmentName: staff.department?.department_name ?? null,
+    positionName: staff.position?.position_name ?? null,
+  };
+}
+
+export async function updateMyProfile(
+  staffId: string,
+  data: { name: string; phoneNumber?: string | null; email?: string | null },
+): Promise<StaffProfileData> {
+  const staff = await prisma.staffInfo.update({
+    where: { staff_id: staffId },
+    data: {
+      name: data.name,
+      phoneNumber: data.phoneNumber ?? null,
+      updated_at: new Date(),
+    },
+    select: {
+      staff_id: true,
+      staff_code: true,
+      name: true,
+      phoneNumber: true,
+      department: { select: { department_name: true } },
+      position: { select: { position_name: true } },
+      user: { select: { email: true } },
+    },
+  });
+
+  if (data.email !== undefined) {
+    if (staff.user) {
+      await prisma.user.update({
+        where: { staff_id: staffId },
+        data: { email: data.email || null },
+      });
+    } else if (data.email) {
+      const { randomBytes } = await import("crypto");
+      const passwordHash = await hashPassword(staff.phoneNumber || randomBytes(5).toString("hex"));
+      await prisma.user.create({
+        data: {
+          staff_id: staffId,
+          email: data.email,
+          password_hash: passwordHash,
+        },
+      });
+    }
+  }
+
+  // Re-fetch after user update to get fresh email
+  const updated = await prisma.staffInfo.findUnique({
+    where: { staff_id: staffId },
+    select: {
+      staff_id: true,
+      staff_code: true,
+      name: true,
+      phoneNumber: true,
+      department: { select: { department_name: true } },
+      position: { select: { position_name: true } },
+      user: { select: { email: true } },
+    },
+  });
+
+  return {
+    staffId: updated!.staff_id,
+    staffCode: updated!.staff_code,
+    name: updated!.name,
+    phoneNumber: updated!.phoneNumber ?? null,
+    email: updated!.user?.email ?? null,
+    departmentName: updated!.department?.department_name ?? null,
+    positionName: updated!.position?.position_name ?? null,
+  };
 }
