@@ -11,7 +11,12 @@ export async function findUserByIdentifier(identifier: string) {
         { staff: { staff_code: { equals: identifier, mode: "insensitive" } } },
       ],
     },
-    include: {
+    select: {
+      user_id: true,
+      email: true,
+      password_hash: true,
+      is_active: true,
+      force_change_password: true,
       staff: {
         select: {
           staff_id: true,

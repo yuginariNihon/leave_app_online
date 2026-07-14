@@ -1,48 +1,42 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
 import type { StaffProfile } from "@/lib/services/leaveService";
 
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 export function ProfileCard({ profile }: { profile: StaffProfile }) {
+  const initials = getInitials(profile.name);
   return (
-    <Card className="bg-white rounded-[8px] border-[#c7c5cf] shadow-sm overflow-hidden" data-purpose="employee-profile">
-      <CardContent className="p-5">
-        <div className="flex items-center gap-4 mb-4">
-          <Avatar className="w-16 h-16 rounded-full bg-[#cbdbf5] flex items-center justify-center">
-            <AvatarFallback className="bg-transparent">
-              <svg className="w-10 h-10 text-[#0b1c30]/30" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
-              </svg>
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h2 className="text-lg font-bold text-[#0b1c30] leading-tight">{profile.name}</h2>
-            <div className="flex items-center gap-1 mt-1">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <span className="text-xs font-medium text-[#46464e]">Status: Is Active</span>
-            </div>
+    <div className="bg-white rounded-xl border border-[#c7c4d7] overflow-hidden shadow-sm">
+      <div className="bg-[#e7eeff]/10 p-6 flex items-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-[#e7eeff] flex items-center justify-center text-[#fffbff] text-[24px] font-bold">
+          {initials}
+        </div>
+        <div>
+          <h4 className="text-[20px] font-bold text-[#111c2d]">{profile.name}</h4>
+          <p className="text-[20px] font-medium text-[#464554] mt-0.5">ID: {profile.staffCode}</p>
+          <div className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-bold mt-1 uppercase">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+            Is Active
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-y-3 text-sm border-t border-[#c7c5cf] pt-4">
-          <div className="flex justify-between">
-            <span className="text-[#46464e]">Employee ID :</span>
-            <span className="font-medium text-[#0b1c30]">{profile.staffCode}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[#46464e]">Position :</span>
-            <span className="font-medium text-[#0b1c30]">{profile.positionName ?? "-"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[#46464e]">Department :</span>
-            <span className="font-medium text-[#0b1c30]">{profile.departmentName ?? "-"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[#46464e]">Employee Type :</span>
-            <span className="font-medium text-[#0b1c30]">{profile.employmentTypeName ?? "-"}</span>
-          </div>
+      </div>
+      <div className="p-6 border-t border-[#c7c4d7] space-y-5">
+        <div className="flex justify-between items-center">
+          <span className="text-[18px] text-[#464554] leading-[1.6]">Position (ตำแหน่ง)</span>
+          <span className="text-[18px] font-semibold text-[#111c2d] leading-[1.6]">{profile.positionName ?? "-"}</span>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex justify-between items-center">
+          <span className="text-[18px] text-[#464554] leading-[1.6]">Department (แผนก)</span>
+          <span className="text-[18px] font-semibold text-[#111c2d] leading-[1.6]">{profile.departmentName ?? "-"}</span>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,38 +1,26 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import type { DashboardLeaveStats } from "@/lib/services/leaveService";
 
 export function LeaveStatsCards({ stats }: { stats: DashboardLeaveStats }) {
+  const cards = [
+    { label: "ลาคงเหลือทั้งหมด", sub: "Remaining Leave", value: stats.totalRemainingDays, color: "text-[#4648d4]" },
+    { label: "รออนุมัติ", sub: "Pending Approval", value: stats.pending, color: "text-[#904900]" },
+    { label: "อนุมัติแล้ว", sub: "Approved", value: stats.approved, color: "text-[#4648d4]" },
+    { label: "ไม่ผ่าน / ยกเลิก", sub: "Rejected / Cancel", value: stats.rejectedCancelled, color: "text-[#ba1a1a]" },
+  ];
+
   return (
-    <section className="grid grid-cols-2 gap-3" data-purpose="leave-summary">
-      <Card className="bg-white rounded-[8px] border-[#c7c5cf] shadow-sm flex flex-col items-center text-center overflow-hidden">
-        <CardContent className="p-4 w-full">
-          <span className="text-xs text-[#46464e] mb-1 block">ลาคงเหลือทั้งหมด</span>
-          <span className="text-base font-bold text-[#0b1c30] leading-tight block">Remaining Leave</span>
-          <div className="mt-2 text-2xl font-bold text-[#0b1c30]">{stats.totalRemainingDays}</div>
-        </CardContent>
-      </Card>
-      <Card className="bg-white rounded-[8px] border-[#c7c5cf] shadow-sm flex flex-col items-center text-center overflow-hidden">
-        <CardContent className="p-4 w-full">
-          <span className="text-xs text-[#46464e] mb-1 block">รออนุมัติ</span>
-          <span className="text-base font-bold text-[#0b1c30] leading-tight block">Pending Approval</span>
-          <div className="mt-2 text-2xl font-bold text-[#f59e0b]">{stats.pending}</div>
-        </CardContent>
-      </Card>
-      <Card className="bg-white rounded-[8px] border-[#c7c5cf] shadow-sm flex flex-col items-center text-center overflow-hidden">
-        <CardContent className="p-4 w-full">
-          <span className="text-xs text-[#46464e] mb-1 block">อนุมัติแล้ว</span>
-          <span className="text-base font-bold text-[#0b1c30] leading-tight block">Approved</span>
-          <div className="mt-2 text-2xl font-bold text-green-600">{stats.approved}</div>
-        </CardContent>
-      </Card>
-      <Card className="bg-white rounded-[8px] border-[#c7c5cf] shadow-sm flex flex-col items-center text-center overflow-hidden">
-        <CardContent className="p-4 w-full">
-          <span className="text-xs text-[#46464e] mb-1 block">ไม่ผ่าน / ยกเลิก</span>
-          <span className="text-base font-bold text-[#0b1c30] leading-tight block">Rejected / Cancel</span>
-          <div className="mt-2 text-2xl font-bold text-[#ba1a1a]">{stats.rejectedCancelled}</div>
-        </CardContent>
-      </Card>
-    </section>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {cards.map((c) => (
+        <div
+          key={c.label}
+          className="bg-white p-4 rounded-xl border border-[#c7c4d7] flex flex-col items-center justify-center text-center transition-transform duration-200 hover:scale-[1.02]"
+        >
+          <p className="text-sm font-medium text-[#464554] opacity-80 leading-[1.6]">{c.label}</p>
+          <p className="text-sm font-semibold text-[#464554] leading-[1.6]">{c.sub}</p>
+          <span className={`text-[28px] font-bold ${c.color}`}>{c.value}</span>
+        </div>
+      ))}
+    </div>
   );
 }

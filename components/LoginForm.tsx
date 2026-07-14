@@ -75,12 +75,12 @@ export function LoginForm() {
             Remember me
           </Label>
         </div>
-        <Link
+        {/*<Link
           className="text-xs text-[#e1fdff] hover:drop-shadow-[0_0_5px_#00dbe7] transition-all"
-          href="#"
+          href="/dashboard/reset-password"
         >
           Forgot Password?
-        </Link>
+        </Link>*/}
       </div>
 
       <Button

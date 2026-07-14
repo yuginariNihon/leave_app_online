@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "./ui/button";
@@ -121,14 +120,20 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" sideOffset={8} className="w-auto">
-            <DropdownMenuLabel className="px-3 py-2">
-              <div className="text-sm font-semibold">{user.name}</div>
-              <div className="text-xs text-muted-foreground">{user.email}</div>
+          <DropdownMenuContent align="end" sideOffset={8} className="w-[320px] p-0 rounded-lg bg-white border border-gray-100 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1),0_2px_10px_-2px_rgba(0,0,0,0.05)]">
+            <DropdownMenuLabel className="p-5 bg-[#f9f9ff] block w-full">
+              <h2 className="text-[#4b5563] text-lg font-bold leading-tight tracking-tight">{user.name}</h2>
+              <p className="text-[#6b7280] text-sm mt-1 truncate">{user.email}</p>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="text-red-600"
+              className="block w-full px-5 py-4 text-[#374151] hover:bg-[#f0f3ff] focus:bg-[#f0f3ff] focus:text-[#374151] transition-colors duration-200 text-[15px] font-medium rounded-none cursor-pointer border-t border-gray-100"
+              onSelect={() => router.push("/dashboard/reset-password")}
+            >
+              เปลี่ยนรหัสผ่าน
+            </DropdownMenuItem>
+            <div className="h-px bg-gray-100" />
+            <DropdownMenuItem
+              className="block w-full px-5 py-4 text-[#ef4444] hover:bg-red-50 focus:bg-red-50 focus:text-[#ef4444] transition-colors duration-200 text-[15px] font-semibold rounded-none cursor-pointer"
               disabled={isSigningOut}
               onSelect={(event) => {
                 event.preventDefault();

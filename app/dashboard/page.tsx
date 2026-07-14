@@ -30,23 +30,21 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] flex flex-col font-sans">
-      <main className="flex-grow p-4 space-y-6 max-w-[1200px] mx-auto w-full">
+    <div className="min-h-screen bg-[#f9f9ff] flex flex-col font-sans">
+      <main className="flex-grow p-6 max-w-[1400px] mx-auto w-full">
         <DashboardIntro userName={profile.name} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-8 flex flex-col gap-6">
             <LeaveStatsCards stats={stats} />
             <RecentLeaveList leaves={recentLeaves} />
           </div>
-          <div className="lg:col-span-1 space-y-6">
+          <aside className="lg:col-span-4 flex flex-col gap-6">
             <ProfileCard profile={profile} />
             <QuickActions />
             <LeaveRights rights={rights} />
-          </div>
+          </aside>
         </div>
       </main>
-
     </div>
   );
 }

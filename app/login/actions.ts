@@ -83,6 +83,10 @@ export async function loginAction(
     roles: staffRoles.map((sr) => sr.role.role_name),
   });
 
+  if (user.force_change_password) {
+    redirect("/dashboard/reset-password?force=true");
+  }
+
   redirect(isHR ? "/dashboard/hr" : "/dashboard");
 }
 

@@ -29,6 +29,7 @@ const DEFAULT_PAGES: { pageKey: string; pageName: string; groupName: string; def
   { pageKey: "manage_sections",    pageName: "จัดการแผนกย่อย",      groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
   { pageKey: "manage_leave_quota", pageName: "จัดการสิทธิ์วันลา",    groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
   { pageKey: "manage_holidays",    pageName: "จัดการวันหยุด",       groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
+  { pageKey: "manage_users",       pageName: "จัดการผู้ใช้",        groupName: "จัดการระบบ", defaultRoleNames: ["HR", "SUPER_ADMIN"] },
 
   // Employee pages
   { pageKey: "user_profile",  pageName: "โปรไฟล์ของฉัน",  groupName: "เมนูพนักงาน", defaultRoleNames: ["STAFF", "Employee", "APPROVER"] },

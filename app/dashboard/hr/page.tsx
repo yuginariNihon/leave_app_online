@@ -199,6 +199,16 @@ export default async function HrDashboardPage() {
               <p className="font-semibold text-sm text-[#1a1a40]">จัดการวันหยุด</p>
             </Link>
 
+            <Link
+              href="/dashboard/hr/user-management"
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow flex flex-col items-center gap-2 text-center"
+            >
+              <div className="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center">
+                <UserCog className="w-5 h-5 text-cyan-600" />
+              </div>
+              <p className="font-semibold text-sm text-[#1a1a40]">จัดการผู้ใช้</p>
+            </Link>
+
             {user.roles.includes("SUPER_ADMIN") && (
               <>
                 <Link
@@ -234,6 +244,8 @@ export default async function HrDashboardPage() {
             )}
           </div>
         </div>
+
+        <div className="border-t-2 border-slate-300 my-6"></div>
 
         <KpiCards data={kpiData} />
 

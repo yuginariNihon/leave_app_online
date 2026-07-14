@@ -132,7 +132,7 @@ export function StaffForm({
 
           <div className="flex flex-col gap-2 md:col-span-2">
             <label className="text-sm font-semibold text-[#45464d] tracking-wide">
-              อีเมล
+              อีเมล <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#45464d]" />
@@ -141,7 +141,11 @@ export function StaffForm({
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#c6c6cd] bg-white text-base transition-all outline-none focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)]"
                 placeholder="อีเมล"
                 type="email"
+                required
               />
+              {errs.email && (
+                <p className="text-red-500 text-sm mt-1">{errs.email.message}</p>
+              )}
             </div>
           </div>
 
@@ -248,7 +252,7 @@ export function StaffForm({
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-[#45464d] tracking-wide">
-              เบอร์โทรศัพท์
+              เบอร์โทรศัพท์ <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#45464d]" />
@@ -256,7 +260,11 @@ export function StaffForm({
                 {...register("phoneNumber")}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#c6c6cd] bg-white text-base transition-all outline-none focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)]"
                 placeholder="เบอร์โทรศัพท์"
+                required
               />
+              {errs.phoneNumber && (
+                <p className="text-red-500 text-sm mt-1">{errs.phoneNumber.message}</p>
+              )}
             </div>
           </div>
 

@@ -88,6 +88,7 @@ export function SidebarMenu() {
     staffRoles: pathname.startsWith("/dashboard/hr/staff-roles"),
     sections: pathname.startsWith("/dashboard/hr/sections"),
     holidays: pathname.startsWith("/dashboard/hr/holidays"),
+    userManagement: pathname.startsWith("/dashboard/hr/user-management"),
     leaveReport: pathname.startsWith("/dashboard/hr/leave-report"),
     workflows: pathname.startsWith("/dashboard/hr/workflows"),
     supervisorApproval: pathname === "/dashboard/approval-requests",
@@ -393,6 +394,18 @@ export function SidebarMenu() {
                   </SidebarMenuItem>
                 </>
               )}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={cn(btnClass(activePaths.userManagement), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  onClick={() => handleNav("/dashboard/hr/user-management")}
+                  tooltip={open ? undefined : "จัดการผู้ใช้"}
+                >
+                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                    <UserCog className={iconClass(activePaths.userManagement)} />
+                    {open && <span>จัดการผู้ใช้</span>}
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={cn(btnClass(activePaths.employeeTypes || activePaths.employeeTypesAdd), open ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
