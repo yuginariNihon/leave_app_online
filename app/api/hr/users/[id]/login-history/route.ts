@@ -17,7 +17,7 @@ export async function GET(
 
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
 
     const history = await getUserLoginHistory(id, limit);
     return NextResponse.json({ data: history });

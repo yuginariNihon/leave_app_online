@@ -150,7 +150,7 @@ export default async function HrDashboardPage() {
             </Link>
 
             <Link
-              href="/dashboard/hr/employment-types"
+              href="/dashboard/hr/employee-types"
               className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow flex flex-col items-center gap-2 text-center"
             >
               <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">

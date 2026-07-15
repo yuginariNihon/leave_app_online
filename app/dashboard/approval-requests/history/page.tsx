@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { History } from "lucide-react";
 
 import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
 import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters";
@@ -11,6 +9,7 @@ import { ApprovalHistoryTable } from "@/components/approval-requests/ApprovalHis
 import { Pagination } from "@/components/leave-history/Pagination";
 import DashboardContent from "@/components/DashboardContent";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 
 type HistoryItem = {
   approvalId: string;
@@ -43,14 +42,15 @@ function ApprovalHistoryPageInner() {
   }, []);
 
   const [roleType, setRoleType] = useState(searchParams.get("roleType") || "all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const { live: { searchTerm, typeFilter, startDate, endDate }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit: handleSearchSubmit, reset: handleResetFilters } = useFilterWithApply({
+    searchTerm: "",
+    typeFilter: "all",
+    startDate: "",
+    endDate: "",
+  });
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<
     Array<{ id: string; label: string }>
   >([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
 
   const [data, setData] = useState<HistoryItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -81,10 +81,10 @@ function ApprovalHistoryPageInner() {
       setError("");
       try {
         const params = new URLSearchParams();
-        if (searchTerm) params.set("search", searchTerm);
-        if (typeFilter !== "all") params.set("leaveTypeId", typeFilter);
-        if (startDate) params.set("startDate", startDate);
-        if (endDate) params.set("endDate", endDate);
+        if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
+        if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
+        if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
+        if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
         if (roleType !== "all") params.set("roleType", roleType);
         params.set("page", String(currentPage));
 
@@ -107,35 +107,9 @@ function ApprovalHistoryPageInner() {
 
     fetchData();
     return () => { cancelled = true; };
-  }, [searchTerm, typeFilter, startDate, endDate, currentPage, fetchKey]);
+  }, [appliedFilters, currentPage, fetchKey]);
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
 
-  const handleTypeChange = (value: string) => {
-    setTypeFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handleStartDateChange = (value: string) => {
-    setStartDate(value);
-    setCurrentPage(1);
-  };
-
-  const handleEndDateChange = (value: string) => {
-    setEndDate(value);
-    setCurrentPage(1);
-  };
-
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setTypeFilter("all");
-    setStartDate("");
-    setEndDate("");
-    setCurrentPage(1);
-  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">
@@ -157,16 +131,17 @@ function ApprovalHistoryPageInner() {
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
             <ApprovalFilters
               searchTerm={searchTerm}
-              onSearchChange={handleSearchChange}
+              onSearchChange={(v) => setFilter("searchTerm", v)}
               typeFilter={typeFilter}
-              onTypeChange={handleTypeChange}
+              onTypeChange={(v) => setFilter("typeFilter", v)}
               typeOptions={leaveTypeOptions}
               startDate={startDate}
-              onStartDateChange={handleStartDateChange}
+              onStartDateChange={(v) => setFilter("startDate", v)}
               endDate={endDate}
-              onEndDateChange={handleEndDateChange}
+              onEndDateChange={(v) => setFilter("endDate", v)}
               totalItems={total}
               onReset={handleResetFilters}
+              onSearchSubmit={handleSearchSubmit}
             />
           </div>
 

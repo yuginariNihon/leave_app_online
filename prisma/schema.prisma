@@ -375,6 +375,8 @@ model User {
   password_hash String? @db.Text
 
   force_change_password Boolean @default(true)
+  
+  password_changed_at DateTime?  @db.Timestamp(6)
 
   supabase_auth_id String? @unique @db.Uuid
 

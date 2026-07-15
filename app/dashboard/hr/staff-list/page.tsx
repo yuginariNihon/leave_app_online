@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import { useRouter } from "next/navigation";
-import { Search, Users } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -17,16 +18,18 @@ import { Pagination } from "@/components/leave-history/Pagination";
 import type { StaffListItem } from "@/lib/services/leaveService";
 import DashboardContent from "@/components/DashboardContent";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { Button } from "@/components/ui/button";
 
 export default function StaffListPage() {
   const router = useRouter();
   const [fetchKey, setFetchKey] = useState(0);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const { live: { searchTerm, statusFilter, departmentFilter }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit: handleSearchSubmit, reset: handleReset } = useFilterWithApply({
+    searchTerm: "",
+    statusFilter: "all",
+    departmentFilter: "all",
+  });
   const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
-  const [currentPage, setCurrentPage] = useState(1);
 
   const [data, setData] = useState<StaffListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -76,6 +79,8 @@ export default function StaffListPage() {
     loadDepartments();
   }, []);
 
+
+
   useEffect(() => {
     let cancelled = false;
 
@@ -84,9 +89,9 @@ export default function StaffListPage() {
       setError("");
       try {
         const params = new URLSearchParams();
-        if (searchTerm) params.set("search", searchTerm);
-        if (statusFilter !== "all") params.set("status", statusFilter);
-        if (departmentFilter !== "all") params.set("departmentId", departmentFilter);
+        if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
+        if (appliedFilters.statusFilter !== "all") params.set("status", appliedFilters.statusFilter);
+        if (appliedFilters.departmentFilter !== "all") params.set("departmentId", appliedFilters.departmentFilter);
         params.set("page", String(currentPage));
 
         const res = await fetch(`/api/hr/staff-list?${params}`);
@@ -108,7 +113,7 @@ export default function StaffListPage() {
 
     fetchData();
     return () => { cancelled = true; };
-  }, [searchTerm, statusFilter, departmentFilter, currentPage, fetchKey]);
+  }, [appliedFilters, currentPage, fetchKey]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">
@@ -131,11 +136,12 @@ export default function StaffListPage() {
                 className="pl-10 h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px] w-[200px]"
                 placeholder="ค้นหารหัสพนักงาน..."
                 value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => setFilter("searchTerm", e.target.value)}
               />
             </div>
+            
             <div className="w-full md:w-auto">
-              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
+              <Select value={statusFilter} onValueChange={(v) => setFilter("statusFilter", v)}>
                 <SelectTrigger className="w-full md:w-[160px] !h-11 border-[#c8c5d0] rounded-lg">
                   <SelectValue placeholder="สถานะ" />
                 </SelectTrigger>
@@ -146,6 +152,14 @@ export default function StaffListPage() {
                 </SelectContent>
               </Select>
             </div>
+            <Button
+              type="button"
+              onClick={handleSearchSubmit}
+              className="bg-[#6063ee] hover:bg-secondary text-white font-semibold rounded-lg h-11 px-4 text-[12px] tracking-[0.05em] uppercase flex items-center gap-2 shadow-sm"
+            >
+              <Search className="w-[18px] h-[18px]" />
+              ค้นหา
+            </Button>
           </div>
         </div>
 

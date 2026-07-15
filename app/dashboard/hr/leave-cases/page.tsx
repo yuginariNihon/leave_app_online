@@ -161,19 +161,19 @@ export default function LeaveCasesPage() {
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center justify-center gap-3">
-                            <button
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                               onClick={() => router.push(`/dashboard/hr/leave-cases/edit?leaveCaseId=${c.leaveCaseId}`)}
                             >
                               <Pencil className="w-[20px] h-[20px]" />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/10 transition-all"
                               disabled={togglingIds.includes(c.leaveCaseId)}
                               onClick={() => handleToggleActive(c.leaveCaseId, c.isActive)}
                             >
                               {c.isActive ? <PowerOff className="w-[20px] h-[20px]" /> : <Power className="w-[20px] h-[20px]" />}
-                            </button>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

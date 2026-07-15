@@ -28,6 +28,7 @@ interface LeaveFiltersProps {
   cancelledItems?: number;
   onReset?: () => void;
   onExportCSV?: () => void;
+  onSearchSubmit?: () => void;
 }
 
 export function LeaveFilters({
@@ -49,6 +50,7 @@ export function LeaveFilters({
   cancelledItems,
   onReset,
   onExportCSV,
+  onSearchSubmit,
 }: LeaveFiltersProps) {
   const showChips = approvedItems !== undefined;
   return (
@@ -112,6 +114,11 @@ export function LeaveFilters({
               </SelectContent>
             </Select>
           </div>
+        )}
+        {onSearchSubmit && (
+          <Button onClick={onSearchSubmit} className="h-11 px-6 rounded-xl">
+            ค้นหา
+          </Button>
         )}
       </div>
 

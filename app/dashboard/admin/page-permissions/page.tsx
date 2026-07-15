@@ -185,7 +185,7 @@ export default function PagePermissionsPage() {
                           const isSuperAdminRole = role.roleName === "SUPER_ADMIN";
 
                           return (
-                            <button
+                            <Button
                               key={role.roleId}
                               type="button"
                               disabled={isSuperAdminRole}
@@ -198,7 +198,7 @@ export default function PagePermissionsPage() {
                             >
                               {isSuperAdminRole && <Shield className="w-3 h-3" />}
                               {role.roleName}
-                            </button>
+                            </Button>
                           );
                         })}
                       </div>

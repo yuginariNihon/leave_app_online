@@ -20,6 +20,7 @@ type MainHeaderUser = {
   name: string;
   email: string;
   roles: string[];
+  forceChangePassword: boolean;
 };
 
 export function MainHeader({ user }: { user: MainHeaderUser }) {

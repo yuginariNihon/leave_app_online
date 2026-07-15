@@ -81,6 +81,7 @@ export async function loginAction(
     name: user.staff.name,
     email: user.email ?? "",
     roles: staffRoles.map((sr) => sr.role.role_name),
+    forceChangePassword: user.force_change_password,
   });
 
   if (user.force_change_password) {

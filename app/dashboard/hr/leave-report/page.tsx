@@ -27,9 +27,18 @@ import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
 import { statusTextMap } from "@/components/leave-history/types";
-import { formatDateOnly, formatLeaveDateRange, formatDays, downloadCsv } from "@/lib/utils";
+import { formatLeaveDateRange, formatDays, downloadCsv } from "@/lib/utils";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
+import { useFilterWithApply } from "@/hooks/useFilterWithApply";
+
+type ReportFilters = {
+  searchTerm: string;
+  departmentFilter: string;
+  typeFilter: string;
+  startDate: string;
+  endDate: string;
+};
 
 type ReportRecord = {
   leaveId: string;
@@ -47,12 +56,13 @@ type ReportRecord = {
 export default function LeaveReportPage() {
   const router = useRouter();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [departmentFilter, setDepartmentFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const { live: { searchTerm, departmentFilter, typeFilter, startDate, endDate }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit: handleSearchSubmit, reset: handleReset } = useFilterWithApply({
+    searchTerm: "",
+    departmentFilter: "all",
+    typeFilter: "all",
+    startDate: monthStart(),
+    endDate: monthEnd(),
+  });
 
   const [data, setData] = useState<ReportRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -95,15 +105,15 @@ export default function LeaveReportPage() {
   const buildQuery = useCallback(
     (page: number) => {
       const params = new URLSearchParams();
-      if (searchTerm) params.set("search", searchTerm);
-      if (departmentFilter !== "all") params.set("departmentId", departmentFilter);
-      if (typeFilter !== "all") params.set("leaveTypeId", typeFilter);
-      params.set("startDate", startDate || monthStart());
-      params.set("endDate", endDate || monthEnd());
+      if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
+      if (appliedFilters.departmentFilter !== "all") params.set("departmentId", appliedFilters.departmentFilter);
+      if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
+      params.set("startDate", appliedFilters.startDate);
+      params.set("endDate", appliedFilters.endDate);
       params.set("page", String(page));
       return params.toString();
     },
-    [searchTerm, departmentFilter, typeFilter, startDate, endDate],
+    [appliedFilters],
   );
 
   useEffect(() => {
@@ -143,48 +153,14 @@ export default function LeaveReportPage() {
     return () => { cancelled = true; };
   }, [buildQuery, currentPage]);
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
-
-  const handleDepartmentChange = (value: string) => {
-    setDepartmentFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handleTypeChange = (value: string) => {
-    setTypeFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handleStartDateChange = (value: string) => {
-    setStartDate(value);
-    setCurrentPage(1);
-  };
-
-  const handleEndDateChange = (value: string) => {
-    setEndDate(value);
-    setCurrentPage(1);
-  };
-
-  const handleReset = () => {
-    setSearchTerm("");
-    setDepartmentFilter("all");
-    setTypeFilter("all");
-    setStartDate("");
-    setEndDate("");
-    setCurrentPage(1);
-  };
-
   const handleExportCSV = async () => {
     try {
       const params = new URLSearchParams();
-      if (searchTerm) params.set("search", searchTerm);
-      if (departmentFilter !== "all") params.set("departmentId", departmentFilter);
-      if (typeFilter !== "all") params.set("leaveTypeId", typeFilter);
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
+      if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
+      if (appliedFilters.departmentFilter !== "all") params.set("departmentId", appliedFilters.departmentFilter);
+      if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
+      if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
+      if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
       params.set("limit", String(total || 1));
 
       const res = await fetch(`/api/hr/leave-report?${params}`);
@@ -265,19 +241,19 @@ export default function LeaveReportPage() {
         <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
             <div className="space-y-6 mb-2">
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-col md:flex-row items-start gap-4">
                 <div className="relative w-full md:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                   <Input
                     className="pl-10 h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl"
                     placeholder="ค้นหารหัสพนักงาน / ชื่อ..."
                     value={searchTerm}
-                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onChange={(e) => setFilter("searchTerm", e.target.value)}
                   />
                 </div>
 
                 <div className="w-full md:w-auto">
-                  <Select value={departmentFilter} onValueChange={handleDepartmentChange}>
+                  <Select value={departmentFilter} onValueChange={(v) => setFilter("departmentFilter", v)}>
                     <SelectTrigger className="w-full md:w-[200px] !h-11 border-slate-200 rounded-xl">
                       <SelectValue placeholder="แผนก" />
                     </SelectTrigger>
@@ -291,7 +267,7 @@ export default function LeaveReportPage() {
                 </div>
 
                 <div className="w-full md:w-auto">
-                  <Select value={typeFilter} onValueChange={handleTypeChange}>
+                  <Select value={typeFilter} onValueChange={(v) => setFilter("typeFilter", v)}>
                     <SelectTrigger className="w-full md:w-[180px] !h-11 border-slate-200 rounded-xl">
                       <SelectValue placeholder="ประเภทการลา" />
                     </SelectTrigger>
@@ -309,16 +285,20 @@ export default function LeaveReportPage() {
                     type="date"
                     className="h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl w-full md:w-[160px]"
                     value={startDate}
-                    onChange={(e) => handleStartDateChange(e.target.value)}
+                    onChange={(e) => setFilter("startDate", e.target.value)}
                   />
                   <span className="text-slate-400 font-medium">ถึง</span>
                   <Input
                     type="date"
                     className="h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl w-full md:w-[160px]"
                     value={endDate}
-                    onChange={(e) => handleEndDateChange(e.target.value)}
+                    onChange={(e) => setFilter("endDate", e.target.value)}
                   />
                 </div>
+
+                <Button onClick={handleSearchSubmit} className="h-11 px-6 rounded-xl">
+                  ค้นหา
+                </Button>
               </div>
 
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-6 border-t border-slate-100">
@@ -342,7 +322,7 @@ export default function LeaveReportPage() {
                 <div className="flex items-center gap-3">
                   <Button
                     variant="ghost"
-                    onClick={handleReset}
+                    onClick={() => handleReset({ searchTerm: "", departmentFilter: "all", typeFilter: "all", startDate: monthStart(), endDate: monthEnd() })}
                     className="h-11 px-4 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors border border-slate-300"
                   >
                     ล้างตัวกรอง

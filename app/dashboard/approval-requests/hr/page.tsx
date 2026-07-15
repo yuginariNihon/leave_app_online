@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Loader2, CalendarCheck, FileText } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select,
@@ -15,8 +15,6 @@ import {
 import {
   AlertDialog,
   AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogCancel,
@@ -30,6 +28,7 @@ import type { ApprovalRequestItem } from "@/lib/services/approvalService";
 import DashboardContent from "@/components/DashboardContent";
 import { cn } from "@/lib/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 
 export default function HrApprovalRequestsPage() {
   const router = useRouter();
@@ -44,14 +43,15 @@ export default function HrApprovalRequestsPage() {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const { live: { searchTerm, typeFilter, startDate, endDate }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit: handleSearchSubmit, reset: handleResetFilters } = useFilterWithApply({
+    searchTerm: "",
+    typeFilter: "all",
+    startDate: "",
+    endDate: "",
+  });
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<
     Array<{ id: string; label: string }>
   >([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
 
   const [data, setData] = useState<ApprovalRequestItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -83,14 +83,14 @@ export default function HrApprovalRequestsPage() {
   const buildQuery = useCallback(
     (page: number) => {
       const params = new URLSearchParams();
-      if (searchTerm) params.set("search", searchTerm);
-      if (typeFilter !== "all") params.set("leaveTypeId", typeFilter);
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
+      if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
+      if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
+      if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
+      if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
       params.set("page", String(page));
       return params.toString();
     },
-    [searchTerm, typeFilter, startDate, endDate],
+    [appliedFilters],
   );
 
   useEffect(() => {
@@ -149,33 +149,7 @@ export default function HrApprovalRequestsPage() {
     }
   }, [router, searchParams]);
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
 
-  const handleTypeChange = (value: string) => {
-    setTypeFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handleStartDateChange = (value: string) => {
-    setStartDate(value);
-    setCurrentPage(1);
-  };
-
-  const handleEndDateChange = (value: string) => {
-    setEndDate(value);
-    setCurrentPage(1);
-  };
-
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setTypeFilter("all");
-    setStartDate("");
-    setEndDate("");
-    setCurrentPage(1);
-  };
 
   const processApproval = async (
     approvalId: string,
@@ -266,16 +240,17 @@ export default function HrApprovalRequestsPage() {
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
             <ApprovalFilters
               searchTerm={searchTerm}
-              onSearchChange={handleSearchChange}
+              onSearchChange={(v) => setFilter("searchTerm", v)}
               typeFilter={typeFilter}
-              onTypeChange={handleTypeChange}
+              onTypeChange={(v) => setFilter("typeFilter", v)}
               typeOptions={leaveTypeOptions}
               startDate={startDate}
-              onStartDateChange={handleStartDateChange}
+              onStartDateChange={(v) => setFilter("startDate", v)}
               endDate={endDate}
-              onEndDateChange={handleEndDateChange}
+              onEndDateChange={(v) => setFilter("endDate", v)}
               totalItems={total}
               onReset={handleResetFilters}
+              onSearchSubmit={handleSearchSubmit}
             />
           </div>
 
@@ -406,7 +381,7 @@ export default function HrApprovalRequestsPage() {
                 <AlertDialogCancel className="w-full sm:w-1/2 h-10 flex items-center justify-center rounded-lg border border-[#c8c5ce] text-[#020220] text-[13px] font-semibold leading-[18px] bg-[#ffffff] hover:bg-[#e6e8ea] transition-colors duration-200 active:scale-95">
                   ปิด
                 </AlertDialogCancel>
-                <button
+                <Button
                   onClick={() => pendingAction && processBulk(pendingAction)}
                   disabled={processingIds.length > 0}
                   className={cn(
@@ -422,7 +397,7 @@ export default function HrApprovalRequestsPage() {
                     : pendingAction === "approved"
                       ? "ยืนยันการอนุมัติ"
                       : "ยืนยันการไม่อนุมัติ"}
-                </button>
+                </Button>
               </div>
             </div>
           </AlertDialogContent>

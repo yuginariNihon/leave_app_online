@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, History } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { formatDateOnly, downloadCsv } from "@/lib/utils";
 
 import { LeaveFilters } from "@/components/leave-history/LeaveFilters";
@@ -12,19 +12,21 @@ import { Pagination } from "@/components/leave-history/Pagination";
 import type { LeaveRecord } from "@/components/leave-history/types";
 import { statusTextMap } from "@/components/leave-history/types";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 
 export default function LeaveHistoryPage() {
   const router = useRouter();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<
     Array<{ id: string; label: string }>
   >([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const { live: { searchTerm, statusFilter, typeFilter, startDate, endDate }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit, reset } = useFilterWithApply({
+    searchTerm: "",
+    statusFilter: "all",
+    typeFilter: "all",
+    startDate: "",
+    endDate: "",
+  });
 
   const [data, setData] = useState<LeaveRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -54,11 +56,11 @@ export default function LeaveHistoryPage() {
   const buildQuery = useCallback(
     (page: number, exportAll = false) => {
       const params = new URLSearchParams();
-      if (searchTerm) params.set("search", searchTerm);
-      if (statusFilter !== "all") params.set("status", statusFilter);
-      if (typeFilter !== "all") params.set("leaveTypeId", typeFilter);
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
+      if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
+      if (appliedFilters.statusFilter !== "all") params.set("status", appliedFilters.statusFilter);
+      if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
+      if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
+      if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
       if (exportAll) {
         params.set("exportAll", "true");
       } else {
@@ -66,7 +68,7 @@ export default function LeaveHistoryPage() {
       }
       return params.toString();
     },
-    [searchTerm, statusFilter, typeFilter, startDate, endDate],
+    [appliedFilters],
   );
 
   useEffect(() => {
@@ -113,40 +115,6 @@ export default function LeaveHistoryPage() {
       cancelled = true;
     };
   }, [buildQuery, currentPage]);
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
-
-  const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handleTypeChange = (value: string) => {
-    setTypeFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handleStartDateChange = (value: string) => {
-    setStartDate(value);
-    setCurrentPage(1);
-  };
-
-  const handleEndDateChange = (value: string) => {
-    setEndDate(value);
-    setCurrentPage(1);
-  };
-
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setStatusFilter("all");
-    setTypeFilter("all");
-    setStartDate("");
-    setEndDate("");
-    setCurrentPage(1);
-  };
 
   const handleExportCSV = async () => {
     try {
@@ -219,23 +187,24 @@ export default function LeaveHistoryPage() {
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
             <LeaveFilters
               searchTerm={searchTerm}
-              onSearchChange={handleSearchChange}
+              onSearchChange={(v) => setFilter("searchTerm", v)}
               statusFilter={statusFilter}
-              onStatusChange={handleStatusChange}
+              onStatusChange={(v) => setFilter("statusFilter", v)}
               typeFilter={typeFilter}
-              onTypeChange={handleTypeChange}
+              onTypeChange={(v) => setFilter("typeFilter", v)}
               typeOptions={leaveTypeOptions}
               startDate={startDate}
-              onStartDateChange={handleStartDateChange}
+              onStartDateChange={(v) => setFilter("startDate", v)}
               endDate={endDate}
-              onEndDateChange={handleEndDateChange}
+              onEndDateChange={(v) => setFilter("endDate", v)}
               totalItems={total}
               approvedItems={approvedCount}
               pendingItems={pendingCount}
               rejectedItems={rejectedCount}
               cancelledItems={cancelledCount}
-              onReset={handleResetFilters}
+              onReset={() => reset({ searchTerm: "", statusFilter: "all", typeFilter: "all", startDate: "", endDate: "" })}
               onExportCSV={handleExportCSV}
+              onSearchSubmit={submit}
             />
           </div>
 

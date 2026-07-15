@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 const SESSION_COOKIE_NAME = "leave_app_db_session";
 
@@ -18,6 +19,7 @@ const PAGE_KEY_BY_PREFIX: [string, string][] = [
   ["/dashboard/hr/holidays", "manage_holidays"],
   ["/dashboard/hr/user-management", "manage_users"],
   ["/dashboard/hr/leave-report", "leave_report"],
+  ["/dashboard/hr/leave-quota", "manage_leave_quota"],
   ["/dashboard/approval-requests/history", "supervisor_history"],
   ["/dashboard/approval-requests/hr", "hr_approval"],
   ["/dashboard/approval-requests", "supervisor_approval"],
@@ -39,6 +41,60 @@ export async function proxy(request: NextRequest) {
 
   if (pathname === "/login" && hasSession) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Force change password guard
+  if (hasSession && pathname.startsWith("/dashboard") && pathname !== "/dashboard/reset-password") {
+    try {
+      const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+      if (token) {
+        const session = await prisma.session.findUnique({
+          where: { token },
+          select: {
+            user: { select: { force_change_password: true } },
+          },
+        });
+        if (session?.user?.force_change_password) {
+          return NextResponse.redirect(new URL("/dashboard/reset-password?force=true", request.url));
+        }
+      }
+    } catch {
+      // Silently fail if DB query errors; allow request to proceed
+    }
+  }
+
+  // HR dashboard guard — only HR or SUPER_ADMIN
+  if (hasSession && pathname === "/dashboard/hr") {
+    try {
+      const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+      if (token) {
+        const session = await prisma.session.findUnique({
+          where: { token },
+          select: {
+            user: {
+              select: {
+                staff: {
+                  select: {
+                    staffRoles: {
+                      select: {
+                        role: { select: { role_name: true } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+        const roleNames = session?.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
+        const isAuthorized = roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN");
+        if (!isAuthorized) {
+          return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+      }
+    } catch {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
   }
 
   // Permission check — only for protected dashboard pages

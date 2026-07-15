@@ -12,6 +12,7 @@ interface ApprovalFiltersProps {
   onEndDateChange: (value: string) => void;
   totalItems: number;
   onReset?: () => void;
+  onSearchSubmit?: () => void;
 }
 
 export function ApprovalFilters(props: ApprovalFiltersProps) {

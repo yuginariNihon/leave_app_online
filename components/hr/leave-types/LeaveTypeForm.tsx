@@ -4,7 +4,8 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Tags, Save, Loader2 } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
+import { Tags, Save, Loader2, Check } from "lucide-react";
 import { createLeaveTypeSchema } from "@/lib/TypeSchema";
 import type { CreateLeaveTypeValues, UpdateLeaveTypeValues } from "@/lib/TypeSchema";
 
@@ -30,12 +31,17 @@ export function LeaveTypeForm({
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors: errs },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<any>({
     resolver: zodResolver(createLeaveTypeSchema),
     defaultValues: defaultValues ?? { leaveTypeName: "", maxDaysPerYear: null, isPaid: true, requiresAttachment: false },
   });
+
+  const isPaid = watch("isPaid");
+  const requiresAttachment = watch("requiresAttachment");
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -72,53 +78,49 @@ export function LeaveTypeForm({
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-[#45464d] tracking-wide">ได้เงิน</label>
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="true"
-                {...register("isPaid")}
-                defaultChecked={defaultValues?.isPaid !== false}
-                className="w-4 h-4 accent-[#1a1a40]"
-              />
-              <span className="text-base">ใช่</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="false"
-                {...register("isPaid")}
-                defaultChecked={defaultValues?.isPaid === false}
-                className="w-4 h-4 accent-[#1a1a40]"
-              />
-              <span className="text-base">ไม่ใช่</span>
-            </label>
+          <div className="flex items-center gap-2">
+            <Toggle
+              pressed={isPaid === true}
+              onPressedChange={(p) => setValue("isPaid", p, { shouldValidate: true })}
+              variant="outline"
+              className="h-10 px-5 text-base data-[state=on]:bg-emerald-50 data-[state=on]:text-emerald-700 data-[state=on]:border-emerald-300"
+            >
+              {isPaid === true && <Check className="w-4 h-4" />}
+              ได้เงิน
+            </Toggle>
+            <Toggle
+              pressed={isPaid === false}
+              onPressedChange={(p) => setValue("isPaid", !p, { shouldValidate: true })}
+              variant="outline"
+              className="h-10 px-5 text-base data-[state=on]:bg-red-50 data-[state=on]:text-red-700 data-[state=on]:border-red-300"
+            >
+              {isPaid === false && <Check className="w-4 h-4" />}
+              ไม่ได้เงิน
+            </Toggle>
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-[#45464d] tracking-wide">ต้องแนบเอกสาร</label>
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="true"
-                {...register("requiresAttachment")}
-                defaultChecked={defaultValues?.requiresAttachment === true}
-                className="w-4 h-4 accent-[#1a1a40]"
-              />
-              <span className="text-base">ใช่</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="false"
-                {...register("requiresAttachment")}
-                defaultChecked={defaultValues?.requiresAttachment !== true}
-                className="w-4 h-4 accent-[#1a1a40]"
-              />
-              <span className="text-base">ไม่ใช่</span>
-            </label>
+          <div className="flex items-center gap-2">
+            <Toggle
+              pressed={requiresAttachment === true}
+              onPressedChange={(p) => setValue("requiresAttachment", p, { shouldValidate: true })}
+              variant="outline"
+              className="h-10 px-5 text-base data-[state=on]:bg-amber-50 data-[state=on]:text-amber-700 data-[state=on]:border-amber-300"
+            >
+              {requiresAttachment === true && <Check className="w-4 h-4" />}
+              ต้องแนบ
+            </Toggle>
+            <Toggle
+              pressed={requiresAttachment === false}
+              onPressedChange={(p) => setValue("requiresAttachment", !p, { shouldValidate: true })}
+              variant="outline"
+              className="h-10 px-5 text-base data-[state=on]:bg-slate-100 data-[state=on]:text-slate-700 data-[state=on]:border-slate-300"
+            >
+              {requiresAttachment === false && <Check className="w-4 h-4" />}
+              ไม่ต้องแนบ
+            </Toggle>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, UserCog, Plus, Pencil, Power, PowerOff, FileText } from "lucide-react";
+import { Search, Plus, Pencil, Power, PowerOff, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -162,19 +162,19 @@ export default function EmployeeTypesPage() {
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center justify-center gap-3">
-                            <button
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                               onClick={() => router.push(`/dashboard/hr/employee-types/edit?employeeTypeId=${et.employmentTypeId}`)}
                             >
                               <Pencil className="w-[20px] h-[20px]" />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/10 transition-all"
                               disabled={togglingIds.includes(et.employmentTypeId)}
                               onClick={() => handleToggleActive(et.employmentTypeId, et.isActive)}
                             >
                               {et.isActive ? <PowerOff className="w-[20px] h-[20px]" /> : <Power className="w-[20px] h-[20px]" />}
-                            </button>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

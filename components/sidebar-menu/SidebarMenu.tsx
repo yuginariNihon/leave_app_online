@@ -47,13 +47,15 @@ function iconClass(isActive: boolean) {
 export function SidebarMenu() {
   const router = useRouter();
   const pathname = usePathname();
-  const { roles } = useUser();
+  const { roles, forceChangePassword } = useUser();
   const { open, toggleSidebar, openMobile, setOpenMobile } = useSidebar();
   const isMobile = useIsMobile();
 
   const isHR = roles.includes("HR") || roles.includes("SUPER_ADMIN");
   const isApprover = roles.includes("APPROVER");
   const isSuperAdmin = roles.includes("SUPER_ADMIN");
+  const [hrMenuExpanded, setHrMenuExpanded] = useState(true);
+  const [systemMenuExpanded, setSystemMenuExpanded] = useState(true);
   const [staffListExpanded, setStaffListExpanded] = useState(false);
   const [deptListExpanded, setDeptListExpanded] = useState(false);
   const [posListExpanded, setPosListExpanded] = useState(false);
@@ -103,11 +105,19 @@ export function SidebarMenu() {
     return (
       <>
         <SidebarGroup className={cn("transition-all duration-300 ease-in-out", open ? "" : "px-0")}>
-          {open && (
-            <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          {open ? (
+            <div className="flex items-center justify-between px-3 mb-2 cursor-pointer select-none" onClick={() => setHrMenuExpanded(!hrMenuExpanded)}>
+              <SidebarGroupLabel className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                เมนู HR
+              </SidebarGroupLabel>
+              <ChevronDown className={cn("w-[18px] h-[18px] text-slate-300 transition-transform", hrMenuExpanded ? "" : "-rotate-90")} />
+            </div>
+          ) : (
+            <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider sr-only">
               เมนู HR
             </SidebarGroupLabel>
           )}
+          {hrMenuExpanded && (
           <SidebarGroupContent>
             <SidebarMenuList className="gap-1">
               <SidebarMenuItem>
@@ -152,16 +162,18 @@ export function SidebarMenu() {
               </SidebarMenuItem>
             </SidebarMenuList>
           </SidebarGroupContent>
+          )}
         </SidebarGroup>
         <SidebarGroup className={cn("transition-all duration-300 ease-in-out", open ? "" : "px-0")}>
-          <div className={cn("flex items-center justify-between mb-2", open ? "px-3" : "justify-center")}>
+          <div className={cn("flex items-center justify-between mb-2 cursor-pointer select-none", open ? "px-3" : "justify-center")} onClick={() => setSystemMenuExpanded(!systemMenuExpanded)}>
             {open && (
               <SidebarGroupLabel className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 จัดการระบบ
               </SidebarGroupLabel>
             )}
-            {open && <ChevronDown className="w-[18px] h-[18px] text-slate-300" />}
+            {open && <ChevronDown className={cn("w-[18px] h-[18px] text-slate-300 transition-transform", systemMenuExpanded ? "" : "-rotate-90")} />}
           </div>
+          {systemMenuExpanded && (
           <SidebarGroupContent>
             <SidebarMenuList className="gap-1">
               <SidebarMenuItem>
@@ -438,6 +450,7 @@ export function SidebarMenu() {
               </SidebarMenuItem>
             </SidebarMenuList>
           </SidebarGroupContent>
+          )}
         </SidebarGroup>
       </>
     );
@@ -556,7 +569,17 @@ export function SidebarMenu() {
 
       {/* Navigation */}
       <SidebarContent className={cn("py-4 overflow-y-auto transition-all duration-300 ease-in-out ![&::-webkit-scrollbar]:block ![&::-webkit-scrollbar]:w-1.5 ![&::-webkit-scrollbar-thumb]:bg-slate-300 ![&::-webkit-scrollbar-thumb]:rounded-full", !isMobile && open ? "px-3" : "px-2")}>
-        {isHR ? renderHRSidebar() : isApprover ? renderSupervisorSidebar() : renderEmployeeSidebar()}
+        {forceChangePassword ? (
+          <div className="px-4 py-8 text-center">
+            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M12 15v2m0 0v2m0-2h2m-2 0H10m9.364-7.364A9 9 0 1112 3a9 9 0 017.364 4.636z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-[#374151]">กรุณาเปลี่ยนรหัสผ่าน</p>
+            <p className="text-xs text-[#6b7280] mt-1">ก่อนเข้าใช้งานระบบ</p>
+          </div>
+        ) : isHR ? renderHRSidebar() : isApprover ? renderSupervisorSidebar() : renderEmployeeSidebar()}
       </SidebarContent>
     </>
   );

@@ -15,6 +15,7 @@ export type SessionUser = {
   name: string;
   email: string;
   roles: string[];
+  forceChangePassword: boolean;
   expiresAt: number;
 };
 
@@ -98,6 +99,7 @@ async function getSessionUserImpl(): Promise<SessionUser | null> {
       name: session.user.staff.name,
       email: session.user.email ?? "",
       roles: staffRoles.map((sr) => sr.role.role_name.toUpperCase()),
+      forceChangePassword: session.user.force_change_password,
       expiresAt: session.expires_at.getTime(),
     };
   } catch (error) {

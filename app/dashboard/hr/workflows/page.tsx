@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, FileText, User, Pencil, Plus } from "lucide-react";
 import DashboardContent from "@/components/DashboardContent";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { Button } from "@/components/ui/button";
 import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
 
 type StepDisplay = {
@@ -78,13 +79,13 @@ export default function WorkflowsPage() {
             <h1 className="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-[#070235]">จัดการลำดับการอนุมัติ</h1>
             <p className="text-[14px] leading-[20px] text-[#47464f]">แสดงลำดับขั้นตอนการอนุมัติใบลาตามตำแหน่ง</p>
           </div>
-          <button
+          <Button
             onClick={() => router.push("/dashboard/hr/workflows/add")}
             className="flex items-center gap-2 px-4 py-2 bg-[#1a1a40] text-white rounded-xl text-sm font-semibold hover:bg-[#2a2a5a] transition-colors"
           >
             <Plus className="w-4 h-4" />
             เพิ่ม
-          </button>
+          </Button>
         </div>
 
         <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg">
@@ -140,13 +141,13 @@ export default function WorkflowsPage() {
                         <div className={`w-1.5 h-1.5 rounded-full ${item.isActive ? "bg-emerald-500" : "bg-gray-400"}`} />
                         <span className="text-[13px] leading-[18px] font-bold">{item.isActive ? "Active" : "Inactive"}</span>
                       </div>
-                      <button
+                      <Button
                         onClick={() => router.push(`/dashboard/hr/workflows/edit?workflowId=${item.workflowId}`)}
                         className="p-2 hover:bg-[#eceef0] rounded-full transition-colors text-[#787680] hover:text-[#070235]"
                         title="แก้ไขลำดับการอนุมัติ"
                       >
                         <Pencil className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>

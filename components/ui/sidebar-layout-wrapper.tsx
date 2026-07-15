@@ -6,7 +6,7 @@ import { UserProvider } from "@/lib/user-context";
 
 type SidebarLayoutWrapperProps = {
   children: React.ReactNode;
-  user: { name: string; email: string; roles: string[] };
+  user: { name: string; email: string; roles: string[]; forceChangePassword: boolean };
 };
 
 export function SidebarLayoutWrapper({ children, user }: SidebarLayoutWrapperProps) {

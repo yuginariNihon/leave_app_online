@@ -12,7 +12,6 @@ export type PagePermissionItem = {
 const DEFAULT_PAGES: { pageKey: string; pageName: string; groupName: string; defaultRoleNames: string[] }[] = [
   // HR menu
   { pageKey: "hr_approval",      pageName: "อนุมัติคำขอลา (HR)",      groupName: "เมนู HR",    defaultRoleNames: ["HR"] },
-  { pageKey: "hr_history",       pageName: "ประวัติการอนุมัติ (HR)",    groupName: "เมนู HR",    defaultRoleNames: ["HR"] },
   { pageKey: "leave_report",     pageName: "รายงานการลา",             groupName: "เมนู HR",    defaultRoleNames: ["HR"] },
 
   // จัดการระบบ
@@ -36,7 +35,7 @@ const DEFAULT_PAGES: { pageKey: string; pageName: string; groupName: string; def
 
   // Supervisor
   { pageKey: "supervisor_approval", pageName: "อนุมัติคำขอ",              groupName: "เมนูหัวหน้า", defaultRoleNames: ["APPROVER"] },
-  { pageKey: "supervisor_history",  pageName: "ประวัติการอนุมัติ",         groupName: "เมนูหัวหน้า", defaultRoleNames: ["APPROVER"] },
+  { pageKey: "supervisor_history",  pageName: "ประวัติการอนุมัติ",         groupName: "เมนูหัวหน้า", defaultRoleNames: ["APPROVER", "HR"] },
 
   // Employee pages (STAFF/Employee + APPROVER can access)
   { pageKey: "leave_request",  pageName: "คำขอลา",    groupName: "เมนูพนักงาน", defaultRoleNames: ["STAFF", "APPROVER"] },

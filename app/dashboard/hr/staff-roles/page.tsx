@@ -17,6 +17,7 @@ import DashboardContent from "@/components/DashboardContent";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { toast } from "sonner";
 import { StaffRoleDialog } from "@/app/dashboard/admin/roles/StaffRoleDialog";
+import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/user-context";
 
 type StaffWithRoles = {
@@ -200,12 +201,12 @@ export default function StaffRolesPage() {
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center justify-center">
-                            <button
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                               onClick={() => handleEdit(s)}
                             >
                               <Pencil className="w-[20px] h-[20px]" />
-                            </button>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

@@ -1029,6 +1029,7 @@ export async function updateStaff(
           staff_id: id,
           email: data.email,
           password_hash: passwordHash,
+          password_changed_at: new Date(),
         },
       });
     }
@@ -1130,13 +1131,14 @@ export async function createStaff(
   }
 
   if (data.email && data.phoneNumber) {
-    const passwordHash = await hashPassword(data.phoneNumber || randomBytes(5).toString("hex"));
+    const passwordHash = await hashPassword(data.phoneNumber);
     await prisma.user.upsert({
       where: { staff_id: staff.staff_id },
       create: {
         staff_id: staff.staff_id,
         email: data.email,
         password_hash: passwordHash,
+        password_changed_at: new Date(),
       },
       update: { email: data.email },
     });
@@ -1307,13 +1309,14 @@ export async function importStaff(
         }
 
         if (row.email && row.phoneNumber) {
-          const passwordHash = await hashPassword(row.phoneNumber || randomBytes(5).toString("hex"));
+          const passwordHash = await hashPassword(row.phoneNumber);
           await tx.user.upsert({
             where: { staff_id: createdStaff.staff_id },
             create: {
               staff_id: createdStaff.staff_id,
               email: row.email,
               password_hash: passwordHash,
+              password_changed_at: new Date(),
             },
             update: { email: row.email },
           });
@@ -2985,8 +2988,8 @@ export async function createUserRecord(params: { staffId: string; email: string;
   const passwordHash = await hashPassword(params.password);
   const user = await prisma.user.upsert({
     where: { staff_id: params.staffId },
-    update: { email: params.email, password_hash: passwordHash, force_change_password: true, is_active: true },
-    create: { staff_id: params.staffId, email: params.email, password_hash: passwordHash, force_change_password: true, is_active: true },
+    update: { email: params.email, password_hash: passwordHash, force_change_password: true, is_active: true, password_changed_at: new Date() },
+    create: { staff_id: params.staffId, email: params.email, password_hash: passwordHash, force_change_password: true, is_active: true, password_changed_at: new Date() },
   });
   return user;
 }
@@ -2996,7 +2999,7 @@ export async function resetUserPassword(userId: string) {
   const passwordHash = await hashPassword(rawPassword);
   await prisma.user.update({
     where: { user_id: userId },
-    data: { password_hash: passwordHash, force_change_password: true },
+    data: { password_hash: passwordHash, force_change_password: true, password_changed_at: new Date() },
   });
   return { password: rawPassword };
 }
@@ -3015,7 +3018,7 @@ export async function toggleUserActive(userId: string) {
   return { isActive: newValue };
 }
 
-export async function getUserLoginHistory(userId: string, limit = 20) {
+export async function getUserLoginHistory(userId: string, limit = 10) {
   const history = await prisma.loginHistory.findMany({
     where: { user_id: userId },
     orderBy: { login_at: "desc" },

@@ -6,6 +6,7 @@ type UserContextData = {
   name: string;
   email: string;
   roles: string[];
+  forceChangePassword: boolean;
 };
 
 const UserContext = createContext<UserContextData | null>(null);

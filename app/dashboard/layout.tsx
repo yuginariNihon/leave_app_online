@@ -8,8 +8,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await requireSessionUser();
 
   return (
-    <SidebarLayoutWrapper user={{ name: user.name, email: user.email, roles: user.roles }}>
-      <MainHeader user={{ name: user.name, email: user.email, roles: user.roles }} />
+    <SidebarLayoutWrapper user={{ name: user.name, email: user.email, roles: user.roles, forceChangePassword: user.forceChangePassword }}>
+      <MainHeader user={{ name: user.name, email: user.email, roles: user.roles, forceChangePassword: user.forceChangePassword }} />
       {children}
       <MainFooter />
     </SidebarLayoutWrapper>

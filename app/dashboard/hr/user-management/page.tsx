@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, UserPlus, KeyRound, ToggleLeft, ToggleRight, History, Copy, Check, Loader2 } from "lucide-react";
+import { useFilterWithApply } from "@/hooks/useFilterWithApply";
+import { Search, KeyRound, ToggleLeft, ToggleRight, History, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -26,6 +27,8 @@ type UserListItem = {
   roleNames: string[];
 };
 
+
+
 type LoginHistoryItem = {
   loginHistoryId: string;
   loginAt: string;
@@ -38,23 +41,18 @@ type LoginHistoryItem = {
 export default function UserManagementPage() {
   const [fetchKey, setFetchKey] = useState(0);
 
+  const { live: { search, activeFilter }, setFilter, applied: appliedFilters, page, setPage, submit: handleSearchSubmit, reset: handleReset } = useFilterWithApply({
+    search: "",
+    activeFilter: "all",
+  });
+
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string>("all");
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createStaffId, setCreateStaffId] = useState("");
-  const [createEmail, setCreateEmail] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [generatedPassword, setGeneratedPassword] = useState("");
-  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
-  const [passwordCopied, setPasswordCopied] = useState(false);
 
   const [resetTarget, setResetTarget] = useState<UserListItem | null>(null);
   const [resetting, setResetting] = useState(false);
@@ -64,6 +62,7 @@ export default function UserManagementPage() {
   const [historyData, setHistoryData] = useState<LoginHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  const [passwordCopied, setPasswordCopied] = useState(false);
   const [togglingIds, setTogglingIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -79,8 +78,8 @@ export default function UserManagementPage() {
     setError("");
     try {
       const params = new URLSearchParams();
-      if (search) params.set("search", search);
-      if (activeFilter !== "all") params.set("isActive", activeFilter);
+      if (appliedFilters.search) params.set("search", appliedFilters.search);
+      if (appliedFilters.activeFilter !== "all") params.set("isActive", appliedFilters.activeFilter);
       params.set("page", String(page));
       params.set("limit", "20");
 
@@ -96,46 +95,12 @@ export default function UserManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, activeFilter, page]);
+  }, [appliedFilters, page]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
   }, [fetchUsers, fetchKey]);
-
-  const handleCreateUser = async () => {
-    if (!createStaffId.trim()) {
-      toast.error("กรุณากรอกรหัสพนักงาน");
-      return;
-    }
-    if (!createEmail.trim()) {
-      toast.error("กรุณากรอกอีเมล");
-      return;
-    }
-    setCreating(true);
-    try {
-      const res = await fetch("/api/hr/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ staffId: createStaffId.trim(), email: createEmail.trim() }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to create user");
-      }
-      const json = await res.json();
-      setGeneratedPassword(json.data.password);
-      setCreateOpen(false);
-      setCreateStaffId("");
-      setCreateEmail("");
-      setPasswordDialogOpen(true);
-      toast.success("สร้างผู้ใช้สำเร็จ");
-      fetchUsers();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
-    } finally {
-      setCreating(false);
-    }
-  };
 
   const handleResetPassword = async () => {
     if (!resetTarget) return;
@@ -241,25 +206,28 @@ export default function UserManagementPage() {
                 className="pl-10 h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px] w-[200px]"
                 placeholder="ค้นหาพนักงาน..."
                 value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                onChange={(e) => setFilter("search", e.target.value)}
               />
             </div>
+            
             <select
               className="h-11 border border-[#c8c5d0] rounded-lg px-3 text-[14px] bg-white focus-visible:ring-secondary/20 outline-none"
               value={activeFilter}
-              onChange={(e) => { setActiveFilter(e.target.value); setPage(1); }}
+              onChange={(e) => setFilter("activeFilter", e.target.value)}
             >
               <option value="all">ทั้งหมด</option>
               <option value="true">เปิดใช้งาน</option>
               <option value="false">ปิดใช้งาน</option>
             </select>
             <Button
-              onClick={() => setCreateOpen(true)}
+              type="button"
+              onClick={handleSearchSubmit}
               className="bg-[#6063ee] hover:bg-secondary text-white font-semibold rounded-lg h-11 px-4 text-[12px] tracking-[0.05em] uppercase flex items-center gap-2 shadow-sm"
             >
-              <UserPlus className="w-[18px] h-[18px]" />
-              สร้างผู้ใช้
+              <Search className="w-[18px] h-[18px]" />
+              ค้นหา
             </Button>
+
           </div>
         </div>
 
@@ -284,7 +252,7 @@ export default function UserManagementPage() {
                     <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">อีเมล</TableHead>
                     <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">บทบาท</TableHead>
                     <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">สถานะ</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">บังคับเปลี่ยนรหัส</TableHead>
+                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] text-nowrap uppercase">บังคับเปลี่ยนรหัส</TableHead>
                     <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">เข้าสู่ระบบล่าสุด</TableHead>
                     <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">สร้างเมื่อ</TableHead>
                     <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase text-center">จัดการ</TableHead>
@@ -322,14 +290,14 @@ export default function UserManagementPage() {
                         <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap text-[#47464f]">{formatDate(user.createdAt)}</TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
-                            <button
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                               title="รีเซ็ตรหัสผ่าน"
                               onClick={() => { setResetTarget(user); setResetPasswordResult(""); }}
                             >
                               <KeyRound className="w-[18px] h-[18px]" />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/10 transition-all"
                               title={user.isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"}
                               disabled={togglingIds.includes(user.userId)}
@@ -342,14 +310,14 @@ export default function UserManagementPage() {
                               ) : (
                                 <ToggleLeft className="w-[18px] h-[18px]" />
                               )}
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                               title="ประวัติการเข้าใช้"
                               onClick={() => openHistoryDialog(user)}
                             >
                               <History className="w-[18px] h-[18px]" />
-                            </button>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -394,72 +362,9 @@ export default function UserManagementPage() {
           </div>
         )}
 
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>สร้างผู้ใช้ใหม่</DialogTitle>
-              <DialogDescription>กรอกข้อมูลเพื่อสร้างบัญชีผู้ใช้สำหรับพนักงาน</DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-4 py-2">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-medium text-[#47464f]">รหัสพนักงาน (Staff ID)</label>
-                <Input
-                  placeholder="เช่น STF001"
-                  value={createStaffId}
-                  onChange={(e) => setCreateStaffId(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-medium text-[#47464f]">อีเมล</label>
-                <Input
-                  type="email"
-                  placeholder="อีเมลสำหรับเข้าใช้งาน"
-                  value={createEmail}
-                  onChange={(e) => setCreateEmail(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 mt-2">
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>ยกเลิก</Button>
-              <Button
-                className="bg-[#6063ee] hover:bg-secondary text-white"
-                disabled={creating}
-                onClick={handleCreateUser}
-              >
-                {creating && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-                สร้างผู้ใช้
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
 
-        <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>รหัสผ่านสำหรับผู้ใช้ใหม่</DialogTitle>
-              <DialogDescription>กรุณาบันทึกรหัสผ่านนี้และส่งให้พนักงาน</DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col items-center gap-4 py-4">
-              <div className="bg-[#f0f0ff] border border-[#d0d5f0] rounded-lg px-6 py-4 w-full text-center">
-                <p className="text-[13px] text-[#47464f] mb-2">รหัสผ่าน</p>
-                <p className="text-[22px] font-bold text-[#070235] tracking-wider font-mono select-all">{generatedPassword}</p>
-              </div>
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={() => copyToClipboard(generatedPassword)}
-              >
-                {passwordCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                {passwordCopied ? "คัดลอกแล้ว" : "คัดลอก"}
-              </Button>
-            </div>
-            <div className="flex justify-end">
-              <Button onClick={() => { setPasswordDialogOpen(false); setPasswordCopied(false); }}>
-                ปิด
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+
+
 
         <Dialog open={!!resetTarget && !resetPasswordResult} onOpenChange={(o) => { if (!o) { setResetTarget(null); setResetPasswordResult(""); } }}>
           <DialogContent className="sm:max-w-[480px] !rounded-xl !p-0 overflow-hidden gap-0 shadow-xl">
@@ -484,13 +389,13 @@ export default function UserManagementPage() {
                 </div>
               </div>
               <div className="flex flex-col-reverse md:flex-row w-full gap-4 md:justify-end">
-                <button
+                <Button
                   onClick={() => { setResetTarget(null); setResetPasswordResult(""); }}
                   className="w-full md:w-auto px-6 py-2.5 rounded-lg border border-[#767586] text-[#111c2d] text-[14px] font-semibold leading-[20px] hover:bg-[#d8e3fb] transition-colors cursor-pointer active:scale-95 duration-100"
                 >
                   ยกเลิก
-                </button>
-                <button
+                </Button>
+                <Button
                   disabled={resetting}
                   onClick={handleResetPassword}
                   className="w-full md:w-auto px-6 py-2.5 rounded-lg bg-[#6063ee] text-white text-[14px] font-semibold leading-[20px] hover:brightness-110 shadow-sm transition-all cursor-pointer active:scale-95 duration-100 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -503,7 +408,7 @@ export default function UserManagementPage() {
                     </svg>
                   )}
                   {resetting ? "กำลังดำเนินการ..." : "ยืนยันรีเซ็ต"}
-                </button>
+                </Button>
               </div>
             </div>
             <div className="px-6 py-3 bg-[#e7eeff] border-t border-[#c7c4d7] flex justify-between items-center">
@@ -536,7 +441,7 @@ export default function UserManagementPage() {
                 <p className="text-[13px] text-[#464554] font-medium mb-2">รหัสผ่านใหม่</p>
                 <p className="text-[22px] font-bold text-[#111c2d] tracking-wider font-mono select-all">{resetPasswordResult}</p>
               </div>
-              <button
+              <Button
                 onClick={() => copyToClipboard(resetPasswordResult)}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-[#767586] text-[#111c2d] text-[14px] font-semibold leading-[20px] hover:bg-[#d8e3fb] transition-colors cursor-pointer active:scale-95 duration-100 mb-2"
               >
@@ -550,7 +455,7 @@ export default function UserManagementPage() {
                   </svg>
                 )}
                 {passwordCopied ? "คัดลอกแล้ว" : "คัดลอก"}
-              </button>
+              </Button>
             </div>
             <div className="px-6 py-3 bg-[#e7eeff] border-t border-[#c7c4d7] flex justify-between items-center">
               <span className="text-[12px] leading-[16px] tracking-[0.02em] font-medium text-[#464554] flex items-center gap-1">
@@ -559,12 +464,12 @@ export default function UserManagementPage() {
                 </svg>
                 Protected action
               </span>
-              <button
+              <Button
                 onClick={() => { setResetTarget(null); setResetPasswordResult(""); setPasswordCopied(false); }}
                 className="text-[14px] font-semibold leading-[20px] text-[#4648d4] hover:underline"
               >
                 ปิด
-              </button>
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

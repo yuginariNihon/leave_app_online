@@ -290,20 +290,20 @@ export default function HolidaysPage() {
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center justify-center gap-3">
-                            <button
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                               onClick={() => openEdit(holiday)}
                             >
                               <svg className="w-[20px] h-[20px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/10 transition-all"
                               onClick={() => handleDelete(holiday.holidayId, holiday.holidayName)}
                             >
                               <Trash2 className="w-[20px] h-[20px]" />
-                            </button>
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
