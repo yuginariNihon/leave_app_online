@@ -304,9 +304,9 @@ export default function ImportStaffPage() {
                   </div>
                 )}
               </div>
-          </div>
-        </div>
-      </section>
+            </div>    {/* bg-white */}
+          </div>      {/* max-w-4xl */}
+        </section>
       </main>
     </div>
   );

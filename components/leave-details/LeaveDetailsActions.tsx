@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Printer, XCircle, X, AlertTriangle, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
-import { formatShortDate, formatLeaveDateRange } from "@/lib/utils";
+import { formatLeaveDateRange } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,

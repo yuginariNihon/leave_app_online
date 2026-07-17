@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@/lib/user-context";
 import { Save, Loader2, Shield } from "lucide-react";
 
 type StaffWithRoles = {
@@ -34,12 +33,8 @@ type Props = {
 };
 
 export function StaffRoleDialog({ open, onOpenChange, staff, roleOptions, onSave }: Props) {
-  const { roles: userRoles } = useUser();
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-
-  const isSuperAdmin = userRoles.includes("SUPER_ADMIN");
-  const isSelf = userRoles.length > 0 && staff.roles.length > 0 && staff.staffId === staff.staffId;
 
   useEffect(() => {
     if (open) {
@@ -80,7 +75,6 @@ export function StaffRoleDialog({ open, onOpenChange, staff, roleOptions, onSave
         <div className="space-y-3 py-4">
           {roleOptions.map((role) => {
             const isChecked = selected.includes(role.roleName);
-            const cannotUncheck = isSuperAdmin && role.roleName === "SUPER_ADMIN";
 
             return (
               <label

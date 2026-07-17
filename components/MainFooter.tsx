@@ -1,7 +1,6 @@
 "use client";
-import React from "react";
+
 import { usePathname } from "next/navigation";
-import { Button } from "./ui/button";
 
 export function MainFooter() {
   const pathname = usePathname();

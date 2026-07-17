@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { UseFormReturn, Controller, useWatch } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileUp } from "lucide-react";
+import { DatePicker } from "./DatePicker";
+
 import {
   Select,
   SelectContent,
@@ -27,15 +28,13 @@ interface LeaveFormProps {
   isQuotaExceeded?: boolean;
   optionsLoading?: boolean;
   dayCount: number;
-  fileName: string;
-  fileError?: string;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (values: LeaveFormValues) => void;
   createdAt?: string;
+  holidays?: string[];
 }
 
-export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {},isQuotaExceeded = false,optionsLoading = false,dayCount,fileName,fileError = "",onFileChange,onSubmit,createdAt,}: LeaveFormProps) {
-  const {register,control,handleSubmit,setValue,formState: { errors },} = form;
+export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {},isQuotaExceeded = false,optionsLoading = false,dayCount,onSubmit,createdAt,holidays = [],}: LeaveFormProps) {
+  const {register,control,handleSubmit,setValue,clearErrors,formState: { errors },} = form;
 
   const leaveTypeId = useWatch({ control, name: "leaveTypeId" });
   const leaveCaseId = useWatch({ control, name: "leaveCaseId" });
@@ -64,25 +63,6 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
       setValue("leaveCaseId", firstLeaveCaseId, { shouldValidate: true });
     }
   }, [leaveTypeId, leaveCaseId, filteredLeaveCases, firstLeaveCaseId, setValue]);
-
-  // จัดการวันที่เริ่มต้น: ถ้าเลือกวันเริ่มต้นหลังวันสิ้นสุด ให้เลื่อนวันสิ้นสุดตาม
-  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newStart = e.target.value;
-    setValue("startDate", newStart, { shouldValidate: true });
-    if (new Date(newStart) > new Date(endDate)) {
-      setValue("endDate", newStart, { shouldValidate: true });
-    }
-  };
-
-  // จัดการวันที่สิ้นสุด: ป้องกันไม่ให้เลือกวันก่อนวันเริ่มต้น
-  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEnd = e.target.value;
-    if (new Date(newEnd) >= new Date(startDate)) {
-      setValue("endDate", newEnd, { shouldValidate: true });
-    } else {
-      setValue("endDate", startDate, { shouldValidate: true });
-    }
-  };
 
   return (
     <form id="leave-request-form" onSubmit={handleSubmit(onSubmit)} className="relative z-10 space-y-8">
@@ -194,13 +174,18 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
           <Label htmlFor="start-date" className="text-sm font-semibold text-slate-700">
             วันที่เริ่มต้น<span className="text-red-500 ml-1">*</span>
           </Label>
-          <Input
-            type="date"
-            id="start-date"
-            className="h-11 bg-white border-gray-200 focus:ring-[#100d41]"
+          <DatePicker
             value={startDate}
-            max={endDate}
-            onChange={handleStartDateChange}
+            onChange={(v) => {
+              setValue("startDate", v, { shouldValidate: true });
+              clearErrors("startDate");
+              if (new Date(v) > new Date(endDate)) {
+                setValue("endDate", v, { shouldValidate: true });
+              }
+            }}
+            max={endDate || undefined}
+            holidays={holidays}
+            placeholder="เลือกวันที่เริ่มต้น"
           />
           {errors.startDate && (
             <p className="text-sm text-red-500">{errors.startDate.message}</p>
@@ -212,13 +197,19 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
           <Label htmlFor="end-date" className="text-sm font-semibold text-slate-700">
             วันที่สิ้นสุด<span className="text-red-500 ml-1">*</span>
           </Label>
-          <Input
-            type="date"
-            id="end-date"
-            className="h-11 bg-white border-gray-200 focus:ring-[#100d41]"
+          <DatePicker
             value={endDate}
-            min={startDate}
-            onChange={handleEndDateChange}
+            onChange={(v) => {
+              clearErrors("endDate");
+              if (new Date(v) >= new Date(startDate)) {
+                setValue("endDate", v, { shouldValidate: true });
+              } else {
+                setValue("endDate", startDate, { shouldValidate: true });
+              }
+            }}
+            min={startDate || undefined}
+            holidays={holidays}
+            placeholder="เลือกวันที่สิ้นสุด"
           />
           {errors.endDate && (
             <p className="text-sm text-red-500">{errors.endDate.message}</p>

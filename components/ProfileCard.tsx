@@ -1,4 +1,4 @@
-import React from "react";
+
 import type { StaffProfile } from "@/lib/services/leaveService";
 
 function getInitials(name: string): string {

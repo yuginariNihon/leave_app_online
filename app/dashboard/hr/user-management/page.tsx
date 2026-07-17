@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import { Search, KeyRound, ToggleLeft, ToggleRight, History, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ type LoginHistoryItem = {
 export default function UserManagementPage() {
   const [fetchKey, setFetchKey] = useState(0);
 
-  const { live: { search, activeFilter }, setFilter, applied: appliedFilters, page, setPage, submit: handleSearchSubmit, reset: handleReset } = useFilterWithApply({
+  const { live: { search, activeFilter }, setFilter, applied: appliedFilters, page, setPage, submit: handleSearchSubmit } = useFilterWithApply({
     search: "",
     activeFilter: "all",
   });

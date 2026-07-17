@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { toast } from "sonner";
 import { CheckCircle2, X } from "lucide-react";
 import { useRouter } from "next/navigation";

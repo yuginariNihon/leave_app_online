@@ -61,7 +61,7 @@ export async function getDashboardKpiData(): Promise<DashboardKpiData> {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const [pendingApprovals, approvedToday, totalLeavesThisMonth, totalLeavesThisYear, activeStaffCount, terminatedStaffCount, leaveToday, avgApprovalData] = await Promise.all([
+  const [pendingApprovals, approvedToday, totalLeavesThisMonth, totalLeavesThisYear, activeStaffCount, terminatedStaffCount, leaveToday, avgApprovalData] = await prisma.$transaction([
     prisma.dataLeave.count({ where: { leave_status: LeaveStatus.pending } }),
     prisma.dataLeave.count({ where: { leave_status: LeaveStatus.approved, updated_at: { gte: today } } }),
     prisma.dataLeave.count({ where: { created_at: { gte: monthStart } } }),
@@ -103,27 +103,34 @@ export async function getDashboardKpiData(): Promise<DashboardKpiData> {
 }
 
 export async function getLeaveTrendData(): Promise<LeaveTrendItem[]> {
-  const months: LeaveTrendItem[] = [];
+  const rows = await prisma.$queryRaw<{ month: Date; count: bigint }[]>`
+    SELECT DATE_TRUNC('month', created_at)::date AS month, COUNT(*)::int AS count
+    FROM "DataLeave"
+    WHERE created_at >= NOW() - INTERVAL '12 months'
+    GROUP BY DATE_TRUNC('month', created_at)
+    ORDER BY month ASC
+  `;
+
   const now = new Date();
+  const countsByMonth = new Map<string, number>();
+  for (const r of rows) {
+    const key = `${r.month.getFullYear()}-${r.month.getMonth()}`;
+    countsByMonth.set(key, Number(r.count));
+  }
+
+  const result: LeaveTrendItem[] = [];
   for (let i = 11; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthStart = d;
-    const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
     const label = d.toLocaleDateString("th-TH", { month: "short", year: "2-digit" });
-
-    const count = await prisma.dataLeave.count({
-      where: {
-        created_at: { gte: monthStart, lt: monthEnd },
-      },
-    });
-    months.push({ month: label, count });
+    result.push({ month: label, count: countsByMonth.get(key) ?? 0 });
   }
-  return months;
+  return result;
 }
 
 export async function getLeaveTypeDistribution(): Promise<LeaveTypeDistItem[]> {
   const types = await prisma.leaveType.findMany({
-    include: { _count: { select: { leaves: true } } },
+    select: { leave_type_name: true, _count: { select: { leaves: true } } },
     orderBy: { leave_type_name: "asc" },
   });
   return types
@@ -274,37 +281,30 @@ export async function getDeptLeaveComparison(monthsBack = 6): Promise<DeptLeaveC
   const since = new Date();
   since.setMonth(since.getMonth() - monthsBack);
 
-  const departments = await prisma.department.findMany({
-    include: {
-      staffs: {
-        select: {
-          leaves: {
-            where: { created_at: { gte: since } },
-            select: { leave_id: true },
-          },
-        },
-      },
-    },
-    orderBy: { department_name: "asc" },
-  });
+  const rows = await prisma.$queryRaw<{ department_name: string; total_leaves: bigint }[]>`
+    SELECT d.department_name, COUNT(dl.leave_id)::int AS total_leaves
+    FROM "Department" d
+    LEFT JOIN "StaffInfo" s ON s.department_id = d.department_id
+    LEFT JOIN "DataLeave" dl ON dl.staff_id = s.staff_id AND dl.created_at >= ${since}
+    GROUP BY d.department_id, d.department_name
+    HAVING COUNT(dl.leave_id) > 0
+    ORDER BY total_leaves DESC
+  `;
 
-  return departments
-    .map((d) => ({
-      departmentName: d.department_name,
-      totalLeaves: d.staffs.reduce((sum, s) => sum + s.leaves.length, 0),
-    }))
-    .filter((d) => d.totalLeaves > 0)
-    .sort((a, b) => b.totalLeaves - a.totalLeaves);
+  return rows.map((r) => ({
+    departmentName: r.department_name,
+    totalLeaves: Number(r.total_leaves),
+  }));
 }
 
 export async function getApprovalStatusStats(): Promise<ApprovalStatusStat[]> {
-  const counts = await Promise.all(
-    Object.keys(STATUS_COLORS).map(async (status) => {
-      const count = await prisma.dataLeave.count({ where: { leave_status: status as LeaveStatus } });
-      return { status, count, color: STATUS_COLORS[status] };
-    })
+  const entries = Object.entries(STATUS_COLORS);
+  const counts = await prisma.$transaction(
+    entries.map(([status]) => prisma.dataLeave.count({ where: { leave_status: status as LeaveStatus } }))
   );
-  return counts.filter((c) => c.count > 0);
+  return entries
+    .map(([status, color], i) => ({ status, count: counts[i], color }))
+    .filter((r) => r.count > 0);
 }
 
 export async function getLeaveCalendarData(year: number, month: number): Promise<LeaveCalendarDay[]> {

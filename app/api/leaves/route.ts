@@ -9,6 +9,8 @@ import {
   type CreateLeaveRequestValues,
 } from "@/lib/TypeSchema";
 import { getSessionUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { toDateOnly } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -16,7 +18,6 @@ async function buildCreateLeaveRequestInput(
   input: CreateLeaveRequestValues,
   staffId: string,
 ): Promise<CreateLeaveRequestInput | { error: string }> {
-
 
   const { isStaffValid, isLeaveTypeValid, isLeaveCaseValid } =
     await validateLeaveRequestDetails(staffId, input.leaveTypeId, input.leaveCaseId);
@@ -34,6 +35,28 @@ async function buildCreateLeaveRequestInput(
       error:
         "Invalid leaveCaseId, or it does not belong to the selected leaveTypeId.",
     };
+  }
+
+  // Validate no Sunday or company holiday in range
+  const start = toDateOnly(input.startDate);
+  const end = toDateOnly(input.endDate);
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    if (d.getDay() === 0) {
+      const dayStr = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+      return { error: `ไม่สามารถยื่นคำขอลาในวันอาทิตย์ (${dayStr})` };
+    }
+  }
+
+  const holidays = await prisma.holiday.findMany({
+    where: { holiday_date: { gte: start, lte: end } },
+    select: { holiday_name: true, holiday_date: true },
+  });
+
+  if (holidays.length > 0) {
+    const names = holidays.map((h) => h.holiday_name).join(", ");
+    return { error: `ไม่สามารถยื่นคำขอลาในวันหยุดบริษัท: ${names}` };
   }
 
   return {

@@ -1034,9 +1034,13 @@ export async function getApprovalHistory(
         leave: {
           include: {
             staff: {
-              include: { department: true },
+              select: {
+                name: true,
+                staff_code: true,
+                department: { select: { department_name: true } },
+              },
             },
-            leaveType: true,
+            leaveType: { select: { leave_type_name: true } },
           },
         },
       },

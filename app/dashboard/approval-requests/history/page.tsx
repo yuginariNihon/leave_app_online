@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
 import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters";
@@ -29,7 +29,6 @@ type HistoryItem = {
 };
 
 function ApprovalHistoryPageInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [fetchKey, setFetchKey] = useState(0);
 
@@ -41,12 +40,20 @@ function ApprovalHistoryPageInner() {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
-  const [roleType, setRoleType] = useState(searchParams.get("roleType") || "all");
+  const [roleType] = useState(searchParams.get("roleType") || "all");
+  const monthStart = (() => {
+    const d = new Date(); d.setDate(1);
+    return d.toISOString().split("T")[0];
+  })();
+  const monthEnd = (() => {
+    const d = new Date(); d.setMonth(d.getMonth() + 1, 0);
+    return d.toISOString().split("T")[0];
+  })();
   const { live: { searchTerm, typeFilter, startDate, endDate }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit: handleSearchSubmit, reset: handleResetFilters } = useFilterWithApply({
     searchTerm: "",
     typeFilter: "all",
-    startDate: "",
-    endDate: "",
+    startDate: monthStart,
+    endDate: monthEnd,
   });
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<
     Array<{ id: string; label: string }>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 
 import { ArrowLeft, CalendarDays } from "lucide-react";
-import { countInclusiveDays, currentSubmitTime } from "@/lib/utils";
+import { currentSubmitTime } from "@/lib/utils";
 
 import {
   LeaveForm
@@ -26,8 +26,6 @@ import { SuccessDialog } from "@/components/leave-request/SuccessDialog";
 import { styleAlertTextSuccess } from "@/lib/utils";
 import { leaveFormSchema, LeaveFormValues } from "@/lib/TypeSchema";
 import { useLeaveOptions } from "@/hooks/useLeaveOptions";
-// ⚠️ File upload — not yet implemented (hook kept for future use)
-import { useFileUpload } from "@/hooks/useFileUpload";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export type LeaveQuotaMap = Record<string, { usedDays: number; maxDays: number; remaining: number }>;
@@ -40,9 +38,9 @@ export default function LeaveRequestPage() {
   const [submitTime, setSubmitTime] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [leaveQuota, setLeaveQuota] = useState<LeaveQuotaMap>({});
+  const [holidays, setHolidays] = useState<string[]>([]);
 
   const { leaveTypeOptions, leaveCaseOptions, optionsLoading, optionsError } = useLeaveOptions();
-  const { fileName, fileError: uploadFileError, handleFileChange } = useFileUpload();
 
   // React Hook Form
   const form = useForm<LeaveFormValues>({
@@ -80,19 +78,37 @@ export default function LeaveRequestPage() {
     };
   }, []);
 
+  // Fetch holidays
+  useEffect(() => {
+    fetch("/api/holidays")
+      .then((r) => r.json())
+      .then((json) => setHolidays((json.data ?? []).map((h: { holidayDate: string }) => h.holidayDate)))
+      .catch(() => {});
+  }, []);
+
   // Watch form values
   const startDate = form.watch("startDate");
   const endDate = form.watch("endDate");
   const leaveTypeId = form.watch("leaveTypeId");
   const leavePeriod = form.watch("leavePeriod");
 
-  // Calculate leave days
+  // Calculate leave days (exclude Sundays and holidays)
   const dayCount = useMemo(() => {
     if (!startDate || !endDate) return 0;
-    const fullDays = countInclusiveDays(startDate, endDate);
-    if (leavePeriod && leavePeriod !== "full_day") return fullDays / 2;
-    return fullDays;
-  }, [startDate, endDate, leavePeriod]);
+    let count = 0;
+    const start = new Date(Number(startDate.slice(0,4)), Number(startDate.slice(5,7)) - 1, Number(startDate.slice(8,10)));
+    const end = new Date(Number(endDate.slice(0,4)), Number(endDate.slice(5,7)) - 1, Number(endDate.slice(8,10)));
+    const cur = new Date(start);
+    while (cur <= end) {
+      const ds = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}-${String(cur.getDate()).padStart(2, "0")}`;
+      if (cur.getDay() !== 0 && !holidays.includes(ds)) {
+        count++;
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+    if (leavePeriod && leavePeriod !== "full_day") return count / 2;
+    return count;
+  }, [startDate, endDate, leavePeriod, holidays]);
 
   // Check if requested days exceed remaining quota
   const totalRemaining = leaveTypeId ? leaveQuota[leaveTypeId]?.remaining ?? Infinity : Infinity;
@@ -247,10 +263,8 @@ export default function LeaveRequestPage() {
               isQuotaExceeded={isQuotaExceeded}
               optionsLoading={optionsLoading}
               dayCount={dayCount}
-              fileName={fileName}
-              fileError={uploadFileError}
-              onFileChange={handleFileChange}
               onSubmit={handleSubmit}
+              holidays={holidays}
             />
           </CardContent>
 

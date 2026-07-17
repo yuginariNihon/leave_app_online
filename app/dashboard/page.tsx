@@ -1,4 +1,4 @@
-import React from "react";
+
 import { requireSessionUser } from "@/lib/auth";
 import { DashboardIntro } from "@/components/DashboardIntro";
 import { LeaveStatsCards } from "@/components/LeaveStatsCards";

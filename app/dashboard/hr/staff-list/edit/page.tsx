@@ -1,21 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Save, Loader2, Check } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { StaffForm } from "@/components/hr/StaffForm";
 import type { StaffMasterData, StaffDetailData, LeaveRightItem } from "@/lib/services/leaveService";
 import type { UpdateStaffValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-
-const statusOptions = [
-  { value: "active" as const, label: "Active" },
-  { value: "inactive" as const, label: "Inactive" },
-  { value: "terminated" as const, label: "Terminated" },
-];
 
 export default function EditStaffPage() {
   const router = useRouter();
@@ -266,8 +260,9 @@ export default function EditStaffPage() {
               )}
             </div>
           </div>
-      </section>
+        </section>
       </main>
     </div>
   );
 }
+

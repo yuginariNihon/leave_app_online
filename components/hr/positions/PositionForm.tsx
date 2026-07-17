@@ -1,11 +1,10 @@
 "use client";
 
-import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Save, Loader2, ArrowLeft } from "lucide-react";
-import { createPositionSchema, updatePositionSchema } from "@/lib/TypeSchema";
+import { Save, Loader2 } from "lucide-react";
+import { createPositionSchema } from "@/lib/TypeSchema";
 import type { CreatePositionValues, UpdatePositionValues } from "@/lib/TypeSchema";
 
 interface PositionFormProps {
@@ -19,7 +18,6 @@ interface PositionFormProps {
 }
 
 export function PositionForm({
-  mode,
   defaultValues,
   isSubmitting,
   isSuccess,

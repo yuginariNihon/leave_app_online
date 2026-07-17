@@ -1,4 +1,4 @@
-import React from "react";
+
 import type { DashboardLeaveStats } from "@/lib/services/leaveService";
 
 export function LeaveStatsCards({ stats }: { stats: DashboardLeaveStats }) {

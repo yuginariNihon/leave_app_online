@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_PAGE_PERMISSIONS } from "@/lib/menu-config";
 
 export type PagePermissionItem = {
   pageResourceId: string;
@@ -9,39 +10,7 @@ export type PagePermissionItem = {
   allowedRoleNames: string[];
 };
 
-const DEFAULT_PAGES: { pageKey: string; pageName: string; groupName: string; defaultRoleNames: string[] }[] = [
-  // HR menu
-  { pageKey: "hr_approval",      pageName: "อนุมัติคำขอลา (HR)",      groupName: "เมนู HR",    defaultRoleNames: ["HR"] },
-  { pageKey: "leave_report",     pageName: "รายงานการลา",             groupName: "เมนู HR",    defaultRoleNames: ["HR"] },
-
-  // จัดการระบบ
-  { pageKey: "manage_workflows",  pageName: "จัดการลำดับการอนุมัติ",    groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_staff",      pageName: "รายชื่อพนักงาน",          groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_departments",pageName: "จัดการแผนก",              groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_positions",  pageName: "จัดการตำแหน่ง",           groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_leave_types",pageName: "จัดการประเภทการลา",       groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_leave_cases",pageName: "จัดการกรณีการลา",        groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_emp_types",  pageName: "จัดการประเภทพนักงาน",     groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_roles",      pageName: "จัดการบทบาทพนักงาน",      groupName: "จัดการระบบ", defaultRoleNames: ["SUPER_ADMIN"] },
-  { pageKey: "manage_staff_roles",pageName: "จัดการสิทธิ์ของพนักงาน",   groupName: "จัดการระบบ", defaultRoleNames: ["SUPER_ADMIN"] },
-  { pageKey: "manage_page_permissions", pageName: "จัดการสิทธิ์การเข้าถึงหน้า", groupName: "จัดการระบบ", defaultRoleNames: ["SUPER_ADMIN"] },
-  { pageKey: "manage_sections",    pageName: "จัดการแผนกย่อย",      groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_leave_quota", pageName: "จัดการสิทธิ์วันลา",    groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_holidays",    pageName: "จัดการวันหยุด",       groupName: "จัดการระบบ", defaultRoleNames: ["HR"] },
-  { pageKey: "manage_users",       pageName: "จัดการผู้ใช้",        groupName: "จัดการระบบ", defaultRoleNames: ["HR", "SUPER_ADMIN"] },
-
-  // Employee pages
-  { pageKey: "user_profile",  pageName: "โปรไฟล์ของฉัน",  groupName: "เมนูพนักงาน", defaultRoleNames: ["STAFF", "Employee", "APPROVER"] },
-
-  // Supervisor
-  { pageKey: "supervisor_approval", pageName: "อนุมัติคำขอ",              groupName: "เมนูหัวหน้า", defaultRoleNames: ["APPROVER"] },
-  { pageKey: "supervisor_history",  pageName: "ประวัติการอนุมัติ",         groupName: "เมนูหัวหน้า", defaultRoleNames: ["APPROVER", "HR"] },
-
-  // Employee pages (STAFF/Employee + APPROVER can access)
-  { pageKey: "leave_request",  pageName: "คำขอลา",    groupName: "เมนูพนักงาน", defaultRoleNames: ["STAFF", "APPROVER"] },
-  { pageKey: "leave_history",  pageName: "ประวัติการลา", groupName: "เมนูพนักงาน", defaultRoleNames: ["STAFF", "APPROVER"] },
-  { pageKey: "leave_details",  pageName: "รายละเอียดการลา", groupName: "เมนูพนักงาน", defaultRoleNames: ["STAFF", "APPROVER"] },
-];
+const DEFAULT_PAGES = DEFAULT_PAGE_PERMISSIONS;
 
 export async function seedDefaultPagePermissions() {
   const roles = await prisma.role.findMany({ select: { role_id: true, role_name: true } });

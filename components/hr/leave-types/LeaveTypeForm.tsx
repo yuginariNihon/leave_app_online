@@ -1,11 +1,10 @@
 "use client";
 
-import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Tags, Save, Loader2, Check } from "lucide-react";
+import { Save, Loader2, Check } from "lucide-react";
 import { createLeaveTypeSchema } from "@/lib/TypeSchema";
 import type { CreateLeaveTypeValues, UpdateLeaveTypeValues } from "@/lib/TypeSchema";
 
@@ -20,7 +19,6 @@ interface LeaveTypeFormProps {
 }
 
 export function LeaveTypeForm({
-  mode,
   defaultValues,
   isSubmitting,
   isSuccess,

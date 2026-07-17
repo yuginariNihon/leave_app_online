@@ -1,32 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { PAGE_KEY_BY_PREFIX } from "@/lib/menu-config";
 
 const SESSION_COOKIE_NAME = "leave_app_db_session";
-
-const PAGE_KEY_BY_PREFIX: [string, string][] = [
-  ["/dashboard/admin/page-permissions", "manage_page_permissions"],
-  ["/dashboard/admin/roles", "manage_roles"],
-  ["/dashboard/hr/employee-types", "manage_emp_types"],
-  ["/dashboard/hr/leave-cases", "manage_leave_cases"],
-  ["/dashboard/hr/leave-types", "manage_leave_types"],
-  ["/dashboard/hr/positions", "manage_positions"],
-  ["/dashboard/hr/departments", "manage_departments"],
-  ["/dashboard/hr/staff-list", "manage_staff"],
-  ["/dashboard/hr/workflows", "manage_workflows"],
-  ["/dashboard/hr/staff-roles", "manage_staff_roles"],
-  ["/dashboard/hr/sections", "manage_sections"],
-  ["/dashboard/hr/holidays", "manage_holidays"],
-  ["/dashboard/hr/user-management", "manage_users"],
-  ["/dashboard/hr/leave-report", "leave_report"],
-  ["/dashboard/hr/leave-quota", "manage_leave_quota"],
-  ["/dashboard/approval-requests/history", "supervisor_history"],
-  ["/dashboard/approval-requests/hr", "hr_approval"],
-  ["/dashboard/approval-requests", "supervisor_approval"],
-  ["/dashboard/leave-request", "leave_request"],
-  ["/dashboard/leave-history", "leave_history"],
-  ["/dashboard/leave-details", "leave_details"],
-];
 
 const USER_PAGES: string[] = [];
 

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Calendar, Plus, Trash2, Repeat, Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, Plus, Trash2, Repeat, Search, X, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +37,12 @@ export default function HolidaysPage() {
   const [formDate, setFormDate] = useState("");
   const [formRecurring, setFormRecurring] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [showImport, setShowImport] = useState(false);
+  const [importRows, setImportRows] = useState<{ holidayName: string; holidayDate: string; isRecurring: boolean }[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [importResults, setImportResults] = useState<{ row: number; status: "ok" | "error"; message: string }[]>([]);
+  const [importFileName, setImportFileName] = useState("");
 
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
@@ -175,6 +181,14 @@ export default function HolidaysPage() {
               />
             </div>
             <Button
+              onClick={() => { setImportRows([]); setImportResults([]); setImportFileName(""); setShowImport(true); }}
+              variant="outline"
+              className="h-11 px-4 text-[12px] tracking-[0.05em] uppercase flex items-center gap-2 rounded-lg"
+            >
+              <Upload className="w-[18px] h-[18px]" />
+              นำเข้า CSV
+            </Button>
+            <Button
               onClick={() => {
                 resetForm();
                 setShowForm(true);
@@ -188,30 +202,35 @@ export default function HolidaysPage() {
         </div>
 
         {showForm && (
-          <div className="mb-6 bg-white rounded-xl border border-[#c8c5d0] shadow-lg p-6">
-            <h3 className="text-[16px] font-semibold text-[#070235] mb-4">
-              {editingId ? "แก้ไขวันหยุด" : "เพิ่มวันหยุดใหม่"}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-[13px] font-medium text-[#47464f] mb-1">ชื่อวันหยุด</label>
-                <Input
-                  className="h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px]"
-                  placeholder="เช่น วันปีใหม่"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={resetForm}>
+            <div className="w-full max-w-[520px] bg-white rounded-xl shadow-xl border border-[#c8c5d0] mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-6 py-5 border-b border-[#c8c5d0]">
+                <h3 className="text-[18px] font-bold text-[#070235]">
+                  {editingId ? "แก้ไขวันหยุด" : "เพิ่มวันหยุดใหม่"}
+                </h3>
+                <button onClick={resetForm} className="text-[#787680] hover:text-[#070235] transition-colors p-1">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <div>
-                <label className="block text-[13px] font-medium text-[#47464f] mb-1">วันที่</label>
-                <Input
-                  type="date"
-                  className="h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px]"
-                  value={formDate}
-                  onChange={(e) => setFormDate(e.target.value)}
-                />
-              </div>
-              <div className="flex items-end pb-3">
+              <div className="px-6 py-5 space-y-4">
+                <div>
+                  <label className="block text-[13px] font-medium text-[#47464f] mb-1">ชื่อวันหยุด</label>
+                  <Input
+                    className="h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px]"
+                    placeholder="เช่น วันปีใหม่"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-medium text-[#47464f] mb-1">วันที่</label>
+                  <Input
+                    type="date"
+                    className="h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px]"
+                    value={formDate}
+                    onChange={(e) => setFormDate(e.target.value)}
+                  />
+                </div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -222,22 +241,165 @@ export default function HolidaysPage() {
                   <span className="text-[14px] text-[#47464f]">วันหยุดประจำปี (ซ้ำทุกปี)</span>
                 </label>
               </div>
+              <div className="flex items-center justify-end gap-3 px-6 py-4 bg-[#f8f9ff] border-t border-[#c8c5d0]">
+                <Button
+                  onClick={resetForm}
+                  variant="outline"
+                  className="h-10 px-5 text-[12px] tracking-[0.05em] uppercase rounded-lg"
+                >
+                  ยกเลิก
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-[#6063ee] hover:bg-secondary text-white font-semibold rounded-lg h-10 px-5 text-[12px] tracking-[0.05em] uppercase shadow-sm"
+                >
+                  {saving ? "กำลังบันทึก..." : editingId ? "บันทึก" : "เพิ่ม"}
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-3 mt-4">
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-[#6063ee] hover:bg-secondary text-white font-semibold rounded-lg h-10 px-5 text-[12px] tracking-[0.05em] uppercase shadow-sm"
-              >
-                {saving ? "กำลังบันทึก..." : editingId ? "บันทึก" : "เพิ่ม"}
-              </Button>
-              <Button
-                onClick={resetForm}
-                variant="outline"
-                className="h-10 px-5 text-[12px] tracking-[0.05em] uppercase rounded-lg"
-              >
-                ยกเลิก
-              </Button>
+          </div>
+        )}
+
+        {/* Import CSV Modal */}
+        {showImport && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowImport(false)}>
+            <div className="w-full max-w-[640px] bg-white rounded-xl shadow-xl border border-[#c8c5d0] mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-6 py-5 border-b border-[#c8c5d0]">
+                <h3 className="text-[18px] font-bold text-[#070235]">นำเข้าข้อมูลวันหยุดจาก CSV</h3>
+                <button onClick={() => setShowImport(false)} className="text-[#787680] hover:text-[#070235] transition-colors p-1">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="px-6 py-5 space-y-4">
+                <div className="border-2 border-dashed border-[#c8c5d0] rounded-xl p-8 text-center hover:border-[#6063ee] transition-colors cursor-pointer" onClick={() => document.getElementById("csv-upload")?.click()}>
+                  <Upload className="w-10 h-10 text-[#787680] mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-[#070235]">คลิกเพื่อเลือกไฟล์ CSV</p>
+                  <p className="text-xs text-[#787680] mt-1">หรือลากไฟล์มาวางที่นี่</p>
+                  <input
+                    id="csv-upload"
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setImportFileName(file.name);
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const text = ev.target?.result as string;
+                        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+                        if (lines.length < 2) {
+                          toast.error("ไฟล์ CSV ต้องมีหัวตารางและข้อมูลอย่างน้อย 1 แถว");
+                          return;
+                        }
+                        const header = lines[0].toLowerCase().split(",").map((h) => h.trim());
+                        const nameIdx = header.findIndex((h) => h === "holidayname" || h === "ชื่อวันหยุด");
+                        const dateIdx = header.findIndex((h) => h === "holidaydate" || h === "วันที่");
+                        const recurringIdx = header.findIndex((h) => h === "isrecurring" || h === "is_recurring" || h === "ซ้ำทุกปี");
+                        if (nameIdx === -1 || dateIdx === -1) {
+                          toast.error("ไฟล์ CSV ต้องมีคอลัมน์ holidayName และ holidayDate");
+                          return;
+                        }
+                        const rows = lines.slice(1).map((line) => {
+                          const cols = line.split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
+                          return {
+                            holidayName: cols[nameIdx] || "",
+                            holidayDate: cols[dateIdx] || "",
+                            isRecurring: recurringIdx !== -1 ? cols[recurringIdx]?.toLowerCase() === "true" || cols[recurringIdx] === "1" : false,
+                          };
+                        }).filter((r) => r.holidayName && r.holidayDate);
+                        setImportRows(rows);
+                        setImportResults([]);
+                      };
+                      reader.readAsText(file);
+                    }}
+                  />
+                </div>
+                {importFileName && (
+                  <p className="text-xs text-[#47464f]">ไฟล์: {importFileName} &bull; {importRows.length} รายการ</p>
+                )}
+                {importRows.length > 0 && (
+                  <div className="max-h-[200px] overflow-y-auto border border-[#c8c5d0] rounded-lg">
+                    <table className="w-full text-[13px]">
+                      <thead className="bg-[#f8f9ff] sticky top-0">
+                        <tr className="border-b border-[#c8c5d0]">
+                          <th className="text-left px-3 py-2 font-semibold text-[#47464f]">#</th>
+                          <th className="text-left px-3 py-2 font-semibold text-[#47464f]">ชื่อวันหยุด</th>
+                          <th className="text-left px-3 py-2 font-semibold text-[#47464f]">วันที่</th>
+                          <th className="text-left px-3 py-2 font-semibold text-[#47464f]">ประเภท</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#c8c5d0]">
+                        {importRows.map((r, i) => (
+                          <tr key={i}>
+                            <td className="px-3 py-2 text-[#787680]">{i + 1}</td>
+                            <td className="px-3 py-2 font-medium text-[#070235]">{r.holidayName}</td>
+                            <td className="px-3 py-2 text-[#47464f]">{r.holidayDate}</td>
+                            <td className="px-3 py-2">{r.isRecurring ? <span className="text-indigo-600 font-medium">ประจำปี</span> : <span className="text-slate-500">ครั้งเดียว</span>}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {importResults.length > 0 && (
+                  <div className="max-h-[150px] overflow-y-auto border border-[#c8c5d0] rounded-lg bg-[#f8f9ff]">
+                    {importResults.map((r, i) => (
+                      <div key={i} className={`px-3 py-1.5 text-xs border-b border-[#c8c5d0]/50 last:border-0 ${r.status === "ok" ? "text-green-700" : "text-red-600"}`}>
+                        แถวที่ {r.row}: {r.message}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-end gap-3 px-6 py-4 bg-[#f8f9ff] border-t border-[#c8c5d0]">
+                <Button onClick={() => setShowImport(false)} variant="outline" className="h-10 px-5 text-[12px] tracking-[0.05em] uppercase rounded-lg">
+                  ปิด
+                </Button>
+                {importRows.length > 0 && (
+                  <Button
+                    onClick={async () => {
+                      setImporting(true);
+                      setImportResults([]);
+                      const results: { row: number; status: "ok" | "error"; message: string }[] = [];
+                      for (let i = 0; i < importRows.length; i++) {
+                        const r = importRows[i];
+                        try {
+                          const res = await fetch("/api/hr/holidays", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ holidayName: r.holidayName, holidayDate: r.holidayDate, isRecurring: r.isRecurring }),
+                          });
+                          if (res.ok) {
+                            results.push({ row: i + 1, status: "ok", message: `"${r.holidayName}" เพิ่มสำเร็จ` });
+                          } else {
+                            const err = await res.json();
+                            results.push({ row: i + 1, status: "error", message: err.error || `"${r.holidayName}" ล้มเหลว` });
+                          }
+                        } catch {
+                          results.push({ row: i + 1, status: "error", message: `"${r.holidayName}" เกิดข้อผิดพลาด` });
+                        }
+                        setImportResults([...results]);
+                      }
+                      setImporting(false);
+                      if (results.every((r) => r.status === "ok")) {
+                        toast.success(`นำเข้าสำเร็จ ${results.length} รายการ`);
+                        setShowImport(false);
+                        setFetchKey((k) => k + 1);
+                      } else {
+                        const ok = results.filter((r) => r.status === "ok").length;
+                        const err = results.filter((r) => r.status === "error").length;
+                        toast.error(`นำเข้า ${ok} สำเร็จ, ${err} ล้มเหลว`);
+                      }
+                    }}
+                    disabled={importing}
+                    className="bg-[#6063ee] hover:bg-secondary text-white font-semibold rounded-lg h-10 px-5 text-[12px] tracking-[0.05em] uppercase shadow-sm"
+                  >
+                    {importing ? `กำลังนำเข้า... (${importResults.length}/${importRows.length})` : `นำเข้า ${importRows.length} รายการ`}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -1209,6 +1209,19 @@ export async function importStaff(
   const errors: { row: number; message: string }[] = [];
   let success = 0;
 
+  // Pre-load lookup maps for O(1) case-insensitive matching (avoids N+1 + mode:insensitive)
+  const [allDepartments, allPositions, allSections, allEmploymentTypes] = await Promise.all([
+    prisma.department.findMany({ select: { department_id: true, department_name: true } }),
+    prisma.position.findMany({ select: { position_id: true, position_name: true } }),
+    prisma.section.findMany({ select: { section_id: true, section_name: true, department_id: true } }),
+    prisma.employmentType.findMany({ select: { employment_type_id: true, name: true } }),
+  ]);
+
+  const deptMap = new Map(allDepartments.map((d) => [d.department_name.toLowerCase(), d.department_id]));
+  const posMap = new Map(allPositions.map((p) => [p.position_name.toLowerCase(), p.position_id]));
+  const sectionMap = new Map(allSections.map((s) => [`${s.department_id}:${s.section_name.toLowerCase()}`, s.section_id]));
+  const etMap = new Map(allEmploymentTypes.map((e) => [e.name.toLowerCase(), e.employment_type_id]));
+
   await prisma.$transaction(async (tx) => {
     const activeLeaveTypes = await tx.leaveType.findMany({
       where: { is_active: true },
@@ -1228,48 +1241,34 @@ export async function importStaff(
           continue;
         }
 
-        const department = await tx.department.findFirst({
-          where: { department_name: { equals: row.departmentName, mode: "insensitive" } },
-          select: { department_id: true },
-        });
-        if (!department) {
+        const departmentId = deptMap.get(row.departmentName?.toLowerCase() ?? "");
+        if (!departmentId) {
           errors.push({ row: i + 1, message: `ไม่พบแผนก ${row.departmentName}` });
           continue;
         }
 
-        const position = await tx.position.findFirst({
-          where: { position_name: { equals: row.positionName, mode: "insensitive" } },
-          select: { position_id: true },
-        });
-        if (!position) {
+        const positionId = posMap.get(row.positionName?.toLowerCase() ?? "");
+        if (!positionId) {
           errors.push({ row: i + 1, message: `ไม่พบตำแหน่ง ${row.positionName}` });
           continue;
         }
 
         let sectionId: string | undefined;
         if (row.sectionName) {
-          const section = await tx.section.findFirst({
-            where: { section_name: { equals: row.sectionName, mode: "insensitive" }, department_id: department.department_id },
-            select: { section_id: true },
-          });
-          if (section) sectionId = section.section_id;
+          sectionId = sectionMap.get(`${departmentId}:${row.sectionName.toLowerCase()}`);
         }
 
         let employmentTypeId: string | undefined;
         if (row.employmentTypeName) {
-          const et = await tx.employmentType.findFirst({
-            where: { name: { equals: row.employmentTypeName, mode: "insensitive" } },
-            select: { employment_type_id: true },
-          });
-          if (et) employmentTypeId = et.employment_type_id;
+          employmentTypeId = etMap.get(row.employmentTypeName.toLowerCase());
         }
 
         const createdStaff = await tx.staffInfo.create({
           data: {
             staff_code: row.staffCode,
             name: row.name,
-            department_id: department.department_id,
-            position_id: position.position_id,
+            department_id: departmentId,
+            position_id: positionId,
             section_id: sectionId ?? null,
             employment_type_id: employmentTypeId ?? null,
             phoneNumber: row.phoneNumber || null,
@@ -2439,7 +2438,7 @@ export async function getWorkflows(): Promise<WorkflowDisplayItem[]> {
   const workflows = await prisma.leaveWorkflow.findMany({
     include: {
       position: { select: { position_name: true, position_level: true } },
-      steps: { orderBy: { approval_level: "asc" } },
+      steps: { select: { approval_level: true, approver_type: true, is_required: true }, orderBy: { approval_level: "asc" } },
     },
     orderBy: { position: { position_level: "asc" } },
   });
@@ -2484,7 +2483,7 @@ export async function getWorkflowById(
     where: { workflow_id: id },
     include: {
       position: { select: { position_name: true, position_level: true } },
-      steps: { orderBy: { approval_level: "asc" } },
+      steps: { select: { workflow_step_id: true, approval_level: true, approver_type: true, is_required: true }, orderBy: { approval_level: "asc" } },
     },
   });
 
@@ -2622,6 +2621,7 @@ export type StaffWithRolesItem = {
 export async function getAllRoles(): Promise<RoleItem[]> {
   const roles = await prisma.role.findMany({
     where: { is_active: true },
+    select: { role_id: true, role_name: true, is_active: true },
     orderBy: { role_name: "asc" },
   });
   return roles.map((r) => ({
@@ -2633,10 +2633,13 @@ export async function getAllRoles(): Promise<RoleItem[]> {
 
 export async function getStaffRoleList(): Promise<StaffWithRolesItem[]> {
   const staff = await prisma.staffInfo.findMany({
-    include: {
+    select: {
+      staff_id: true,
+      staff_code: true,
+      name: true,
       department: { select: { department_name: true } },
       staffRoles: {
-        include: { role: { select: { role_name: true } } },
+        select: { role: { select: { role_name: true } } },
       },
     },
     orderBy: { name: "asc" },
@@ -2703,6 +2706,7 @@ export type HolidayItem = {
 
 export async function getHolidays(): Promise<HolidayItem[]> {
   const holidays = await prisma.holiday.findMany({
+    select: { holiday_id: true, holiday_name: true, holiday_date: true, is_recurring: true },
     orderBy: { holiday_date: "asc" },
   });
 

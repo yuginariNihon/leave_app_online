@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Download, FileText, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,14 +31,6 @@ import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 
-type ReportFilters = {
-  searchTerm: string;
-  departmentFilter: string;
-  typeFilter: string;
-  startDate: string;
-  endDate: string;
-};
-
 type ReportRecord = {
   leaveId: string;
   staffCode: string;
@@ -54,8 +45,6 @@ type ReportRecord = {
 };
 
 export default function LeaveReportPage() {
-  const router = useRouter();
-
   const { live: { searchTerm, departmentFilter, typeFilter, startDate, endDate }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit: handleSearchSubmit, reset: handleReset } = useFilterWithApply({
     searchTerm: "",
     departmentFilter: "all",

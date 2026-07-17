@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/lib/user-context";
 import {
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { canAccessPage } from "@/lib/menu-config";
 
 const itemBase =
   "rounded-[8px] px-3 py-2.5 h-auto text-[14px] gap-3 group transition-colors";
@@ -53,7 +54,6 @@ export function SidebarMenu() {
 
   const isHR = roles.includes("HR") || roles.includes("SUPER_ADMIN");
   const isApprover = roles.includes("APPROVER");
-  const isSuperAdmin = roles.includes("SUPER_ADMIN");
   const [hrMenuExpanded, setHrMenuExpanded] = useState(true);
   const [systemMenuExpanded, setSystemMenuExpanded] = useState(true);
   const [staffListExpanded, setStaffListExpanded] = useState(false);
@@ -92,6 +92,7 @@ export function SidebarMenu() {
     holidays: pathname.startsWith("/dashboard/hr/holidays"),
     userManagement: pathname.startsWith("/dashboard/hr/user-management"),
     leaveReport: pathname.startsWith("/dashboard/hr/leave-report"),
+    leaveCalendar: pathname.startsWith("/dashboard/leave-calendar"),
     workflows: pathname.startsWith("/dashboard/hr/workflows"),
     supervisorApproval: pathname === "/dashboard/approval-requests",
     supervisorHistory: pathname.startsWith("/dashboard/approval-requests/history"),
@@ -158,6 +159,16 @@ export function SidebarMenu() {
                 >
                   <BarChart3 className={iconClass(activePaths.leaveReport)} />
                   {open && <span>รายงานการลา</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={cn(btnClass(activePaths.leaveCalendar), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  onClick={() => handleNav("/dashboard/leave-calendar")}
+                  tooltip={open ? undefined : "ปฏิทินการลา"}
+                >
+                  <CalendarDays className={iconClass(activePaths.leaveCalendar)} />
+                  {open && <span>ปฏิทินการลา</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenuList>
@@ -342,69 +353,61 @@ export function SidebarMenu() {
                   </div>
                 )}
               </SidebarMenuItem>
-              {isSuperAdmin && (
-                <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      className={cn(btnClass(activePaths.adminRoles), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                      onClick={() => handleNav("/dashboard/admin/roles")}
-                      tooltip={open ? undefined : "จัดการบทบาทพนักงาน"}
-                    >
-                      <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
-                        <Shield className={iconClass(activePaths.adminRoles)} />
-                        {open && <span>จัดการบทบาทพนักงาน</span>}
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      className={cn(btnClass(activePaths.adminPagePermissions), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                      onClick={() => handleNav("/dashboard/admin/page-permissions")}
-                      tooltip={open ? undefined : "จัดการสิทธิ์การเข้าถึงหน้า"}
-                    >
-                      <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
-                        <Shield className={iconClass(activePaths.adminPagePermissions)} />
-                        {open && <span>จัดการสิทธิ์การเข้าถึงหน้า</span>}
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      className={cn(btnClass(activePaths.staffRoles), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                      onClick={() => handleNav("/dashboard/hr/staff-roles")}
-                      tooltip={open ? undefined : "จัดการสิทธิ์ของพนักงาน"}
-                    >
-                      <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
-                        <UserCog className={iconClass(activePaths.staffRoles)} />
-                        {open && <span>จัดการสิทธิ์ของพนักงาน</span>}
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      className={cn(btnClass(activePaths.sections), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                      onClick={() => handleNav("/dashboard/hr/sections")}
-                      tooltip={open ? undefined : "จัดการแผนกย่อย"}
-                    >
-                      <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
-                        <Building2 className={iconClass(activePaths.sections)} />
-                        {open && <span>จัดการแผนกย่อย</span>}
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      className={cn(btnClass(activePaths.holidays), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                      onClick={() => handleNav("/dashboard/hr/holidays")}
-                      tooltip={open ? undefined : "จัดการวันหยุด"}
-                    >
-                      <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
-                        <CalendarDays className={iconClass(activePaths.holidays)} />
-                        {open && <span>จัดการวันหยุด</span>}
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </>
+              {canAccessPage("manage_roles", roles) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className={cn(btnClass(activePaths.adminRoles), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                    onClick={() => handleNav("/dashboard/admin/roles")}
+                    tooltip={open ? undefined : "จัดการบทบาทพนักงาน"}
+                  >
+                    <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                      <Shield className={iconClass(activePaths.adminRoles)} />
+                      {open && <span>จัดการบทบาทพนักงาน</span>}
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {canAccessPage("manage_page_permissions", roles) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className={cn(btnClass(activePaths.adminPagePermissions), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                    onClick={() => handleNav("/dashboard/admin/page-permissions")}
+                    tooltip={open ? undefined : "จัดการสิทธิ์การเข้าถึงหน้า"}
+                  >
+                    <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                      <Shield className={iconClass(activePaths.adminPagePermissions)} />
+                      {open && <span>จัดการสิทธิ์การเข้าถึงหน้า</span>}
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {canAccessPage("manage_staff_roles", roles) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className={cn(btnClass(activePaths.staffRoles), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                    onClick={() => handleNav("/dashboard/hr/staff-roles")}
+                    tooltip={open ? undefined : "จัดการสิทธิ์ของพนักงาน"}
+                  >
+                    <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                      <UserCog className={iconClass(activePaths.staffRoles)} />
+                      {open && <span>จัดการสิทธิ์ของพนักงาน</span>}
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {canAccessPage("manage_sections", roles) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className={cn(btnClass(activePaths.sections), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                    onClick={() => handleNav("/dashboard/hr/sections")}
+                    tooltip={open ? undefined : "จัดการแผนกย่อย"}
+                  >
+                    <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                      <Building2 className={iconClass(activePaths.sections)} />
+                      {open && <span>จัดการแผนกย่อย</span>}
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               )}
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -415,6 +418,18 @@ export function SidebarMenu() {
                   <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
                     <UserCog className={iconClass(activePaths.userManagement)} />
                     {open && <span>จัดการผู้ใช้</span>}
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={cn(btnClass(activePaths.holidays), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  onClick={() => handleNav("/dashboard/hr/holidays")}
+                  tooltip={open ? undefined : "จัดการวันหยุด"}
+                >
+                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                    <CalendarDays className={iconClass(activePaths.holidays)} />
+                    {open && <span>จัดการวันหยุด</span>}
                   </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -487,6 +502,16 @@ export function SidebarMenu() {
                   {open && <span>ประวัติการอนุมัติ</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={cn(btnClass(activePaths.leaveCalendar), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  onClick={() => handleNav("/dashboard/leave-calendar")}
+                  tooltip={open ? undefined : "ปฏิทินการลา"}
+                >
+                  <CalendarDays className={iconClass(activePaths.leaveCalendar)} />
+                  {open && <span>ปฏิทินการลา</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenuList>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -495,13 +520,6 @@ export function SidebarMenu() {
   }
 
   function renderEmployeeSidebar() {
-    const linkClass = (isActive: boolean) => cn(
-      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors cursor-pointer border-0 w-full text-left",
-      isActive
-        ? "bg-[#f2f4f6] text-[#0F172A] font-semibold"
-        : "text-slate-600 hover:bg-[#f2f4f6] hover:text-[#0F172A]",
-    );
-
     return (
       <SidebarGroup>
         {open && (
@@ -546,8 +564,6 @@ export function SidebarMenu() {
       </SidebarGroup>
     );
   }
-
-  const isEmployee = !isHR && !isApprover;
 
   const sidebarContent = (
     <>

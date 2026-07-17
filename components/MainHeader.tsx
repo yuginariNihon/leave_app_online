@@ -1,5 +1,5 @@
 "use client";
-import React, { useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { logoutAction } from "@/app/login/actions";
 import Image from "next/image";
@@ -11,8 +11,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "./ui/button";
-import { ClipboardList, FileText, Menu } from "lucide-react";
-import { FaUserGroup } from "react-icons/fa6";
+import { ClipboardList, Menu } from "lucide-react";
 import { IoSettings } from "react-icons/io5";
 import { useSidebar } from "@/components/ui/sidebar";
 

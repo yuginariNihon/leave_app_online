@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { FileText, Pencil, Power, PowerOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -11,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import type { StaffListItem } from "@/lib/services/leaveService";
 
 interface StaffTableProps {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -20,12 +20,14 @@ export default function LeaveHistoryPage() {
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<
     Array<{ id: string; label: string }>
   >([]);
+  const monthStart = (() => { const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0]; })();
+  const monthEnd = (() => { const d = new Date(); d.setMonth(d.getMonth() + 1, 0); return d.toISOString().split("T")[0]; })();
   const { live: { searchTerm, statusFilter, typeFilter, startDate, endDate }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit, reset } = useFilterWithApply({
     searchTerm: "",
     statusFilter: "all",
     typeFilter: "all",
-    startDate: "",
-    endDate: "",
+    startDate: monthStart,
+    endDate: monthEnd,
   });
 
   const [data, setData] = useState<LeaveRecord[]>([]);
@@ -202,7 +204,7 @@ export default function LeaveHistoryPage() {
               pendingItems={pendingCount}
               rejectedItems={rejectedCount}
               cancelledItems={cancelledCount}
-              onReset={() => reset({ searchTerm: "", statusFilter: "all", typeFilter: "all", startDate: "", endDate: "" })}
+              onReset={() => reset({ searchTerm: "", statusFilter: "all", typeFilter: "all", startDate: monthStart, endDate: monthEnd })}
               onExportCSV={handleExportCSV}
               onSearchSubmit={submit}
             />

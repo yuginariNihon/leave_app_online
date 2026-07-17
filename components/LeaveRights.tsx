@@ -1,4 +1,4 @@
-import React from "react";
+
 import type { LeaveRightItem } from "@/lib/services/leaveService";
 
 export function LeaveRights({ rights }: { rights: LeaveRightItem[] }) {

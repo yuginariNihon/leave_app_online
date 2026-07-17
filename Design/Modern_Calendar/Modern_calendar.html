@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="th" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#0f172a",
+                        "secondary": "#0051d5",
+                        "background": "#f8f9ff",
+                        "surface": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "surface-bright": "#f8f9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container": "#e5eeff",
+                        "surface-container-high": "#dce9ff",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-surface": "#0b1c30",
+                        "on-surface-variant": "#45464d",
+                        "outline-variant": "#c6c6cd",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#316bf3",
+                        "on-secondary-container": "#fefcff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "8px",
+                        "lg": "8px",
+                        "xl": "12px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-lg": "24px",
+                        "margin-md": "16px",
+                        "margin-sm": "8px",
+                        "container-padding": "32px",
+                        "grid-gutter": "1px",
+                        "calendar-cell-min-height": "120px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "label-bold": ["Inter"],
+                        "headline-sm": ["Manrope"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    }catch(_e){}</script></head><body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<div class="p-container-padding max-w-[1440px] mx-auto space-y-margin-lg">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<nav class="flex items-center gap-1 text-on-surface-variant font-label-bold text-label-bold mb-1">
+<span class="">Home</span>
+<span class="material-symbols-outlined text-[14px]" data-original-icon="chevron_right">circle</span>
+<span class="text-on-surface">ปฏิทินการลา</span>
+</nav>
+<h1 class="font-display-lg text-display-lg text-primary">ปฏิทินการลา</h1>
+</div>
+<div class="flex items-center gap-4 bg-white px-4 py-2 rounded-xl custom-shadow border border-outline-variant/30">
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined" data-original-icon="chevron_left">circle</span>
+</button>
+<span class="font-headline-sm text-headline-sm min-w-[140px] text-center">กรกฎาคม 2569</span>
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined" data-original-icon="chevron_right">circle</span>
+</button>
+</div>
+<div class="h-6 w-px bg-outline-variant"></div>
+<button class="text-secondary font-label-bold text-label-bold hover:underline px-2">วันนี้</button>
+</div>
+</div>
+<!-- Main Calendar Grid -->
+<div class="bg-white rounded-xl custom-shadow border border-outline-variant/30 overflow-hidden"><div class="border-b border-outline-variant/30">
+  <div class="grid grid-cols-7 border-b border-outline-variant/30 bg-surface-container-low/30">
+    <div class="py-3 text-center font-label-bold text-on-surface-variant text-[12px]">อา.</div>
+    <div class="py-3 text-center font-label-bold text-on-surface-variant text-[12px]">จ.</div>
+    <div class="py-3 text-center font-label-bold text-on-surface-variant text-[12px]">อ.</div>
+    <div class="py-3 text-center font-label-bold text-on-surface-variant text-[12px]">พ.</div>
+    <div class="py-3 text-center font-label-bold text-on-surface-variant text-[12px]">พฤ.</div>
+    <div class="py-3 text-center font-label-bold text-on-surface-variant text-[12px]">ศ.</div>
+    <div class="py-3 text-center font-label-bold text-on-surface-variant text-[12px]">ส.</div>
+  </div>
+  <div class="grid grid-cols-7">
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 bg-surface-container-low/20 text-on-surface-variant/50">28</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 bg-surface-container-low/20 text-on-surface-variant/50">29</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 bg-surface-container-low/20 text-on-surface-variant/50">30</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">1</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">2</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">3</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">4</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">5</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">6</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">7</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">8</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">9</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">10<div class="mt-1 p-1 bg-error/10 border border-error/30 rounded text-[10px] text-error font-label-bold">มานะ (ลาป่วย)</div></div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">11</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">12</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">13</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">14</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 bg-secondary/5 hover:bg-surface-container/50">
+      <span class="text-on-surface">15</span>
+      <div class="mt-1 p-1 bg-secondary/10 rounded text-[10px] text-secondary font-label-bold">ปิดปรับปรุงระบบ</div>
+    </div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">16</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface bg-secondary/10 relative hover:bg-surface-container/50"><div class="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full"></div>17</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">18</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">19</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 bg-secondary/5 hover:bg-surface-container/50">
+      <span class="text-on-surface">20</span>
+      <div class="mt-1 p-1 bg-secondary text-white rounded text-[10px] font-label-bold">วิภาดา (ลาพักร้อน)</div>
+    </div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 bg-secondary/5 hover:bg-surface-container/50">
+      <span class="text-on-surface">21</span>
+      <div class="mt-1 p-1 bg-secondary text-white rounded text-[10px] font-label-bold">วิภาดา (ลาพักร้อน)</div>
+    </div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 bg-secondary/5 hover:bg-surface-container/50">
+      <span class="text-on-surface">22</span>
+      <div class="mt-1 p-1 bg-secondary text-white rounded text-[10px] font-label-bold">วิภาดา (ลาพักร้อน)</div>
+    </div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">23</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-b border-outline-variant/30 text-on-surface hover:bg-surface-container/50">24<div class="mt-1 p-1 bg-surface-container-highest border border-on-surface-variant/30 rounded text-[10px] text-on-surface font-label-bold">รัชนี (พักร้อน)</div></div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-b border-outline-variant/30 bg-secondary/5 hover:bg-surface-container/50">
+      <span class="text-on-surface">25</span>
+      <div class="mt-1 p-1 bg-secondary-container/10 border border-secondary/30 rounded text-[10px] text-secondary font-label-bold">สมชาย (ลากิจ)</div>
+    </div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-outline-variant/30 text-on-surface hover:bg-surface-container/50">26</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-outline-variant/30 text-on-surface hover:bg-surface-container/50">27</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-outline-variant/30 text-on-surface hover:bg-surface-container/50">28<div class="mt-1 p-1 bg-surface-container-low/30 rounded text-[10px] text-on-surface-variant font-label-bold">ชดเชยวันหยุด</div></div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-outline-variant/30 text-on-surface hover:bg-surface-container/50">29</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-outline-variant/30 text-on-surface hover:bg-surface-container/50">30</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 border-r border-outline-variant/30 text-on-surface hover:bg-surface-container/50">31</div>
+    <div class="calendar-cell min-h-calendar-cell-min-height p-2 bg-surface-container-low/20 text-on-surface-variant/50">1</div>
+  </div>
+</div><div class="grid grid-cols-1 md:grid-cols-2 gap-margin-lg p-4">
+<!-- Pending Requests Card -->
+<div class="bg-white rounded-xl custom-shadow border border-outline-variant/30 overflow-hidden flex flex-col">
+<div class="px-4 py-3 border-b border-outline-variant/30 bg-surface-container-low/30 flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-primary">คำขอที่รอดำเนินการ</h2>
+<span class="bg-secondary text-white text-[10px] font-label-bold px-2 py-0.5 rounded-full">2 รายการ</span>
+</div>
+<div class="p-4 space-y-3">
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low/20 border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</div>
+<div>
+<p class="font-label-bold text-on-surface">วิภาดา ใจดี</p>
+<p class="text-[10px] text-on-surface-variant">ลาพักร้อน • 20-22 ก.ค.</p>
+</div>
+</div>
+<button class="text-secondary font-label-bold text-label-bold hover:underline">ดูรายละเอียด</button>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low/20 border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</div>
+<div>
+<p class="font-label-bold text-on-surface">สมชาย รักเรียน</p>
+<p class="text-[10px] text-on-surface-variant">ลากิจ • 25 ก.ค.</p>
+</div>
+</div>
+<button class="text-secondary font-label-bold text-label-bold hover:underline">ดูรายละเอียด</button>
+</div>
+</div>
+</div>
+<!-- System Announcements Card -->
+<div class="bg-white rounded-xl custom-shadow border border-outline-variant/30 overflow-hidden flex flex-col">
+<div class="px-4 py-3 border-b border-outline-variant/30 bg-surface-container-low/30">
+<h2 class="font-headline-sm text-headline-sm text-primary">แจ้งเตือนระบบ</h2>
+</div>
+<div class="p-4 space-y-4">
+<div class="flex gap-3">
+<div class="mt-1 text-secondary">
+<span class="material-symbols-outlined text-[20px]">campaign</span>
+</div>
+<div>
+<p class="font-label-bold text-on-surface">ปรับปรุงระบบประจำเดือน</p>
+<p class="text-body-md text-[12px] text-on-surface-variant">ระบบจะปิดปรับปรุงในวันที่ 15 กรกฎาคม เวลา 22:00 - 02:00 น.</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="mt-1 text-secondary">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</div>
+<div>
+<p class="font-label-bold text-on-surface">นโยบายการลาใหม่</p>
+<p class="text-body-md text-[12px] text-on-surface-variant">กรุณาตรวจสอบระเบียบการลาพักร้อนใหม่ที่มีผลบังคับใช้ตั้งแต่เดือนนี้</p>
+</div>
+</div>
+</div>
+</div>
+</div></div>
+<!-- Bottom Content -->
+</div>
+<script class="">
+        document.addEventListener('DOMContentLoaded', () => {
+            const cells = document.querySelectorAll('.calendar-cell');
+            cells.forEach(cell => {
+                if (!cell.classList.contains('bg-surface-container-low/20')) {
+                    cell.addEventListener('click', () => {
+                        cell.style.transform = 'scale(0.98)';
+                        setTimeout(() => cell.style.transform = 'scale(1)', 100);
+                    });
+                    cell.style.cursor = 'pointer';
+                }
+            });
+        });
+    </script>
+
+</body></html>

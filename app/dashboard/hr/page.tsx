@@ -1,8 +1,8 @@
-import React from "react";
+
 import { requireSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, History, Clock, FileText, Users, Building2, Briefcase, Tags, UserCog, GitBranch, BarChart3, CaseSensitive, Shield, UserPlus, CalendarDays } from "lucide-react";
+import { ShieldCheck, History, Users, Building2, Briefcase, Tags, UserCog, GitBranch, BarChart3, CaseSensitive, Shield, UserPlus, CalendarDays } from "lucide-react";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import {
   getDashboardKpiData,

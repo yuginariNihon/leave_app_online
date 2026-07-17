@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Save, Loader2, CaseSensitive } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import { createLeaveCaseSchema } from "@/lib/TypeSchema";
 import type { CreateLeaveCaseValues, UpdateLeaveCaseValues } from "@/lib/TypeSchema";
 
@@ -20,7 +19,7 @@ interface LeaveCaseFormProps {
 }
 
 export function LeaveCaseForm({
-  mode,
+
   defaultValues,
   leaveTypeOptions,
   isSubmitting,

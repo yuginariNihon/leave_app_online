@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, FileText, Eye } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useRouter } from "next/navigation";

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="th"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Executive Calendar - Day View</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Manrope Font from Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            manrope: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            executive: {
+              navy: '#0f172a',
+              surface: '#f8f9ff',
+              dim: '#cbdbf5',
+              container: {
+                lowest: '#ffffff',
+                low: '#eff4ff',
+              }
+            }
+          },
+          borderRadius: {
+            'eight': '8px',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-typography">
+    body {
+      font-family: 'Manrope', sans-serif;
+      background-color: #f1f5f9; /* Subtle background for previewing the popover */
+    }
+    .thai-text {
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+<!-- BEGIN: DayViewPopover -->
+<div class="w-full max-w-[642px] bg-white rounded-eight shadow-xl overflow-hidden border border-slate-100" data-purpose="popover-container" id="day-view-popover">
+<!-- BEGIN: PopoverHeader -->
+<header class="flex items-center justify-between px-6 py-5 border-b border-slate-100" data-purpose="popover-header">
+<h1 class="text-xl font-extrabold text-executive-navy thai-text">
+        วันศุกร์ที่ 17 กรกฎาคม 2569
+      </h1>
+<button aria-label="Close" class="text-slate-400 hover:text-executive-navy transition-colors duration-200 p-1" type="button">
+<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<line x1="18" x2="6" y1="6" y2="18"></line>
+<line x1="6" x2="18" y1="6" y2="18"></line>
+</svg>
+</button>
+</header>
+<!-- END: PopoverHeader -->
+<!-- BEGIN: EmptyStateContent -->
+<main class="flex flex-col items-center justify-center py-16 px-8 bg-executive-surface" data-purpose="empty-state-content">
+<!-- Illustration Wrapper -->
+<div class="relative mb-6 flex items-center justify-center" data-purpose="illustration-container">
+<!-- Abstract Background Shape -->
+<div class="absolute w-32 h-32 bg-executive-container-low rounded-full scale-110 opacity-60"></div>
+<!-- Icon: Calm Day/Clear Schedule -->
+<div class="relative z-10 p-6 bg-white rounded-full shadow-sm border border-slate-50">
+<svg class="w-12 h-12 text-executive-navy opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</div>
+<!-- Empty State Text -->
+<div class="text-center">
+<p class="text-lg font-semibold text-executive-navy thai-text">
+          ไม่มีผู้ลาในวันนี้
+        </p>
+<p class="text-slate-500 text-sm mt-1 thai-text font-medium">
+          ตารางเวลาว่างสำหรับทุกคน ทีมงานพร้อมปฏิบัติหน้าที่
+        </p>
+</div>
+</main>
+<!-- END: EmptyStateContent -->
+<!-- BEGIN: FooterAction (Optional) -->
+<footer class="px-6 py-4 bg-executive-container-lowest border-t border-slate-50 flex justify-end" data-purpose="popover-footer">
+<button class="text-sm font-bold text-executive-navy/70 hover:text-executive-navy px-4 py-2 rounded-eight transition-all duration-200">
+        ดูมุมมองรายเดือน
+      </button>
+</footer>
+<!-- END: FooterAction -->
+</div>
+<!-- END: DayViewPopover -->
+</body></html>

@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
-import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,15 +20,13 @@ import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { Button } from "@/components/ui/button";
 
 export default function StaffListPage() {
-  const router = useRouter();
   const [fetchKey, setFetchKey] = useState(0);
 
-  const { live: { searchTerm, statusFilter, departmentFilter }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit: handleSearchSubmit, reset: handleReset } = useFilterWithApply({
+  const { live: { searchTerm, statusFilter }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit: handleSearchSubmit } = useFilterWithApply({
     searchTerm: "",
     statusFilter: "all",
     departmentFilter: "all",
   });
-  const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
 
   const [data, setData] = useState<StaffListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -70,14 +67,14 @@ export default function StaffListPage() {
   useEffect(() => {
     async function loadDepartments() {
       try {
-        const res = await fetch("/api/leave-options");
-        const json = await res.json();
+        await fetch("/api/leave-options");
       } catch {
         // silently fail
       }
     }
     loadDepartments();
   }, []);
+  
 
 
 
