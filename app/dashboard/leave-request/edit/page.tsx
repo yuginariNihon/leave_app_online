@@ -25,6 +25,7 @@ import { LeaveForm } from "@/components/leave-request/LeaveForm";
 import { getEditLeaveId } from "@/lib/navigation-state";
 import { currentSubmitTime, dateOnly } from "@/lib/utils";
 import { useLeaveOptions } from "@/hooks/useLeaveOptions";
+import { WarningBanner } from "@/components/ui/warning-banner";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export default function EditLeavePage() {
@@ -40,6 +41,7 @@ export default function EditLeavePage() {
   const [createdAt, setCreatedAt] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [holidays, setHolidays] = useState<string[]>([]);
+  const [holidayError, setHolidayError] = useState("");
 
   const { leaveTypeOptions, leaveCaseOptions, optionsLoading, optionsError } = useLeaveOptions();
 
@@ -122,7 +124,7 @@ export default function EditLeavePage() {
     fetch("/api/holidays")
       .then((r) => r.json())
       .then((json) => setHolidays((json.data ?? []).map((h: { holidayDate: string }) => h.holidayDate)))
-      .catch(() => {});
+      .catch(() => setHolidayError("ไม่สามารถโหลดข้อมูลวันหยุดได้ — วันหยุดอาจไม่ถูกบล็อก"));
   }, []);
 
   // Watch form values
@@ -268,6 +270,10 @@ export default function EditLeavePage() {
               <p className="mb-6 text-sm font-medium text-red-600">
                 {submitError}
               </p>
+            )}
+
+            {holidayError && (
+              <WarningBanner message={holidayError} className="mb-4" />
             )}
 
             <LeaveForm

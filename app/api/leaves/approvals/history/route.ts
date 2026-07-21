@@ -13,9 +13,12 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = request.nextUrl;
 
+    const rawLeaveTypeId = searchParams.get("leaveTypeId");
+    const leaveTypeId = (rawLeaveTypeId && rawLeaveTypeId !== "all" && rawLeaveTypeId !== "undefined") ? rawLeaveTypeId : undefined;
+
     const result = await getApprovalHistory(session.staffId, {
       search: searchParams.get("search") || undefined,
-      leaveTypeId: searchParams.get("leaveTypeId") || undefined,
+      leaveTypeId,
       startDate: searchParams.get("startDate") || undefined,
       endDate: searchParams.get("endDate") || undefined,
       roleType: (searchParams.get("roleType") as "approver" | "hr" | "all") || undefined,

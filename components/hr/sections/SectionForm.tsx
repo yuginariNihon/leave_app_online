@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { WarningBanner } from "@/components/ui/warning-banner";
 import { Save, Loader2 } from "lucide-react";
 import { createSectionSchema, updateSectionSchema } from "@/lib/TypeSchema";
 import type { CreateSectionValues, UpdateSectionValues } from "@/lib/TypeSchema";
@@ -34,6 +35,7 @@ export function SectionForm({
 }: SectionFormProps) {
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
   const [loadingDepts, setLoadingDepts] = useState(true);
+  const [deptError, setDeptError] = useState("");
 
   useEffect(() => {
     async function fetchDepts() {
@@ -44,7 +46,7 @@ export function SectionForm({
           setDepartments(json.data);
         }
       } catch {
-        // ignore
+        setDeptError("ไม่สามารถโหลดรายการแผนกได้");
       } finally {
         setLoadingDepts(false);
       }
@@ -62,7 +64,9 @@ export function SectionForm({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <>
+      <WarningBanner message={deptError} className="mb-4" />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-[#45464d] tracking-wide flex items-center gap-1">
@@ -152,5 +156,6 @@ export function SectionForm({
         </Button>
       </div>
     </form>
+    </>
   );
 }

@@ -15,10 +15,13 @@ export async function GET(request: NextRequest) {
 
     const exportAll = searchParams.get("exportAll") === "true";
 
+    const rawLeaveTypeId = searchParams.get("leaveTypeId");
+    const leaveTypeId = (rawLeaveTypeId && rawLeaveTypeId !== "all" && rawLeaveTypeId !== "undefined") ? rawLeaveTypeId : undefined;
+
     const result = await getLeaveHistoryByStaffId(session.staffId, {
       search: searchParams.get("search") || undefined,
       status: searchParams.get("status") || undefined,
-      leaveTypeId: searchParams.get("leaveTypeId") || undefined,
+      leaveTypeId,
       startDate: searchParams.get("startDate") || undefined,
       endDate: searchParams.get("endDate") || undefined,
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,

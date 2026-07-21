@@ -26,6 +26,7 @@ import { SuccessDialog } from "@/components/leave-request/SuccessDialog";
 import { styleAlertTextSuccess } from "@/lib/utils";
 import { leaveFormSchema, LeaveFormValues } from "@/lib/TypeSchema";
 import { useLeaveOptions } from "@/hooks/useLeaveOptions";
+import { WarningBanner, WarningBannerGroup } from "@/components/ui/warning-banner";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 export type LeaveQuotaMap = Record<string, { usedDays: number; maxDays: number; remaining: number }>;
@@ -39,6 +40,8 @@ export default function LeaveRequestPage() {
   const [submitError, setSubmitError] = useState("");
   const [leaveQuota, setLeaveQuota] = useState<LeaveQuotaMap>({});
   const [holidays, setHolidays] = useState<string[]>([]);
+  const [holidayError, setHolidayError] = useState("");
+  const [quotaError, setQuotaError] = useState("");
 
   const { leaveTypeOptions, leaveCaseOptions, optionsLoading, optionsError } = useLeaveOptions();
 
@@ -65,9 +68,11 @@ export default function LeaveRequestPage() {
         if (response.ok) {
           const result = await response.json();
           if (!cancelled) setLeaveQuota(result.data ?? {});
+        } else {
+          if (!cancelled) setQuotaError("ไม่สามารถโหลดข้อมูลสิทธิ์วันลาได้");
         }
       } catch {
-        // quota is optional, fail silently
+        if (!cancelled) setQuotaError("ไม่สามารถโหลดข้อมูลสิทธิ์วันลาได้");
       }
     }
 
@@ -83,7 +88,7 @@ export default function LeaveRequestPage() {
     fetch("/api/holidays")
       .then((r) => r.json())
       .then((json) => setHolidays((json.data ?? []).map((h: { holidayDate: string }) => h.holidayDate)))
-      .catch(() => {});
+      .catch(() => setHolidayError("ไม่สามารถโหลดข้อมูลวันหยุดได้ — วันหยุดอาจไม่ถูกบล็อก"));
   }, []);
 
   // Watch form values
@@ -253,6 +258,13 @@ export default function LeaveRequestPage() {
               <p className="relative z-10 mb-6 text-sm font-medium text-red-600">
                 {optionsError}
               </p>
+            )}
+
+            {(holidayError || quotaError) && (
+              <WarningBannerGroup>
+                <WarningBanner message={holidayError} />
+                <WarningBanner message={quotaError} />
+              </WarningBannerGroup>
             )}
 
             <LeaveForm

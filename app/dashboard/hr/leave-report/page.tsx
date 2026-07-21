@@ -186,8 +186,8 @@ export default function LeaveReportPage() {
           .join("\n");
 
       downloadCsv(`leave_report_${new Date().toISOString().split("T")[0]}.csv`, csvString);
-    } catch (err) {
-      console.warn("CSV export failed:", err);
+    } catch {
+      toast.error("ไม่สามารถส่งออก CSV ได้ กรุณาลองอีกครั้ง");
     }
   };
 

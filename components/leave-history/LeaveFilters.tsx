@@ -62,7 +62,7 @@ export function LeaveFilters({
           <Input
             className="pl-10 h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl"
             placeholder="ค้นหารหัสพนักงาน..."
-            value={searchTerm}
+            value={searchTerm ?? ""}
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
@@ -72,20 +72,20 @@ export function LeaveFilters({
           <Input
             type="date"
             className="h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl w-full md:w-[160px]"
-            value={startDate}
+            value={startDate ?? ""}
             onChange={(e) => onStartDateChange(e.target.value)}
           />
           <span className="text-slate-400 font-medium">ถึง</span>
           <Input
             type="date"
             className="h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl w-full md:w-[160px]"
-            value={endDate}
+            value={endDate ?? ""}
             onChange={(e) => onEndDateChange(e.target.value)}
           />
         </div>
 
         <div className="w-full md:w-auto">
-          <Select value={typeFilter} onValueChange={onTypeChange}>
+          <Select value={typeFilter ?? "all"} onValueChange={onTypeChange}>
             <SelectTrigger className="w-full md:w-[180px] !h-11 border-slate-200 rounded-xl">
               <SelectValue placeholder="ประเภทการลา" />
             </SelectTrigger>
@@ -101,7 +101,7 @@ export function LeaveFilters({
         </div>
         {onStatusChange && (
           <div className="w-full md:w-auto">
-            <Select value={statusFilter} onValueChange={onStatusChange}>
+            <Select value={statusFilter ?? "all"} onValueChange={onStatusChange}>
               <SelectTrigger className="w-full md:w-[180px] !h-11 border-slate-200 rounded-xl">
                 <SelectValue placeholder="สถานะ" />
               </SelectTrigger>

@@ -15,9 +15,12 @@ export async function GET(request: NextRequest) {
   const page = parseInt(searchParams.get("page") ?? "1", 10);
   const limit = parseInt(searchParams.get("limit") ?? "10", 10);
 
+  const rawLeaveTypeId = searchParams.get("leaveTypeId");
+  const leaveTypeId = (rawLeaveTypeId && rawLeaveTypeId !== "all" && rawLeaveTypeId !== "undefined") ? rawLeaveTypeId : undefined;
+
   const filters: ApprovalFilters = {
     search: searchParams.get("search") || undefined,
-    leaveTypeId: searchParams.get("leaveTypeId") || undefined,
+    leaveTypeId,
     startDate: searchParams.get("startDate") || undefined,
     endDate: searchParams.get("endDate") || undefined,
   };

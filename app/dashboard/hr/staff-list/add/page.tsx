@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { StaffForm } from "@/components/hr/StaffForm";
+import { WarningBanner } from "@/components/ui/warning-banner";
 import type { StaffMasterData } from "@/lib/services/leaveService";
 import type { CreateStaffValues, UpdateStaffValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
@@ -18,6 +19,7 @@ export default function AddStaffPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [masterDataError, setMasterDataError] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -27,7 +29,7 @@ export default function AddStaffPage() {
         const json = await res.json();
         setMasterData(json.data);
       } catch {
-        // silently fail
+        setMasterDataError("ไม่สามารถโหลดข้อมูลมาสเตอร์ได้");
       } finally {
         setLoading(false);
       }
@@ -81,6 +83,8 @@ export default function AddStaffPage() {
                   { label: "Add" },
                 ]}
               />
+
+            <WarningBanner message={masterDataError} className="mb-4" />
 
             <StaffForm
               mode="create"

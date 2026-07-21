@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
+import { WarningBanner } from "@/components/ui/warning-banner";
 import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters";
 import { ApprovalHistoryTable } from "@/components/approval-requests/ApprovalHistoryTable";
 import { Pagination } from "@/components/leave-history/Pagination";
@@ -64,6 +65,7 @@ function ApprovalHistoryPageInner() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [leaveTypeError, setLeaveTypeError] = useState("");
 
   useEffect(() => {
     async function loadTypeOptions() {
@@ -74,7 +76,7 @@ function ApprovalHistoryPageInner() {
           setLeaveTypeOptions(json.data?.leaveTypes ?? []);
         }
       } catch {
-        // silently fail
+        setLeaveTypeError("ไม่สามารถโหลดตัวกรองประเภทการลาได้");
       }
     }
     loadTypeOptions();
@@ -89,7 +91,7 @@ function ApprovalHistoryPageInner() {
       try {
         const params = new URLSearchParams();
         if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
-        if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
+        if (appliedFilters.typeFilter && appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
         if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
         if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
         if (roleType !== "all") params.set("roleType", roleType);
@@ -133,6 +135,8 @@ function ApprovalHistoryPageInner() {
             <p className="text-[14px] leading-[20px] text-[#47464f]">View approval history and past decisions.</p>
           </div>
         </div>
+
+        <WarningBanner message={leaveTypeError} className="mb-4" />
 
         <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">

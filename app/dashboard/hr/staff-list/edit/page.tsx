@@ -90,7 +90,7 @@ export default function EditStaffPage() {
         setQuota(json.data ?? []);
       }
     } catch {
-      // silently fail
+      toast.error("ไม่สามารถบันทึกสิทธิ์วันลาได้");
     } finally {
       setQuotaSaving(false);
     }

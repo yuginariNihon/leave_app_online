@@ -73,8 +73,8 @@ export default function ApprovalRequestsPage() {
         if (res.ok) {
           setLeaveTypeOptions(json.data?.leaveTypes ?? []);
         }
-      } catch (err) {
-        console.warn("Failed to fetch leave type options:", err);
+      } catch {
+        toast.error("ไม่สามารถโหลดตัวกรองประเภทการลาได้");
       }
     }
     loadTypeOptions();
@@ -84,7 +84,7 @@ export default function ApprovalRequestsPage() {
     (page: number) => {
       const params = new URLSearchParams();
       if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
-      if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
+      if (appliedFilters.typeFilter && appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
       if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
       if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
       params.set("page", String(page));

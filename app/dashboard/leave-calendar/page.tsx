@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, User, Bell, Info, X, Sun, ArrowRight } from "lucide-react";
 import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
 import DashboardContent from "@/components/DashboardContent";
+import { WarningBanner } from "@/components/ui/warning-banner";
 import { useUser } from "@/lib/user-context";
 
 type DayData = {
@@ -46,6 +47,7 @@ export default function LeaveCalendarPage() {
   const [pendingReqs, setPendingReqs] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<DayData | null>(null);
+  const [calendarError, setCalendarError] = useState("");
 
   const monthLabel = new Date(year, month).toLocaleDateString("th-TH", { month: "long", year: "numeric" });
   const monthParam = `${year}-${String(month + 1).padStart(2, "0")}`;
@@ -71,7 +73,7 @@ export default function LeaveCalendarPage() {
         })));
       }
     } catch {
-      // silently fail
+      setCalendarError("ไม่สามารถโหลดข้อมูลปฏิทินได้");
     } finally {
       setLoading(false);
     }
@@ -123,6 +125,8 @@ export default function LeaveCalendarPage() {
             <button onClick={goToToday} className="text-[12px] font-semibold text-[#0051d5] hover:underline tracking-wider uppercase px-2">วันนี้</button>
           </div>
         </div>
+
+        <WarningBanner message={calendarError} className="mb-4" />
 
         {/* Main Calendar */}
         <div className="bg-white rounded-xl border border-[#c6c6cd]/30 shadow-[0_4px_12px_-2px_rgba(15,23,42,0.05)] overflow-hidden">

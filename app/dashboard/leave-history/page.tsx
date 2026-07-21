@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { formatDateOnly, downloadCsv } from "@/lib/utils";
+import { WarningBanner } from "@/components/ui/warning-banner";
 
 import { LeaveFilters } from "@/components/leave-history/LeaveFilters";
 import { LeaveTable } from "@/components/leave-history/LeaveTable";
@@ -39,6 +41,7 @@ export default function LeaveHistoryPage() {
   const [cancelledCount, setCancelledCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [leaveTypeError, setLeaveTypeError] = useState("");
 
   useEffect(() => {
     async function loadTypeOptions() {
@@ -49,7 +52,7 @@ export default function LeaveHistoryPage() {
           setLeaveTypeOptions(json.data?.leaveTypes ?? []);
         }
       } catch {
-        // silently fail
+        setLeaveTypeError("ไม่สามารถโหลดตัวกรองประเภทการลาได้");
       }
     }
     loadTypeOptions();
@@ -59,8 +62,8 @@ export default function LeaveHistoryPage() {
     (page: number, exportAll = false) => {
       const params = new URLSearchParams();
       if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
-      if (appliedFilters.statusFilter !== "all") params.set("status", appliedFilters.statusFilter);
-      if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
+      if (appliedFilters.statusFilter && appliedFilters.statusFilter !== "all") params.set("status", appliedFilters.statusFilter);
+      if (appliedFilters.typeFilter && appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
       if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
       if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
       if (exportAll) {
@@ -155,7 +158,7 @@ export default function LeaveHistoryPage() {
 
       downloadCsv(`leave_history_${new Date().toISOString().split("T")[0]}.csv`, csvString);
     } catch {
-      // silently fail
+      toast.error("ไม่สามารถส่งออก CSV ได้ กรุณาลองอีกครั้ง");
     }
   };
 
@@ -184,6 +187,8 @@ export default function LeaveHistoryPage() {
               </Button>
           </div>
         </div>
+
+        <WarningBanner message={leaveTypeError} className="mb-4" />
 
         <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">

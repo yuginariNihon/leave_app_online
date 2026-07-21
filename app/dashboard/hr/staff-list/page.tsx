@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -58,7 +59,7 @@ export default function StaffListPage() {
         ),
       );
     } catch {
-      // silently fail
+      toast.error("ไม่สามารถเปลี่ยนสถานะพนักงานได้");
     } finally {
       setTogglingIds((prev) => prev.filter((id) => id !== staffId));
     }
@@ -69,7 +70,7 @@ export default function StaffListPage() {
       try {
         await fetch("/api/leave-options");
       } catch {
-        // silently fail
+        toast.error("ไม่สามารถโหลดตัวกรองแผนกได้");
       }
     }
     loadDepartments();
