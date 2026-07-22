@@ -94,11 +94,31 @@ export async function PATCH(
 
     const staff = await prisma.staffInfo.findUnique({
       where: { staff_id: id },
-      select: { staff_id: true },
+      select: {
+        staff_id: true,
+        staffRoles: {
+          select: { role: { select: { role_name: true } } },
+        },
+      },
     });
 
     if (!staff) {
       return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+    }
+
+    // HR deactivation guard: cannot deactivate HR or SUPER_ADMIN
+    if (isActive === false) {
+      const targetRoles = staff.staffRoles.map((sr) => sr.role.role_name.toUpperCase());
+      const isTargetSuperAdmin = targetRoles.includes("SUPER_ADMIN");
+      const isTargetHR = targetRoles.includes("HR");
+      const isSelf = session?.staffId === id;
+
+      if (isTargetSuperAdmin) {
+        return NextResponse.json({ error: "ไม่สามารถปิดใช้งานผู้ใช้ที่อยู่ในระดับ SUPER_ADMIN" }, { status: 403 });
+      }
+      if (isTargetHR && !session?.roles.includes("SUPER_ADMIN")) {
+        return NextResponse.json({ error: "HR ไม่สามารถปิดใช้งานผู้ใช้ระดับ HR อื่นได้" }, { status: 403 });
+      }
     }
 
     await prisma.staffInfo.update({

@@ -18,7 +18,7 @@ export async function PATCH(
     const { id } = await params;
     const result = await resetUserPassword(id);
 
-    return NextResponse.json({ data: result });
+    return NextResponse.json({ data: result }, { headers: { "Cache-Control": "no-store, max-age=0" } });
   } catch (error) {
     console.error("Error in PATCH /api/hr/users/[id]/reset-password:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

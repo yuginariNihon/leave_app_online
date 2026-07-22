@@ -2,7 +2,7 @@
 import { requireSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ShieldCheck, History, Users, Building2, Briefcase, Tags, UserCog, GitBranch, BarChart3, CaseSensitive, Shield, UserPlus, CalendarDays } from "lucide-react";
+import { ShieldCheck, History, List, CalendarDays, Users, Building2, Briefcase, Tags, UserCog, GitBranch, BarChart3, CaseSensitive, Shield, UserPlus } from "lucide-react";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import {
   getDashboardKpiData,
@@ -92,6 +92,32 @@ export default async function HrDashboardPage() {
             <div>
               <p className="font-semibold text-[#1a1a40]">ประวัติการอนุมัติ</p>
               <p className="text-sm text-slate-500">ดูประวัติการอนุมัติทั้งหมด</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/dashboard/leave-history"
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
+              <List className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-[#1a1a40]">รายการลา</p>
+              <p className="text-sm text-slate-500">ดูรายการคำขอลาทั้งหมด</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/dashboard/leave-calendar"
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
+              <CalendarDays className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-[#1a1a40]">ปฏิทินการลา</p>
+              <p className="text-sm text-slate-500">ดูปฏิทินการลาของพนักงาน</p>
             </div>
           </Link>
         </div>

@@ -26,6 +26,13 @@ export async function PATCH(
       return NextResponse.json({ error: "roles (string[]) is required" }, { status: 400 });
     }
 
+    // HR cannot assign HR or SUPER_ADMIN role to anyone (including themselves)
+    const isHR = session.roles.includes("HR") && !session.roles.includes("SUPER_ADMIN");
+    const wantsElevated = roles.some((r) => r.toUpperCase() === "HR" || r.toUpperCase() === "SUPER_ADMIN");
+    if (isHR && wantsElevated) {
+      return NextResponse.json({ error: "HR ไม่สามารถเพิ่มสิทธิ์ HR หรือ SUPER_ADMIN ให้กับผู้ใช้ได้" }, { status: 403 });
+    }
+
     await updateStaffRoles(id, roles, session.staffId);
     return NextResponse.json({ success: true });
   } catch (error) {

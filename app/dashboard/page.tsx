@@ -13,12 +13,8 @@ import {
   getRecentLeavesByStaffId,
 } from "@/lib/services/leaveService";
 import { redirect } from "next/navigation";
-
 export default async function DashboardPage() {
   const user = await requireSessionUser();
-
-  const isHR = user.roles.includes("HR") || user.roles.includes("SUPER_ADMIN");
-  if (isHR) redirect("/dashboard/hr");
 
   const profile = await getStaffProfile(user.staffId);
   if (!profile) redirect("/login");

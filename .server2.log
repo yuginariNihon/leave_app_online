@@ -1,0 +1,16 @@
+
+> leave_app2@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.5 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.10.172:3000
+- Environments: .env
+✓ Ready in 1899ms
+
+ GET / 200 in 948ms (next.js: 488ms, application-code: 460ms)
+ GET /login 200 in 924ms (next.js: 160ms, proxy.ts: 465ms, application-code: 299ms)
+✓ Compiled in 457ms
+✓ Compiled in 326ms
+✓ Compiled in 320ms
+[?25h

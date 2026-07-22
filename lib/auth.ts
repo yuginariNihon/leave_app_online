@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +7,10 @@ import { cache } from "react";
 export const SESSION_COOKIE_NAME = "leave_app_db_session";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24;
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 export type SessionUser = {
   userId: string;
@@ -33,11 +37,11 @@ export async function createSession(user: CreateSessionInput) {
   const userAgent = headersList.get("user-agent") || undefined;
   const ipAddress = headersList.get("x-forwarded-for")?.split(",")[0].trim() || undefined;
 
-  // Save session record to database
+  // Save session record to database (store SHA-256 hash only)
   await prisma.session.create({
     data: {
       user_id: user.userId,
-      token,
+      token: hashToken(token),
       expires_at: expiresAt,
       ip_address: ipAddress,
       user_agent: userAgent,
@@ -65,8 +69,9 @@ async function getSessionUserImpl(): Promise<SessionUser | null> {
   }
 
   try {
-    const session = await prisma.session.findUnique({
-      where: { token },
+    const hashedToken = hashToken(token);
+    let session = await prisma.session.findUnique({
+      where: { token: hashedToken },
       include: {
         user: {
           include: {
@@ -75,6 +80,27 @@ async function getSessionUserImpl(): Promise<SessionUser | null> {
         },
       },
     });
+
+    // Migration fallback: try plaintext token lookup for pre-hashing sessions
+    if (!session) {
+      session = await prisma.session.findUnique({
+        where: { token },
+        include: {
+          user: {
+            include: {
+              staff: true,
+            },
+          },
+        },
+      });
+      if (session) {
+        // Migrate to hashed token
+        await prisma.session.update({
+          where: { session_id: session.session_id },
+          data: { token: hashedToken },
+        }).catch(() => {});
+      }
+    }
 
     if (!session) {
       return null;
@@ -132,7 +158,7 @@ export async function deleteSession() {
   if (token) {
     try {
       await prisma.session.deleteMany({
-        where: { token },
+        where: { token: hashToken(token) },
       });
     } catch (error) {
       console.error("Error deleting session from DB:", error);

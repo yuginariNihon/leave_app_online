@@ -2999,7 +2999,7 @@ export async function createUserRecord(params: { staffId: string; email: string;
 }
 
 export async function resetUserPassword(userId: string) {
-  const rawPassword = randomBytes(4).toString("hex");
+  const rawPassword = randomBytes(6).toString("hex");
   const passwordHash = await hashPassword(rawPassword);
   await prisma.user.update({
     where: { user_id: userId },
