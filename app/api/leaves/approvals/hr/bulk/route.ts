@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { hrBulkUpdateApprovalStatus } from "@/lib/services/approvalService";
 import { getSessionUser } from "@/lib/auth";
-import { ApprovalStatus } from "@/lib/generated/prisma/enums";
+
+const bulkApprovalSchema = z.object({
+  approvalIds: z.array(z.string()).min(1),
+  status: z.enum(["approved", "rejected"]),
+  comment: z.string().trim().max(200).optional(),
+});
 
 export const runtime = "nodejs";
 
@@ -11,25 +17,19 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const body = await request.json();
+  const parsed = bulkApprovalSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request payload." }, { status: 400 });
+  }
+
+  const { approvalIds, status, comment } = parsed.data;
+
   try {
-    const { approvalIds, status, comment } = await request.json();
-
-    if (!Array.isArray(approvalIds) || approvalIds.length === 0) {
-      return NextResponse.json(
-        { error: "No approval IDs provided." },
-        { status: 400 },
-      );
-    }
-
-    if (status !== ApprovalStatus.approved && status !== ApprovalStatus.rejected) {
-      return NextResponse.json({ error: "Invalid status." }, { status: 400 });
-    }
-
     await hrBulkUpdateApprovalStatus(approvalIds, session.staffId, status, comment);
     return NextResponse.json({ success: true });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to bulk update approvals.";
-    return NextResponse.json({ error: message }, { status: 400 });
+  } catch {
+    return NextResponse.json({ error: "Failed to bulk update approvals." }, { status: 400 });
   }
 }

@@ -1,11 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (process.env.NODE_ENV !== "development") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const debugSecret = process.env.DEBUG_SECRET;
+  if (debugSecret && request.nextUrl.searchParams.get("secret") !== debugSecret) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

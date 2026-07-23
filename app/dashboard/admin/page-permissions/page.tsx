@@ -35,12 +35,6 @@ export default function PagePermissionsPage() {
   const [error, setError] = useState("");
   const [savingGroups, setSavingGroups] = useState<Record<string, boolean>>({});
 
-  const isSuperAdmin = userRoles.includes("SUPER_ADMIN");
-
-  useEffect(() => {
-    if (!isSuperAdmin) router.replace("/dashboard");
-  }, [isSuperAdmin, router]);
-
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) setFetchKey((k) => k + 1);
@@ -119,8 +113,6 @@ export default function PagePermissionsPage() {
       setSavingGroups((prev) => ({ ...prev, [groupName]: false }));
     }
   };
-
-  if (!isSuperAdmin) return null;
 
   const grouped = data.reduce<Record<string, PagePermission[]>>((acc, p) => {
     if (!acc[p.groupName]) acc[p.groupName] = [];

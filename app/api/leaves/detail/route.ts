@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLeaveDetailById } from "@/lib/services/leaveService";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logReadAccess } from "@/lib/services/auditService";
+import { headers } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -50,6 +52,9 @@ export async function GET(request: NextRequest) {
     if (!isOwner && !isHR && !isSupervisor) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    const headersList = await headers();
+    logReadAccess(session.userId, session.staffId, "leave", leaveId, headersList.get("x-forwarded-for")?.split(",")[0].trim(), headersList.get("user-agent") ?? undefined);
 
     return NextResponse.json({ data: detail });
   } catch (error) {

@@ -961,7 +961,7 @@ export async function getApprovalHistory(
   const isHR = userRoles.some((r) => r.role.role_name === "HR");
 
   if (roleType === "hr" && !isSuperAdmin && !isHR) {
-    return { data: [], total: 0, page: 1, totalPages: 0, limit };
+    throw new Error("Forbidden: Only HR can view HR approvals");
   }
 
   const where: Prisma.LeaveApprovalWhereInput = {

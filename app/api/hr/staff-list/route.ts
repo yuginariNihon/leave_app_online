@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStaffList } from "@/lib/services/leaveService";
 import { getSessionUser } from "@/lib/auth";
+import { logReadAccess } from "@/lib/services/auditService";
+import { headers } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -25,6 +27,9 @@ export async function GET(request: NextRequest) {
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 10,
     });
+
+    const headersList = await headers();
+    logReadAccess(session.userId, session.staffId, "staff-list", undefined, headersList.get("x-forwarded-for")?.split(",")[0].trim(), headersList.get("user-agent") ?? undefined);
 
     return NextResponse.json(result);
   } catch (error) {

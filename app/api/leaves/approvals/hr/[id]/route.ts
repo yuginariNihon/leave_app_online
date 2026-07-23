@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { hrUpdateApprovalStatus } from "@/lib/services/approvalService";
 import { getSessionUser } from "@/lib/auth";
-import { ApprovalStatus } from "@/lib/generated/prisma/enums";
+
+const approvalSchema = z.object({
+  status: z.enum(["approved", "rejected"]),
+  comment: z.string().trim().max(200).optional(),
+});
 
 export const runtime = "nodejs";
 
@@ -16,18 +21,18 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  const { status, comment } = body;
+  const parsed = approvalSchema.safeParse(body);
 
-  if (status !== ApprovalStatus.approved && status !== ApprovalStatus.rejected) {
-    return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request payload." }, { status: 400 });
   }
+
+  const { status, comment } = parsed.data;
 
   try {
     await hrUpdateApprovalStatus(id, session.staffId, status, comment);
     return NextResponse.json({ success: true });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to update approval.";
-    return NextResponse.json({ error: message }, { status: 400 });
+  } catch {
+    return NextResponse.json({ error: "Failed to update approval." }, { status: 400 });
   }
 }

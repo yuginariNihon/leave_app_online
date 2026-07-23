@@ -32,12 +32,20 @@ export async function findUserByIdentifier(identifier: string) {
 /**
  * Create a login history audit record.
  */
-export async function createLoginHistory(userId: string, method: string, isSuccess: boolean) {
+export async function createLoginHistory(
+  userId: string,
+  method: string,
+  isSuccess: boolean,
+  ipAddress?: string,
+  userAgent?: string,
+) {
   return prisma.loginHistory.create({
     data: {
       user_id: userId,
       login_method: method,
       is_success: isSuccess,
+      ip_address: ipAddress?.slice(0, 50) ?? null,
+      device_info: userAgent?.slice(0, 500) ?? null,
     },
   });
 }

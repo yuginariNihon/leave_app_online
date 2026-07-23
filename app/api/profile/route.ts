@@ -4,6 +4,8 @@ import {
   getMyProfile,
   updateMyProfile,
 } from "@/lib/services/leaveService";
+import { logReadAccess } from "@/lib/services/auditService";
+import { headers } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -24,6 +26,14 @@ export async function GET() {
         { status: 404 },
       );
     }
+
+    const isHR = session.roles.some((r) => r === "HR" || r === "SUPER_ADMIN");
+    if (!isHR) {
+      profile.phoneNumber = null;
+    }
+
+    const headersList = await headers();
+    logReadAccess(session.userId, session.staffId, "profile", session.staffId, headersList.get("x-forwarded-for")?.split(",")[0].trim(), headersList.get("user-agent") ?? undefined);
 
     return NextResponse.json({ data: profile });
   } catch (error) {
@@ -64,6 +74,10 @@ export async function PUT(request: Request) {
 
   try {
     const profile = await updateMyProfile(session.staffId, parsed.data);
+    const isHR = session.roles.some((r) => r === "HR" || r === "SUPER_ADMIN");
+    if (profile && !isHR) {
+      profile.phoneNumber = null;
+    }
     return NextResponse.json({ data: profile });
   } catch (error) {
     console.error("Failed to update profile", error);

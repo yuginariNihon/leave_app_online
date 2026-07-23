@@ -47,12 +47,6 @@ export default function AdminRolesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffWithRoles | null>(null);
 
-  const isAdmin = userRoles.includes("SUPER_ADMIN") || userRoles.includes("HR");
-
-  useEffect(() => {
-    if (!isAdmin) router.replace("/dashboard");
-  }, [isAdmin, router]);
-
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) setFetchKey((k) => k + 1);
@@ -116,8 +110,6 @@ export default function AdminRolesPage() {
       toast.error(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     }
   };
-
-  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">

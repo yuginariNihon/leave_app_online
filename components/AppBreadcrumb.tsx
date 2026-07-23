@@ -24,7 +24,7 @@ export function AppBreadcrumb({ items, className }: AppBreadcrumbProps) {
           <React.Fragment key={i}>
             {i > 0 && <BreadcrumbSeparator />}
             <BreadcrumbItem>
-              {item.href ? (
+              {item.href?.startsWith("/") ? (
                 <BreadcrumbLink asChild>
                   <Link href={item.href}>{item.label}</Link>
                 </BreadcrumbLink>

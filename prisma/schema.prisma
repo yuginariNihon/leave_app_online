@@ -391,6 +391,7 @@ model User {
 
   loginHistories LoginHistory[]
   sessions       Session[]
+  auditLogs      AuditLog[]
 
   @@index([staff_id])
 }
@@ -510,6 +511,29 @@ model Holiday {
   updated_at    DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   @@unique([holiday_date, holiday_name])
+}
+
+model AuditLog {
+  audit_log_id String @id @default(uuid()) @db.Uuid
+
+  user_id   String @db.Uuid
+  staff_id  String? @db.Uuid  // denormalized เพื่อ query เร็ว
+
+  action      String @db.VarChar(20)    // 'read'
+  target_type String @db.VarChar(50)    // 'leave', 'staff', 'profile'
+  target_id   String? @db.VarChar(100)  // resource ID เช่น leave_id, staff_id
+
+  ip_address  String? @db.VarChar(50)
+  user_agent  String? @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([target_type, target_id])
+  @@index([created_at])
+  @@index([staff_id])
 }
 
 /**

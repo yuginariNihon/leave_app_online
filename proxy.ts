@@ -34,6 +34,7 @@ export async function proxy(request: NextRequest) {
         let session = await prisma.session.findUnique({
           where: { token: hashedToken },
           select: {
+            expires_at: true,
             user: { select: { force_change_password: true } },
           },
         });
@@ -41,11 +42,12 @@ export async function proxy(request: NextRequest) {
           session = await prisma.session.findUnique({
             where: { token },
             select: {
+              expires_at: true,
               user: { select: { force_change_password: true } },
             },
           });
         }
-        if (session?.user?.force_change_password) {
+        if (session && session.expires_at.getTime() >= Date.now() && session.user?.force_change_password) {
           return NextResponse.redirect(new URL("/dashboard/reset-password?force=true", request.url));
         }
       }
@@ -63,6 +65,7 @@ export async function proxy(request: NextRequest) {
         let session = await prisma.session.findUnique({
           where: { token: hashedToken },
           select: {
+            expires_at: true,
             user: {
               select: {
                 staff: {
@@ -80,6 +83,7 @@ export async function proxy(request: NextRequest) {
           session = await prisma.session.findUnique({
             where: { token },
             select: {
+              expires_at: true,
               user: {
                 select: {
                   staff: {
@@ -94,9 +98,11 @@ export async function proxy(request: NextRequest) {
             },
           });
         }
-        const roleNames = session?.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
-        if (roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN")) {
-          return NextResponse.redirect(new URL("/dashboard/hr", request.url));
+        if (session && session.expires_at.getTime() >= Date.now()) {
+          const roleNames = session.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
+          if (roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN")) {
+            return NextResponse.redirect(new URL("/dashboard/hr", request.url));
+          }
         }
       }
     } catch {
@@ -113,6 +119,7 @@ export async function proxy(request: NextRequest) {
         let session = await prisma.session.findUnique({
           where: { token: hashedToken },
           select: {
+            expires_at: true,
             user: {
               select: {
                 staff: {
@@ -133,6 +140,7 @@ export async function proxy(request: NextRequest) {
           session = await prisma.session.findUnique({
             where: { token },
             select: {
+              expires_at: true,
               user: {
                 select: {
                   staff: {
@@ -149,7 +157,10 @@ export async function proxy(request: NextRequest) {
             },
           });
         }
-        const roleNames = session?.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
+        if (!session || session.expires_at.getTime() < Date.now()) {
+          return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+        const roleNames = session.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
         const isAuthorized = roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN");
         if (!isAuthorized) {
           return NextResponse.redirect(new URL("/dashboard", request.url));

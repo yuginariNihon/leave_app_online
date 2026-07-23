@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { getStaffDetail, updateStaff } from "@/lib/services/leaveService";
 import { updateStaffSchema } from "@/lib/TypeSchema";
+import { logReadAccess } from "@/lib/services/auditService";
+import { headers } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -31,6 +33,9 @@ export async function GET(
     if (!staff) {
       return NextResponse.json({ error: "Staff not found" }, { status: 404 });
     }
+
+    const headersList = await headers();
+    logReadAccess(session!.userId, session!.staffId, "staff", id, headersList.get("x-forwarded-for")?.split(",")[0].trim(), headersList.get("user-agent") ?? undefined);
 
     return NextResponse.json({ data: staff });
   } catch (error) {

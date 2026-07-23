@@ -2,6 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createSession, deleteSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -20,9 +21,28 @@ export async function loginAction(
 ): Promise<LoginState> {
   const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const headersList = await headers();
+  const ipAddress = headersList.get("x-forwarded-for")?.split(",")[0].trim() || undefined;
+  const userAgent = headersList.get("user-agent") || undefined;
 
   if (!identifier || !password) {
     return { message: "Please enter your employee ID/email and password." };
+  }
+
+  // Per-IP rate limit
+  if (ipAddress) {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const ipFailures = await prisma.loginHistory.count({
+      where: {
+        ip_address: ipAddress,
+        is_success: false,
+        login_at: { gte: fiveMinutesAgo },
+      },
+    });
+
+    if (ipFailures >= 10) {
+      return { message: "Invalid login credentials." };
+    }
   }
 
   const user = await findUserByIdentifier(identifier);
@@ -59,7 +79,7 @@ export async function loginAction(
 
   const passwordMatches = await bcrypt.compare(password, user.password_hash);
 
-  await createLoginHistory(user.user_id, "password", passwordMatches);
+  await createLoginHistory(user.user_id, "password", passwordMatches, ipAddress, userAgent);
 
   if (!passwordMatches) {
     return { message: "Invalid login credentials." };

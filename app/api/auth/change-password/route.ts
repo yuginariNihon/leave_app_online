@@ -3,7 +3,6 @@ import { requireSessionUser, SESSION_COOKIE_NAME } from "@/lib/auth";
 import { hashPassword } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
-import bcrypt from "bcryptjs";
 
 export const runtime = "nodejs";
 
@@ -28,16 +27,17 @@ export async function PATCH(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { user_id: session.userId },
-      select: { password_hash: true, password_changed_at: true },
+      select: { password_hash: true, password_changed_at: true, force_change_password: true },
     });
 
-    if (user?.password_changed_at && user?.password_hash) {
+    if (user?.password_changed_at && !user.force_change_password) {
       const hoursSinceLastChange = (Date.now() - user.password_changed_at.getTime()) / (1000 * 60 * 60);
       if (hoursSinceLastChange < 24) {
-        const isSamePassword = await bcrypt.compare(newPassword, user.password_hash);
-        if (isSamePassword) {
-          return NextResponse.json({ error: "ไม่สามารถใช้รหัสผ่านซ้ำกับรหัสปัจจุบันได้ภายใน 24 ชั่วโมง" }, { status: 400 });
-        }
+        const remaining = Math.ceil(24 - hoursSinceLastChange);
+        return NextResponse.json(
+          { error: `สามารถเปลี่ยนรหัสผ่านได้อีกครั้งในอีก ${remaining} ชั่วโมง` },
+          { status: 429 },
+        );
       }
     }
 

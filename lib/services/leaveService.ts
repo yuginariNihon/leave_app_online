@@ -476,6 +476,8 @@ export type LeaveDetailResponse = {
 
 export async function getLeaveDetailById(
   leaveId: string,
+  sessionStaffId?: string,
+  sessionRoles?: string[],
 ): Promise<LeaveDetailResponse | null> {
   const leave = await prisma.dataLeave.findUnique({
     where: { leave_id: leaveId },
@@ -527,6 +529,27 @@ export async function getLeaveDetailById(
   });
 
   if (!leave) return null;
+
+  // Authorization guard (defense-in-depth)
+  if (sessionStaffId && sessionRoles) {
+    const isOwner = leave.staff_id === sessionStaffId;
+    const isHR = sessionRoles.some((r) => r === "HR" || r === "SUPER_ADMIN");
+    let isSupervisor = false;
+    if (!isOwner && !isHR) {
+      const supervisorRecord = await prisma.staffSupervisor.findUnique({
+        where: {
+          staff_id_supervisor_id: {
+            staff_id: leave.staff_id,
+            supervisor_id: sessionStaffId,
+          },
+        },
+      });
+      isSupervisor = !!supervisorRecord;
+    }
+    if (!isOwner && !isHR && !isSupervisor) {
+      throw new Error("Forbidden");
+    }
+  }
 
   // Fetch workflow steps to get position names for pending approvals
   const workflow = await prisma.leaveWorkflow.findFirst({
@@ -2679,18 +2702,20 @@ export async function updateStaffRoles(
     roleNames.some((n) => r.role_name.toUpperCase() === n.toUpperCase())
   );
 
-  await prisma.staffRole.deleteMany({
-    where: { staff_id: staffId },
-  });
-
-  if (roles.length > 0) {
-    await prisma.staffRole.createMany({
-      data: roles.map((r) => ({
-        staff_id: staffId,
-        role_id: r.role_id,
-      })),
+  await prisma.$transaction(async (tx) => {
+    await tx.staffRole.deleteMany({
+      where: { staff_id: staffId },
     });
-  }
+
+    if (roles.length > 0) {
+      await tx.staffRole.createMany({
+        data: roles.map((r) => ({
+          staff_id: staffId,
+          role_id: r.role_id,
+        })),
+      });
+    }
+  });
 }
 
 // ────────────────────────────────────

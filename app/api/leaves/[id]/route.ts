@@ -3,7 +3,8 @@ import { updateLeaveRequest, validateLeaveRequestDetails } from "@/lib/services/
 import { getLeaveDetailById } from "@/lib/services/leaveService";
 import { getSessionUser } from "@/lib/auth";
 import { createLeaveRequestSchema } from "@/lib/TypeSchema";
-import { prisma } from "@/lib/prisma";
+import { logReadAccess } from "@/lib/services/auditService";
+import { headers } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const detail = await getLeaveDetailById(id);
+    const detail = await getLeaveDetailById(id, session.staffId, session.roles);
 
     if (!detail) {
       return NextResponse.json(
@@ -28,25 +29,8 @@ export async function GET(
       );
     }
 
-    const isOwner = detail.staffId === session.staffId;
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    let isSupervisor = false;
-
-    if (!isOwner && !isHR) {
-      const supervisorRecord = await prisma.staffSupervisor.findUnique({
-        where: {
-          staff_id_supervisor_id: {
-            staff_id: detail.staffId,
-            supervisor_id: session.staffId,
-          },
-        },
-      });
-      isSupervisor = !!supervisorRecord;
-    }
-
-    if (!isOwner && !isHR && !isSupervisor) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const headersList = await headers();
+    logReadAccess(session.userId, session.staffId, "leave", id, headersList.get("x-forwarded-for")?.split(",")[0].trim(), headersList.get("user-agent") ?? undefined);
 
     return NextResponse.json({ data: detail });
   } catch (error) {
@@ -112,9 +96,7 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Failed to update leave request", error);
-    const message = error instanceof Error ? error.message : "Failed to update leave request.";
-    return NextResponse.json({ error: message }, { status: 400 });
+  } catch {
+    return NextResponse.json({ error: "Failed to update leave request." }, { status: 400 });
   }
 }
