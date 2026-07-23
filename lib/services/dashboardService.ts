@@ -130,6 +130,7 @@ export async function getLeaveTrendData(): Promise<LeaveTrendItem[]> {
 
 export async function getLeaveTypeDistribution(): Promise<LeaveTypeDistItem[]> {
   const types = await prisma.leaveType.findMany({
+    where: { is_active: true },
     select: { leave_type_name: true, _count: { select: { leaves: true } } },
     orderBy: { leave_type_name: "asc" },
   });

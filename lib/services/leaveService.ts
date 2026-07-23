@@ -1234,10 +1234,10 @@ export async function importStaff(
 
   // Pre-load lookup maps for O(1) case-insensitive matching (avoids N+1 + mode:insensitive)
   const [allDepartments, allPositions, allSections, allEmploymentTypes] = await Promise.all([
-    prisma.department.findMany({ select: { department_id: true, department_name: true } }),
-    prisma.position.findMany({ select: { position_id: true, position_name: true } }),
-    prisma.section.findMany({ select: { section_id: true, section_name: true, department_id: true } }),
-    prisma.employmentType.findMany({ select: { employment_type_id: true, name: true } }),
+    prisma.department.findMany({ where: { is_active: true }, select: { department_id: true, department_name: true } }),
+    prisma.position.findMany({ where: { is_active: true }, select: { position_id: true, position_name: true } }),
+    prisma.section.findMany({ where: { is_active: true }, select: { section_id: true, section_name: true, department_id: true } }),
+    prisma.employmentType.findMany({ where: { is_active: true }, select: { employment_type_id: true, name: true } }),
   ]);
 
   const deptMap = new Map(allDepartments.map((d) => [d.department_name.toLowerCase(), d.department_id]));

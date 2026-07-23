@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import type { ApproverType } from "@/lib/generated/prisma/enums";
 import { checkApproverExists, checkApproverForStaff, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
+import { getCachedWorkflow } from "@/lib/services/workflowCache";
 
 // ──────────────────────────────────────────────
 // Types
@@ -255,10 +256,7 @@ async function advanceLeaveApproval(
   });
   if (!staff) return;
 
-  const workflow = await prisma.leaveWorkflow.findFirst({
-    where: { position_id: staff.position_id, is_active: true },
-    include: { steps: { orderBy: { approval_level: "asc" } } },
-  });
+  const workflow = await getCachedWorkflow(staff.position_id);
   if (!workflow) return;
 
   const pendingApprovals = await prisma.leaveApproval.findMany({
@@ -326,16 +324,17 @@ export async function updateApprovalStatus(
   comment?: string,
 ) {
   const supervisor = await prisma.staffInfo.findUnique({
-    where: { staff_id: staffId },
+    where: { staff_id: staffId, is_active: true },
     select: { department_id: true },
   });
+  if (!supervisor) throw new Error("Approver not found or inactive.");
 
   const approval = await prisma.leaveApproval.findFirst({
     where: {
       approval_id: approvalId,
       leave: {
         staff: {
-          department_id: supervisor?.department_id ?? "",
+          department_id: supervisor.department_id,
         },
       },
     },
@@ -360,13 +359,8 @@ export async function updateApprovalStatus(
   });
   if (!leaveOwner) throw new Error("Leave owner not found.");
 
-  const workflow = await prisma.leaveWorkflow.findFirst({
-    where: { position_id: leaveOwner.position_id, is_active: true },
-    include: {
-      steps: { where: { approval_level: approval.approval_level } },
-    },
-  });
-  const step = workflow?.steps[0];
+  const workflow = await getCachedWorkflow(leaveOwner.position_id);
+  const step = workflow?.steps.find((s) => s.approval_level === approval.approval_level);
   if (!step) throw new Error("Workflow step not found for this approval level.");
 
   const isStaff = await checkApproverForStaff(
@@ -434,9 +428,10 @@ export async function bulkUpdateApprovalStatus(
   comment?: string,
 ) {
   const supervisor = await prisma.staffInfo.findUnique({
-    where: { staff_id: staffId },
+    where: { staff_id: staffId, is_active: true },
     select: { department_id: true },
   });
+  if (!supervisor) throw new Error("Approver not found or inactive.");
 
   const approvals = await prisma.leaveApproval.findMany({
     where: {
@@ -444,7 +439,7 @@ export async function bulkUpdateApprovalStatus(
       approval_status: ApprovalStatus.pending,
       leave: {
         staff: {
-          department_id: supervisor?.department_id ?? "",
+          department_id: supervisor.department_id,
         },
       },
     },
@@ -742,11 +737,8 @@ export async function hrUpdateApprovalStatus(
   });
   if (!owner) throw new Error("Leave owner not found.");
 
-  const workflow = await prisma.leaveWorkflow.findFirst({
-    where: { position_id: owner.position_id, is_active: true },
-    include: { steps: { where: { approval_level: approval.approval_level } } },
-  });
-  const step = workflow?.steps[0];
+  const workflow = await getCachedWorkflow(owner.position_id);
+  const step = workflow?.steps.find((s) => s.approval_level === approval.approval_level);
   if (!step || step.approver_type !== "HR") {
     throw new Error("This step is not an HR approval step.");
   }
