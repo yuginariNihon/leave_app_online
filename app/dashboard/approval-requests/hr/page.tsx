@@ -22,10 +22,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters";
 import { ApprovalTable } from "@/components/approval-requests/ApprovalTable";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
+
 import { Pagination } from "@/components/leave-history/Pagination";
 import type { ApprovalRequestItem } from "@/lib/services/approvalService";
-import DashboardContent from "@/components/DashboardContent";
+
 import { cn } from "@/lib/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
@@ -221,9 +221,8 @@ export default function HrApprovalRequestsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <>
+
         <AppBreadcrumb
           items={[{ label: "Home", href: "/dashboard" }, { label: "HR Approvals" }]}
           className="mb-4"
@@ -402,7 +401,7 @@ export default function HrApprovalRequestsPage() {
             </div>
           </AlertDialogContent>
         </AlertDialog>
-      </DashboardContent>
-    </div>
+
+        </>
   );
 }

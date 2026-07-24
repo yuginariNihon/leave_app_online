@@ -158,4 +158,11 @@
   }
 }
 
+/* Smooth sidebar transitions — sync gap/container with DashboardContent (200ms ease-in-out) */
+[data-slot="sidebar-gap"],
+[data-slot="sidebar-container"] {
+  transition-duration: 200ms !important;
+  transition-timing-function: ease-in-out !important;
+}
+
 

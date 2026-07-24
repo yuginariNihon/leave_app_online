@@ -3070,3 +3070,61 @@ export async function getUserLoginHistory(userId: string, limit = 10) {
     deviceInfo: h.device_info,
   }));
 }
+
+export function getVacationEntitlement(yearsOfService: number): number {
+  if (yearsOfService < 1) return 0;
+  if (yearsOfService <= 3) return 6;
+  if (yearsOfService <= 6) return 8;
+  return 10;
+}
+
+export async function syncVacationLeaveLimit(
+  staffId: string,
+  year: number,
+  vacationTypeId: string,
+  startDate: Date,
+) {
+  const yearsOfService = Math.floor((Date.now() - startDate.getTime()) / (365.25 * 86400000));
+  const entitlement = getVacationEntitlement(yearsOfService);
+
+  if (entitlement === 0) {
+    await prisma.userLeaveLimit.upsert({
+      where: { staff_id_leave_type_id_year: { staff_id: staffId, leave_type_id: vacationTypeId, year } },
+      create: { staff_id: staffId, leave_type_id: vacationTypeId, year, max_days: 0, used_days: 0 },
+      update: { max_days: 0, used_days: 0 },
+    });
+    return;
+  }
+
+  const prevLimit = await prisma.userLeaveLimit.findUnique({
+    where: { staff_id_leave_type_id_year: { staff_id: staffId, leave_type_id: vacationTypeId, year: year - 1 } },
+    select: { max_days: true, used_days: true },
+  });
+
+  let carry = 0;
+  if (prevLimit) {
+    const unused = Math.max(0, Number(prevLimit.max_days) - Number(prevLimit.used_days));
+    carry = Math.min(unused, 6);
+  }
+
+  const total = entitlement + carry;
+
+  await prisma.userLeaveLimit.upsert({
+    where: { staff_id_leave_type_id_year: { staff_id: staffId, leave_type_id: vacationTypeId, year } },
+    create: { staff_id: staffId, leave_type_id: vacationTypeId, year, max_days: total, used_days: 0 },
+    update: { max_days: total, used_days: 0 },
+  });
+}
+
+export async function syncLeaveLimit(
+  staffId: string,
+  year: number,
+  leaveTypeId: string,
+  maxDays: number,
+) {
+  await prisma.userLeaveLimit.upsert({
+    where: { staff_id_leave_type_id_year: { staff_id: staffId, leave_type_id: leaveTypeId, year } },
+    create: { staff_id: staffId, leave_type_id: leaveTypeId, year, max_days: maxDays, used_days: 0 },
+    update: { max_days: maxDays, used_days: 0 },
+  });
+}

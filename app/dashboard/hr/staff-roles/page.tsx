@@ -12,8 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
-import DashboardContent from "@/components/DashboardContent";
+
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { toast } from "sonner";
 import { StaffRoleDialog } from "@/app/dashboard/admin/roles/StaffRoleDialog";
@@ -111,9 +110,8 @@ export default function StaffRolesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <>
+
         <AppBreadcrumb
           items={[{ label: "Home", href: "/dashboard" }, { label: "HR" }, { label: "จัดการสิทธิ์ของพนักงาน" }]}
           className="mb-4"
@@ -218,7 +216,7 @@ export default function StaffRolesPage() {
             </div>
           )}
         </div>
-      </DashboardContent>
+
 
       {selectedStaff && (
         <StaffRoleDialog
@@ -229,6 +227,6 @@ export default function StaffRolesPage() {
           onSave={handleSave}
         />
       )}
-    </div>
+        </>
   );
 }

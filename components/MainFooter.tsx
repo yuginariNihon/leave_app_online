@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 
 export function MainFooter() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/login") || pathname?.startsWith("/dashboard/approval-requests")) return null;
+  if (pathname?.startsWith("/login")) return null;
   return (
     <footer className="relative z-20 bg-[#0b1c30] text-white p-8 mt-6">
       <div className="max-w-[1200px] mx-auto flex flex-col gap-8">

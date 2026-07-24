@@ -3,12 +3,12 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
+
 import { WarningBanner } from "@/components/ui/warning-banner";
 import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters";
 import { ApprovalHistoryTable } from "@/components/approval-requests/ApprovalHistoryTable";
 import { Pagination } from "@/components/leave-history/Pagination";
-import DashboardContent from "@/components/DashboardContent";
+
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 
@@ -121,9 +121,8 @@ function ApprovalHistoryPageInner() {
 
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <>
+
         <AppBreadcrumb
           items={[{ label: "Home", href: "/dashboard" }, { label: "Approval History" }]}
           className="mb-4"
@@ -171,8 +170,8 @@ function ApprovalHistoryPageInner() {
             </>
           )}
         </div>
-      </DashboardContent>
-    </div>
+
+        </>
   );
 }
 

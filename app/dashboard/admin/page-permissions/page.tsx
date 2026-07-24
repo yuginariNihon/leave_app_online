@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, Save, Loader2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
-import DashboardContent from "@/components/DashboardContent";
+
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { toast } from "sonner";
 import { useUser } from "@/lib/user-context";
@@ -121,9 +120,8 @@ export default function PagePermissionsPage() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <>
+
         <AppBreadcrumb
           items={[
             { label: "Home", href: "/dashboard" },
@@ -208,7 +206,7 @@ export default function PagePermissionsPage() {
             )}
           </div>
         )}
-      </DashboardContent>
-    </div>
+
+        </>
   );
 }

@@ -21,9 +21,9 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/leave-history/StatusBadge";
 import { Pagination } from "@/components/leave-history/Pagination";
-import DashboardContent from "@/components/DashboardContent";
+
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
+
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
 import { statusTextMap } from "@/components/leave-history/types";
 import { formatLeaveDateRange, formatDays, downloadCsv } from "@/lib/utils";
@@ -212,9 +212,8 @@ export default function LeaveReportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <>
+
         <AppBreadcrumb
           items={[{ label: "Home", href: "/dashboard" }, { label: "HR" }, { label: "รายงานการลา" }]}
           className="mb-4"
@@ -393,7 +392,7 @@ export default function LeaveReportPage() {
             </>
           )}
         </div>
-      </DashboardContent>
-    </div>
+
+        </>
   );
 }

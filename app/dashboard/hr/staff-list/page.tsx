@@ -12,11 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
+
 import { StaffTable } from "@/components/hr/StaffTable";
 import { Pagination } from "@/components/leave-history/Pagination";
 import type { StaffListItem } from "@/lib/services/leaveService";
-import DashboardContent from "@/components/DashboardContent";
+
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { Button } from "@/components/ui/button";
 
@@ -114,9 +114,8 @@ export default function StaffListPage() {
   }, [appliedFilters, currentPage, fetchKey]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <>
+
         <AppBreadcrumb
           items={[{ label: "Home", href: "/dashboard" }, { label: "HR" }, { label: "Staff List" }]}
           className="mb-4"
@@ -182,7 +181,7 @@ export default function StaffListPage() {
             </>
           )}
         </div>
-      </DashboardContent>
-    </div>
+
+        </>
   );
 }

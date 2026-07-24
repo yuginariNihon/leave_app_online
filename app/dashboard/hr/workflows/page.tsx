@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, FileText, User, Pencil, Plus } from "lucide-react";
-import DashboardContent from "@/components/DashboardContent";
+
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { Button } from "@/components/ui/button";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
+
 
 type StepDisplay = {
   level: number;
@@ -61,9 +61,8 @@ export default function WorkflowsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <>
+
         <style>{`
           .flow-container::-webkit-scrollbar { height: 4px; }
           .flow-container::-webkit-scrollbar-thumb { background: #e0e3e5; border-radius: 4px; }
@@ -162,7 +161,7 @@ export default function WorkflowsPage() {
             </div>
           )}
         </div>
-      </DashboardContent>
-    </div>
+
+        </>
   );
 }

@@ -105,7 +105,7 @@ export function SidebarMenu() {
   function renderHRSidebar() {
     return (
       <>
-        <SidebarGroup className={cn("transition-all duration-300 ease-in-out", open ? "" : "px-0")}>
+        <SidebarGroup className={cn("transition-all duration-200 ease-in-out", open ? "" : "px-0")}>
           {open ? (
             <div className="flex items-center justify-between px-3 mb-2 cursor-pointer select-none" onClick={() => setHrMenuExpanded(!hrMenuExpanded)}>
               <SidebarGroupLabel className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
@@ -175,7 +175,7 @@ export function SidebarMenu() {
           </SidebarGroupContent>
           )}
         </SidebarGroup>
-        <SidebarGroup className={cn("transition-all duration-300 ease-in-out", open ? "" : "px-0")}>
+        <SidebarGroup className={cn("transition-all duration-200 ease-in-out", open ? "" : "px-0")}>
           <div className={cn("flex items-center justify-between mb-2 cursor-pointer select-none", open ? "px-3" : "justify-center")} onClick={() => setSystemMenuExpanded(!systemMenuExpanded)}>
             {open && (
               <SidebarGroupLabel className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
@@ -474,7 +474,7 @@ export function SidebarMenu() {
   function renderSupervisorSidebar() {
     return (
       <>
-        <SidebarGroup className={cn("transition-all duration-300 ease-in-out", open ? "" : "px-0")}>
+        <SidebarGroup className={cn("transition-all duration-200 ease-in-out", open ? "" : "px-0")}>
           {open && (
             <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
               การอนุมัติ
@@ -568,7 +568,7 @@ export function SidebarMenu() {
   const sidebarContent = (
     <>
       {/* Header */}
-      <SidebarHeader className={cn("px-6 py-6 border-b border-[#d8dadc]/50 transition-all duration-300 ease-in-out", open ? "" : "px-3")}>
+      <SidebarHeader className={cn("px-6 py-6 border-b border-[#d8dadc]/50 transition-all duration-200 ease-in-out", open ? "" : "px-3")}>
         <div className={cn("flex items-center gap-3", !isMobile && open ? "" : "justify-center")}>
           <button
             onClick={isMobile ? () => setOpenMobile(false) : toggleSidebar}
@@ -584,7 +584,7 @@ export function SidebarMenu() {
       </SidebarHeader>
 
       {/* Navigation */}
-      <SidebarContent className={cn("py-4 overflow-y-auto transition-all duration-300 ease-in-out ![&::-webkit-scrollbar]:block ![&::-webkit-scrollbar]:w-1.5 ![&::-webkit-scrollbar-thumb]:bg-slate-300 ![&::-webkit-scrollbar-thumb]:rounded-full", !isMobile && open ? "px-3" : "px-2")}>
+      <SidebarContent className={cn("py-4 overflow-y-auto transition-all duration-200 ease-in-out ![&::-webkit-scrollbar]:block ![&::-webkit-scrollbar]:w-1.5 ![&::-webkit-scrollbar-thumb]:bg-slate-300 ![&::-webkit-scrollbar-thumb]:rounded-full", !isMobile && open ? "px-3" : "px-2")}>
         {forceChangePassword ? (
           <div className="px-4 py-8 text-center">
             <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
@@ -608,7 +608,7 @@ export function SidebarMenu() {
         )}
         <div
           className={cn(
-            "fixed top-16 left-0 bottom-0 z-50 w-[280px] bg-white border-r border-[#d8dadc] shadow-sm flex flex-col transition-transform duration-300 ease-in-out",
+            "fixed top-16 left-0 bottom-0 z-50 w-[280px] bg-white border-r border-[#d8dadc] shadow-sm flex flex-col transition-transform duration-200 ease-in-out",
             openMobile ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -619,7 +619,7 @@ export function SidebarMenu() {
   }
 
   return (
-    <div className={cn("fixed top-16 left-0 z-30 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out", open ? "w-[280px]" : "w-[80px]")}>
+    <div className={cn("fixed top-16 left-0 z-30 h-[calc(100vh-4rem)] transition-[width] duration-200 ease-in-out", open ? "w-[280px]" : "w-[80px]")}>
       <SidebarRoot
         collapsible="none"
         className="flex size-full flex-col bg-white border-r border-[#d8dadc] shadow-sm"

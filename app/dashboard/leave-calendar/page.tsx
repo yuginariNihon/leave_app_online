@@ -3,8 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, User, Bell, Info, X, Sun, ArrowRight } from "lucide-react";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
-import DashboardContent from "@/components/DashboardContent";
+
 import { WarningBanner } from "@/components/ui/warning-banner";
 import { useUser } from "@/lib/user-context";
 
@@ -98,9 +97,8 @@ export default function LeaveCalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <div>
+
         {/* Breadcrumb */}
         <div className="flex items-center gap-1 text-[12px] font-semibold text-[#45464d] mb-1 tracking-wider uppercase">
           <span>Home</span>
@@ -265,7 +263,7 @@ export default function LeaveCalendarPage() {
             </div>
           </div>
         </div>
-      </DashboardContent>
+
 
       {/* Day popup */}
       {selectedDay && (
@@ -343,6 +341,7 @@ export default function LeaveCalendarPage() {
           </div>
         </div>
       )}
-    </div>
+
+        </div>
   );
 }

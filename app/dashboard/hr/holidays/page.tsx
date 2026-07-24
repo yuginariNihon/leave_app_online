@@ -12,8 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
-import DashboardContent from "@/components/DashboardContent";
+
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { toast } from "sonner";
 
@@ -157,9 +156,8 @@ export default function HolidaysPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <>
+
         <AppBreadcrumb
           items={[{ label: "Home", href: "/dashboard" }, { label: "HR" }, { label: "จัดการวันหยุด" }]}
           className="mb-4"
@@ -485,7 +483,7 @@ export default function HolidaysPage() {
             </div>
           )}
         </div>
-      </DashboardContent>
-    </div>
+
+        </>
   );
 }

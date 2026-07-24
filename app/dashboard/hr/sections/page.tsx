@@ -13,8 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
-import DashboardContent from "@/components/DashboardContent";
+
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import type { SectionListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
@@ -87,9 +86,8 @@ export default function SectionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
-      <SidebarMenu />
-      <DashboardContent>
+        <>
+
         <AppBreadcrumb
           items={[{ label: "Home", href: "/dashboard" }, { label: "HR" }, { label: "จัดการส่วนงาน" }]}
           className="mb-4"
@@ -189,7 +187,7 @@ export default function SectionsPage() {
             </div>
           )}
         </div>
-      </DashboardContent>
-    </div>
+
+        </>
   );
 }
