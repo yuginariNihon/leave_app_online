@@ -58,13 +58,15 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
             </Button>
             
           </div>
-          <button
-            onClick={() => setOpenMobile(true)}
-            className="md:hidden ml-auto mr-2 p-2 bg-transparent border-0 cursor-pointer text-white hover:bg-white/10 rounded-lg transition-colors"
-            aria-label="Open sidebar"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          {user.roles.some((r) => ["HR", "SUPER_ADMIN", "APPROVER"].includes(r)) && (
+            <button
+              onClick={() => setOpenMobile(true)}
+              className="md:hidden ml-auto mr-2 p-2 bg-transparent border-0 cursor-pointer text-white hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Open sidebar"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          )}
       <div className="flex items-center gap-2 sm:gap-4">
         <div className="relative" data-purpose="notifications">
           <svg

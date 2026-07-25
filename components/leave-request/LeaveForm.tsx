@@ -71,7 +71,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* ประเภทการลา */}
         <div className="space-y-3">
-          <Label htmlFor="leave-type" className="text-sm font-semibold text-slate-700">
+          <Label htmlFor="leave-type" className="text-base font-semibold text-slate-700">
             ประเภทการลา<span className="text-red-500 ml-1">*</span>
           </Label>
           <Controller
@@ -117,7 +117,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
         </div>
 
         <div className="space-y-3">
-          <Label htmlFor="leave-case" className="text-sm font-semibold text-slate-700">
+          <Label htmlFor="leave-case" className="text-base font-semibold text-slate-700">
             กรณีการลา<span className="text-red-500 ml-1">*</span>
           </Label>
           <Controller
@@ -170,7 +170,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* วันที่เริ่มต้น */}
         <div className="space-y-3">
-          <Label htmlFor="start-date" className="text-sm font-semibold text-slate-700">
+          <Label htmlFor="start-date" className="text-base font-semibold text-slate-700">
             วันที่เริ่มต้น<span className="text-red-500 ml-1">*</span>
           </Label>
           <DatePicker
@@ -193,7 +193,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
 
         {/* วันที่สิ้นสุด */}
         <div className="space-y-3">
-          <Label htmlFor="end-date" className="text-sm font-semibold text-slate-700">
+          <Label htmlFor="end-date" className="text-base font-semibold text-slate-700">
             วันที่สิ้นสุด<span className="text-red-500 ml-1">*</span>
           </Label>
           <DatePicker
@@ -218,7 +218,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
 
       {/* ช่วงเวลา */}
       <div className="space-y-3">
-        <Label className="text-sm font-semibold text-slate-700">
+        <Label className="text-base font-semibold text-slate-700">
           ช่วงเวลา
         </Label>
         <Controller
@@ -268,7 +268,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
 
       {/* เหตุผลการลา */}
       <div className="space-y-3">
-        <Label htmlFor="reason" className="text-sm font-semibold text-slate-700">
+        <Label htmlFor="reason" className="text-base font-semibold text-slate-700">
           เหตุผลการลา<span className="text-red-500 ml-1">*</span>
         </Label>
         <Textarea
@@ -285,7 +285,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
       {/* ⚠️ File upload — not yet implemented (UI hidden, keep code) */}
       {/*false && (
         <div className="space-y-3">
-          <Label htmlFor="file-upload" className="text-sm font-semibold text-slate-700">
+          <Label htmlFor="file-upload" className="text-base font-semibold text-slate-700">
             แนบไฟล์ (ถ้ามี)
           </Label>
           <div className="relative group">

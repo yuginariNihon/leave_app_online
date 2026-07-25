@@ -125,7 +125,7 @@ export function LeaveFilters({
       {/* Bottom Row: Summary + Actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-6 border-t border-slate-100">
         {showChips ? (
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500 font-medium whitespace-nowrap">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-600 font-medium whitespace-nowrap">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
               <span>ทั้งหมด <span className="text-[#1a1a40] font-bold">{totalItems}</span> รายการ</span>

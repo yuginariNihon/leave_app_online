@@ -29,15 +29,15 @@ export function LeaveTable({ data }: LeaveTableProps) {
   };
 
   return (
-    <Table containerClassName="overflow-auto max-h-[500px]">
+    <Table containerClassName="overflow-auto">
         <TableHeader className="sticky top-0 z-10 bg-[#1e1b4b]">
           <TableRow className="hover:bg-transparent border-none">
-            <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase whitespace-nowrap">วันที่เขียนใบลา</TableHead>
-            <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase whitespace-nowrap">วันที่ลา</TableHead>
-            <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase whitespace-nowrap">ประเภทการลา</TableHead>
-            <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase whitespace-nowrap">จำนวนวันที่ลา</TableHead>
-            <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase whitespace-nowrap">สถานะ</TableHead>
-            <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase text-center"></TableHead>
+            <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] whitespace-nowrap">วันที่เขียนใบลา</TableHead>
+            <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] whitespace-nowrap">วันที่ลา</TableHead>
+            <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] whitespace-nowrap">ประเภทการลา</TableHead>
+            <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] whitespace-nowrap">จำนวนวันที่ลา</TableHead>
+            <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] whitespace-nowrap">สถานะ</TableHead>
+            <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] text-center"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-[#c8c5d0]">
@@ -58,13 +58,13 @@ export function LeaveTable({ data }: LeaveTableProps) {
                 <TableCell className="px-6 py-4 text-center">
                   <div className="flex items-center justify-center gap-3">
                     <button
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
+                      className="w-11 h-11 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                       onClick={() => handleViewDetail(leave.leaveId)}
                     >
                       <Eye className="w-[20px] h-[20px]" />
                     </button>
                     <button
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
+                      className="w-11 h-11 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                     >
                       <FileText className="w-[20px] h-[20px]" />
                     </button>

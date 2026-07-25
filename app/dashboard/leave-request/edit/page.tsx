@@ -249,7 +249,7 @@ export default function EditLeavePage() {
               <div className="">
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 text-white hover:text-[#100d41]"
+                  className="flex items-center gap-2 text-white hover:text-[#100d41] h-11"
                   onClick={() => router.push("/dashboard/leave-history")}
                 >
                   <ArrowLeft className="w-4 h-4" />

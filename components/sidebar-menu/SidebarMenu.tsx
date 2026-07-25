@@ -54,6 +54,7 @@ export function SidebarMenu() {
 
   const isHR = roles.includes("HR") || roles.includes("SUPER_ADMIN");
   const isApprover = roles.includes("APPROVER");
+  if (!isHR && !isApprover) return null;
   const [hrMenuExpanded, setHrMenuExpanded] = useState(true);
   const [systemMenuExpanded, setSystemMenuExpanded] = useState(true);
   const [staffListExpanded, setStaffListExpanded] = useState(false);

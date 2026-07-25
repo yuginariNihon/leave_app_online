@@ -172,14 +172,13 @@ export default function LeaveHistoryPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-md mb-6">
           <div>
             <h1 className="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-[#070235]">ประวัติการลา</h1>
-            <p className="text-[14px] leading-[20px] text-[#47464f]">View and manage your leave request history.</p>
+            <p className="text-[15px] leading-[20px] text-[#47464f]">View and manage your leave request history.</p>
           </div>
           
             <div className="flex items-center gap-4 mb-4">
               <Button
                 variant="ghost"
-                size="sm"
-                className="flex items-center gap-2 text-[#47464f] hover:text-[#070235]"
+                className="flex items-center gap-2 text-[#47464f] hover:text-[#070235] h-11"
                 onClick={() => router.push("/dashboard")}
               >
                 <ArrowLeft className="w-4 h-4" />

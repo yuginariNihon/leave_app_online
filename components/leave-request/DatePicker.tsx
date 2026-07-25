@@ -70,7 +70,7 @@ export function DatePicker({ value, onChange, min, max, holidays = [], placehold
           "flex items-center gap-2 w-full h-11 px-3 rounded-lg border text-sm transition-colors bg-white",
           value
             ? "border-gray-200 text-[#070235]"
-            : "border-gray-200 text-slate-400",
+            : "border-gray-200 text-slate-500",
         )}
       >
         <CalendarDays className="w-4 h-4 text-slate-400 shrink-0" />
@@ -84,7 +84,7 @@ export function DatePicker({ value, onChange, min, max, holidays = [], placehold
             <button
               type="button"
               onClick={() => { if (viewMonth === 0) { setViewYear((y) => y - 1); setViewMonth(11); } else { setViewMonth((m) => m - 1); } }}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-600"
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-600"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -92,7 +92,7 @@ export function DatePicker({ value, onChange, min, max, holidays = [], placehold
             <button
               type="button"
               onClick={() => { if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); } else { setViewMonth((m) => m + 1); } }}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-600"
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-600"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -116,7 +116,7 @@ export function DatePicker({ value, onChange, min, max, holidays = [], placehold
             {Array.from({ length: firstDayOfWeek }).map((_, i) => {
               const day = prevMonthDays - firstDayOfWeek + 1 + i;
               return (
-                <div key={`prev-${i}`} className="h-9 flex items-center justify-center">
+                <div key={`prev-${i}`} className="h-11 flex items-center justify-center">
                   <span className="text-xs text-slate-300">{day}</span>
                 </div>
               );
@@ -138,7 +138,7 @@ export function DatePicker({ value, onChange, min, max, holidays = [], placehold
                   disabled={disabled}
                   onClick={() => handleDayClick(dateStr)}
                   className={cn(
-                    "h-9 flex items-center justify-center text-sm rounded-lg transition-colors relative",
+                    "h-11 flex items-center justify-center text-sm rounded-lg transition-colors relative",
                     disabled
                       ? "text-slate-300 cursor-not-allowed"
                       : selected

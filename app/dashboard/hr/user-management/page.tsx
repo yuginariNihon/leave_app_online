@@ -241,30 +241,30 @@ export default function UserManagementPage() {
             <div className="flex justify-center items-center py-20 text-red-500">{error}</div>
           ) : (
             <div className="overflow-x-auto">
-              <Table containerClassName="max-h-[600px] overflow-y-auto">
+              <Table className="table-fixed" containerClassName="max-h-[600px]">
                 <TableHeader className="sticky top-0 z-10 bg-[#1e1b4b]">
                   <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase w-12">ลำดับ</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">รหัสพนักงาน</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">ชื่อ</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">อีเมล</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">บทบาท</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">สถานะ</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] text-nowrap uppercase">บังคับเปลี่ยนรหัส</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">เข้าสู่ระบบล่าสุด</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">สร้างเมื่อ</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase text-center">จัดการ</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase w-[32px]">ลำดับ</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase w-[80px]">รหัสพนักงาน</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase w-[100px]">ชื่อ</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase w-[140px]">อีเมล</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase w-[100px]">บทบาท</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase w-[70px]">สถานะ</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase w-[90px]">เปลี่ยนรหัส</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase w-[90px]">เข้าสู่ระบบ</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase w-[80px]">สร้างเมื่อ</TableHead>
+                    <TableHead className="text-white font-semibold px-2 py-4 text-[12px] leading-[16px] tracking-[0.02em] uppercase text-center w-[90px]">จัดการ</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-[#c8c5d0]">
                   {users.length > 0 ? (
                     users.map((user, idx) => (
                       <TableRow key={user.userId} className="hover:bg-[#eff4ff]/30 transition-all duration-200">
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] text-[#787680] whitespace-nowrap">{(page - 1) * 20 + idx + 1}</TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] font-semibold text-[#070235] whitespace-nowrap">{user.staffCode}</TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{user.staffName}</TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{user.email ?? "-"}</TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">
+                        <TableCell className="px-2 py-3 text-[13px] leading-[18px] text-[#787680] truncate">{(page - 1) * 20 + idx + 1}</TableCell>
+                        <TableCell className="px-2 py-3 text-[13px] leading-[18px] font-semibold text-[#070235] truncate">{user.staffCode}</TableCell>
+                        <TableCell className="px-2 py-3 text-[13px] leading-[18px] truncate">{user.staffName}</TableCell>
+                        <TableCell className="px-2 py-3 text-[13px] leading-[18px] truncate" title={user.email ?? "-"}>{user.email ?? "-"}</TableCell>
+                        <TableCell className="px-2 py-3 text-[13px] leading-[18px] truncate">
                           <div className="flex flex-wrap gap-1">
                             {user.roleNames.map((role, i) => (
                               <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-[#eff4ff] text-[#4648d4] border border-[#d0d5f0]">
@@ -273,48 +273,48 @@ export default function UserManagementPage() {
                             ))}
                           </div>
                         </TableCell>
-                        <TableCell className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1 px-4 py-1 rounded-full text-[12px] leading-[16px] font-semibold tracking-[0.05em] whitespace-nowrap border ${user.isActive ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-gray-100 text-black border-gray-300"}`}>
+                        <TableCell className="px-2 py-3 truncate">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] leading-[14px] font-semibold tracking-[0.05em] whitespace-nowrap border ${user.isActive ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-gray-100 text-black border-gray-300"}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? "bg-emerald-500" : "bg-gray-400"}`}></span>
                             {user.isActive ? "Active" : "Inactive"}
                           </span>
                         </TableCell>
-                        <TableCell className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-[12px] leading-[16px] font-semibold whitespace-nowrap ${user.forceChangePassword ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-gray-50 text-gray-500 border border-gray-200"}`}>
+                        <TableCell className="px-2 py-3 truncate">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] leading-[14px] font-semibold whitespace-nowrap ${user.forceChangePassword ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-gray-50 text-gray-500 border border-gray-200"}`}>
                             {user.forceChangePassword ? "ใช่" : "ไม่"}
                           </span>
                         </TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap text-[#47464f]">{formatDate(user.lastLoginAt)}</TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap text-[#47464f]">{formatDate(user.createdAt)}</TableCell>
-                        <TableCell className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-2">
+                        <TableCell className="px-2 py-3 text-[13px] leading-[18px] truncate text-[#47464f]">{formatDate(user.lastLoginAt)}</TableCell>
+                        <TableCell className="px-2 py-3 text-[13px] leading-[18px] truncate text-[#47464f]">{formatDate(user.createdAt)}</TableCell>
+                        <TableCell className="px-2 py-3">
+                          <div className="flex items-center justify-center gap-0.5">
                             <Button
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                               title="รีเซ็ตรหัสผ่าน"
                               onClick={() => { setResetTarget(user); setResetPasswordResult(""); }}
                             >
-                              <KeyRound className="w-[18px] h-[18px]" />
+                              <KeyRound className="w-[15px] h-[15px]" />
                             </Button>
                             <Button
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/10 transition-all"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/10 transition-all"
                               title={user.isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"}
                               disabled={togglingIds.includes(user.userId)}
                               onClick={() => handleToggleActive(user)}
                             >
                               {togglingIds.includes(user.userId) ? (
-                                <Loader2 className="w-[18px] h-[18px] animate-spin" />
+                                <Loader2 className="w-[15px] h-[15px] animate-spin" />
                               ) : user.isActive ? (
-                                <ToggleRight className="w-[18px] h-[18px]" />
+                                <ToggleRight className="w-[15px] h-[15px]" />
                               ) : (
-                                <ToggleLeft className="w-[18px] h-[18px]" />
+                                <ToggleLeft className="w-[15px] h-[15px]" />
                               )}
                             </Button>
                             <Button
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                               title="ประวัติการเข้าใช้"
                               onClick={() => openHistoryDialog(user)}
                             >
-                              <History className="w-[18px] h-[18px]" />
+                              <History className="w-[15px] h-[15px]" />
                             </Button>
                           </div>
                         </TableCell>
