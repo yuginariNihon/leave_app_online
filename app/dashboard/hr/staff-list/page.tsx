@@ -77,8 +77,6 @@ export default function StaffListPage() {
   }, []);
   
 
-
-
   useEffect(() => {
     let cancelled = false;
 

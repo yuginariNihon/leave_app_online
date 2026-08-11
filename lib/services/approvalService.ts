@@ -226,6 +226,23 @@ export async function updateUsedDaysOnApproval(
 
   const year = leave.start_date.getFullYear();
 
+  const quota = await db.userLeaveLimit.findUnique({
+    where: {
+      staff_id_leave_type_id_year: {
+        staff_id: leave.staff_id,
+        leave_type_id: leave.leave_type_id,
+        year,
+      },
+    },
+    select: { max_days: true, used_days: true },
+  });
+
+  const newUsedDays = (quota ? Number(quota.used_days) : 0) + Number(leave.total_days);
+  const maxDays = quota ? Number(quota.max_days) : 0;
+  if (newUsedDays > maxDays) {
+    throw new Error("ไม่สามารถอนุมัติใบลาได้เนื่องจากสะสมวันลารวมเกินโควตาที่กำหนด");
+  }
+
   await db.userLeaveLimit.upsert({
     where: {
       staff_id_leave_type_id_year: {
@@ -264,53 +281,55 @@ async function advanceLeaveApproval(
     orderBy: { approval_level: "asc" },
   });
 
-  if (pendingApprovals.length === 0) {
-    await prisma.dataLeave.update({
-      where: { leave_id: leaveId },
-      data: { leave_status: LeaveStatus.approved, updated_at: new Date() },
-    });
-    await updateUsedDaysOnApproval(leaveId);
-    return;
-  }
-
-  for (const approval of pendingApprovals) {
-    const step = workflow.steps.find(
-      (s) => s.approval_level === approval.approval_level,
-    );
-    if (!step) continue;
-
-    const hasApprover = await checkApproverExists(
-      leaveOwnerStaffId,
-      departmentId,
-      step.approver_type,
-    );
-
-    if (hasApprover) {
-      await prisma.dataLeave.update({
+  await prisma.$transaction(async (tx) => {
+    if (pendingApprovals.length === 0) {
+      await tx.dataLeave.update({
         where: { leave_id: leaveId },
-        data: { current_approval_level: approval.approval_level, updated_at: new Date() },
+        data: { leave_status: LeaveStatus.approved, updated_at: new Date() },
       });
+      await updateUsedDaysOnApproval(leaveId, tx);
       return;
     }
 
-    // No approver → auto-approve this step
-    await prisma.leaveApproval.update({
-      where: { approval_id: approval.approval_id },
-      data: {
-        approval_status: ApprovalStatus.approved,
-      approval_comment:
-        `Auto-approved: No valid approver found for ${step.approver_type} step`,
-        acted_at: new Date(),
-      },
-    });
-  }
+    for (const approval of pendingApprovals) {
+      const step = workflow.steps.find(
+        (s) => s.approval_level === approval.approval_level,
+      );
+      if (!step) continue;
 
-  // All remaining steps auto-approved
-  await prisma.dataLeave.update({
-    where: { leave_id: leaveId },
+      const hasApprover = await checkApproverExists(
+        leaveOwnerStaffId,
+        departmentId,
+        step.approver_type,
+      );
+
+      if (hasApprover) {
+        await tx.dataLeave.update({
+          where: { leave_id: leaveId },
+          data: { current_approval_level: approval.approval_level, updated_at: new Date() },
+        });
+        return;
+      }
+
+      // No approver → auto-approve this step
+      await tx.leaveApproval.update({
+        where: { approval_id: approval.approval_id },
+        data: {
+          approval_status: ApprovalStatus.approved,
+          approval_comment:
+            `Auto-approved: No valid approver found for ${step.approver_type} step`,
+          acted_at: new Date(),
+        },
+      });
+    }
+
+    // All remaining steps auto-approved
+    await tx.dataLeave.update({
+      where: { leave_id: leaveId },
       data: { leave_status: LeaveStatus.approved, updated_at: new Date() },
     });
-    await updateUsedDaysOnApproval(leaveId);
+    await updateUsedDaysOnApproval(leaveId, tx);
+  });
 }
 
 // ──────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import { updateStaffRoles } from "@/lib/services/leaveService";
+import { getStaffRoleNames, updateStaffRoles } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
 
@@ -31,6 +31,15 @@ export async function PATCH(
     const wantsElevated = roles.some((r) => r.toUpperCase() === "HR" || r.toUpperCase() === "SUPER_ADMIN");
     if (isHR && wantsElevated) {
       return NextResponse.json({ error: "HR ไม่สามารถเพิ่มสิทธิ์ HR หรือ SUPER_ADMIN ให้กับผู้ใช้ได้" }, { status: 403 });
+    }
+
+    // HR cannot modify roles of an existing SUPER_ADMIN or HR account
+    if (isHR) {
+      const targetRoles = await getStaffRoleNames(id);
+      const isTargetAdminOrHR = targetRoles.includes("SUPER_ADMIN") || targetRoles.includes("HR");
+      if (isTargetAdminOrHR) {
+        return NextResponse.json({ error: "HR ไม่ได้รับอนุญาตให้แก้ไขบทบาทสิทธิ์ของระดับบริหารอื่น" }, { status: 403 });
+      }
     }
 
     await updateStaffRoles(id, roles, session.staffId);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSessionUser, SESSION_COOKIE_NAME } from "@/lib/auth";
 import { hashPassword } from "@/lib/utils";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 
@@ -11,10 +12,10 @@ export async function PATCH(request: NextRequest) {
     const session = await requireSessionUser();
 
     const body = await request.json();
-    const { newPassword, confirmPassword } = body;
+    const { currentPassword, newPassword, confirmPassword } = body;
 
-    if (!newPassword || !confirmPassword) {
-      return NextResponse.json({ error: "กรุณากรอกรหัสผ่านให้ครบทั้งสองช่อง" }, { status: 400 });
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return NextResponse.json({ error: "กรุณากรอกรหัสผ่านเดิมและรหัสผ่านใหม่ให้ครบถ้วน" }, { status: 400 });
     }
 
     if (newPassword.length < 8) {
@@ -25,10 +26,23 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "รหัสผ่านทั้งสองช่องไม่ตรงกัน" }, { status: 400 });
     }
 
+    if (newPassword === currentPassword) {
+      return NextResponse.json({ error: "รหัสผ่านใหม่ต้องไม่เหมือนกับรหัสผ่านเดิม" }, { status: 400 });
+    }
+
     const user = await prisma.user.findUnique({
       where: { user_id: session.userId },
       select: { password_hash: true, password_changed_at: true, force_change_password: true },
     });
+
+    if (!user?.password_hash) {
+      return NextResponse.json({ error: "ไม่พบข้อมูลผู้ใช้ในระบบ" }, { status: 404 });
+    }
+
+    const isCurrentPasswordCorrect = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isCurrentPasswordCorrect) {
+      return NextResponse.json({ error: "รหัสผ่านเดิมไม่ถูกต้อง" }, { status: 400 });
+    }
 
     if (user?.password_changed_at && !user.force_change_password) {
       const hoursSinceLastChange = (Date.now() - user.password_changed_at.getTime()) / (1000 * 60 * 60);

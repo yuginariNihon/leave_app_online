@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSessionUser } from "@/lib/auth";
-import { getUserList, createUserRecord } from "@/lib/services/leaveService";
+import { getUserList, createUserRecord, getStaffRoleNames, getUserByStaffId } from "@/lib/services/leaveService";
 import { randomBytes } from "crypto";
 
 export const runtime = "nodejs";
@@ -42,6 +42,18 @@ export async function POST(request: NextRequest) {
 
     if (!staffId || !email) {
       return NextResponse.json({ error: "staffId and email are required" }, { status: 400 });
+    }
+
+    // HR cannot override the account of an existing SUPER_ADMIN or HR user
+    if (!session.roles.includes("SUPER_ADMIN")) {
+      const targetRoles = await getStaffRoleNames(staffId);
+      const isTargetAdminOrHR = targetRoles.includes("SUPER_ADMIN") || targetRoles.includes("HR");
+      if (isTargetAdminOrHR) {
+        const existingUser = await getUserByStaffId(staffId);
+        if (existingUser) {
+          return NextResponse.json({ error: "HR ไม่สามารถตั้งค่าทับสิทธิ์บัญชีผู้ใช้ระดับบริหารอื่นได้" }, { status: 403 });
+        }
+      }
     }
 
     const password = randomBytes(4).toString("hex");

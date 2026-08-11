@@ -389,7 +389,7 @@ export default function UserManagementPage() {
               <div className="flex flex-col-reverse md:flex-row w-full gap-4 md:justify-end">
                 <Button
                   onClick={() => { setResetTarget(null); setResetPasswordResult(""); }}
-                  className="w-full md:w-auto px-6 py-2.5 rounded-lg border border-[#767586] text-[#111c2d] text-[14px] font-semibold leading-[20px] hover:bg-[#d8e3fb] transition-colors cursor-pointer active:scale-95 duration-100"
+                  className="w-full md:w-auto px-6 py-2.5 rounded-lg border border-[#767586] text-white text-[14px] font-semibold leading-[20px] hover:bg-[#d8e3fb] transition-colors cursor-pointer active:scale-95 duration-100"
                 >
                   ยกเลิก
                 </Button>

@@ -13,8 +13,10 @@ type ResetPasswordFormProps = {
 
 export function ResetPasswordForm({ name, staffCode, departmentName, force }: ResetPasswordFormProps) {
   const router = useRouter();
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
@@ -26,6 +28,10 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
     e.preventDefault();
     setError("");
 
+    if (!currentPassword) {
+      setError("กรุณากรอกรหัสผ่านเดิม");
+      return;
+    }
     if (newPassword.length < 8) {
       setError("รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร");
       return;
@@ -34,13 +40,17 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
       setError("รหัสผ่านทั้งสองช่องไม่ตรงกัน");
       return;
     }
+    if (newPassword === currentPassword) {
+      setError("รหัสผ่านใหม่ต้องไม่เหมือนกับรหัสผ่านเดิม");
+      return;
+    }
 
     setLoading(true);
     try {
       const res = await fetch("/api/auth/change-password", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword, confirmPassword }),
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -132,6 +142,43 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
             </p>
 
             <form ref={formRef} className="space-y-6" onSubmit={handleSubmit}>
+              {/* Current Password */}
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-[#111c2d] flex justify-between">
+                  <span>Current Password | รหัสผ่านเดิม</span>
+                  <span className="text-[#4648d4] text-xs font-medium">* Required</span>
+                </label>
+                <div className="relative">
+                  <input
+                    className="w-full px-4 py-3 bg-white border border-[#c7c4d7] rounded-lg focus:outline-none focus:ring-4 focus:ring-[#4648d4]/20 focus:border-[#4648d4] transition-all pr-12 text-base"
+                    id="current_password"
+                    placeholder="Enter current password"
+                    type={showCurrent ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#464554] hover:text-[#4648d4] transition-colors cursor-pointer bg-transparent border-none"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                    tabIndex={-1}
+                  >
+                    {showCurrent ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
               {/* New Password */}
               <div className="space-y-1">
                 <label className="text-sm font-semibold text-[#111c2d] flex justify-between">

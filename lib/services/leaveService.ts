@@ -106,6 +106,20 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
 
   if (!staff) throw new Error("Staff not found.");
 
+  // ตรวจสอบการทับซ้อนของช่วงเวลาลาที่มีสถานะ pending/approved อยู่แล้ว
+  const overlapLeave = await prisma.dataLeave.findFirst({
+    where: {
+      staff_id: input.staffId,
+      leave_status: { in: [LeaveStatus.pending, LeaveStatus.approved] },
+      start_date: { lte: endDate },
+      end_date: { gte: startDate },
+    },
+    select: { leave_id: true },
+  });
+  if (overlapLeave) {
+    throw new Error("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
+  }
+
   // 2. Find workflow by position (1-to-1 schema)
   const workflow = await prisma.leaveWorkflow.findFirst({
     where: {
@@ -237,6 +251,21 @@ export async function updateLeaveRequest(
   const startDate = toDateOnly(input.startDate);
   const endDate = toDateOnly(input.endDate);
   const totalDays = input.totalDays ?? countInclusiveDays(startDate, endDate);
+
+  // ตรวจสอบการทับซ้อนของช่วงเวลาลากับใบลาอื่น (ไม่รวมใบปัจจุบัน)
+  const overlapLeave = await prisma.dataLeave.findFirst({
+    where: {
+      staff_id: staffId,
+      leave_id: { not: leaveId },
+      leave_status: { in: [LeaveStatus.pending, LeaveStatus.approved] },
+      start_date: { lte: endDate },
+      end_date: { gte: startDate },
+    },
+    select: { leave_id: true },
+  });
+  if (overlapLeave) {
+    throw new Error("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
+  }
 
   return prisma.dataLeave.update({
     where: { leave_id: leaveId },
@@ -1153,8 +1182,9 @@ export async function createStaff(
     });
   }
 
-  if (data.email && data.phoneNumber) {
-    const passwordHash = await hashPassword(data.phoneNumber);
+  if (data.email) {
+    const defaultPassword = data.phoneNumber || randomBytes(5).toString("hex");
+    const passwordHash = await hashPassword(defaultPassword);
     await prisma.user.upsert({
       where: { staff_id: staff.staff_id },
       create: {
@@ -1162,6 +1192,7 @@ export async function createStaff(
         email: data.email,
         password_hash: passwordHash,
         password_changed_at: new Date(),
+        force_change_password: true,
       },
       update: { email: data.email },
     });
@@ -1330,8 +1361,9 @@ export async function importStaff(
           });
         }
 
-        if (row.email && row.phoneNumber) {
-          const passwordHash = await hashPassword(row.phoneNumber);
+        if (row.email) {
+          const defaultPassword = row.phoneNumber || randomBytes(5).toString("hex");
+          const passwordHash = await hashPassword(defaultPassword);
           await tx.user.upsert({
             where: { staff_id: createdStaff.staff_id },
             create: {
@@ -1339,6 +1371,7 @@ export async function importStaff(
               email: row.email,
               password_hash: passwordHash,
               password_changed_at: new Date(),
+              force_change_password: true,
             },
             update: { email: row.email },
           });
@@ -3045,6 +3078,29 @@ export async function toggleUserActive(userId: string) {
     data: { is_active: newValue },
   });
   return { isActive: newValue };
+}
+
+export async function getStaffRoleNames(staffId: string): Promise<string[]> {
+  const roles = await prisma.staffRole.findMany({
+    where: { staff_id: staffId },
+    select: { role: { select: { role_name: true } } },
+  });
+  return roles.map((sr) => sr.role.role_name.toUpperCase());
+}
+
+export async function getUserRoleNames(userId: string): Promise<string[]> {
+  const user = await prisma.user.findUnique({
+    where: { user_id: userId },
+    select: { staff: { select: { staffRoles: { select: { role: { select: { role_name: true } } } } } } },
+  });
+  return (user?.staff?.staffRoles ?? []).map((sr) => sr.role.role_name.toUpperCase());
+}
+
+export async function getUserByStaffId(staffId: string): Promise<{ user_id: string } | null> {
+  return prisma.user.findUnique({
+    where: { staff_id: staffId },
+    select: { user_id: true },
+  });
 }
 
 export async function getUserLoginHistory(userId: string, limit = 10) {
