@@ -4,6 +4,7 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import type { ApproverType } from "@/lib/generated/prisma/enums";
 import { checkApproverExists, checkApproverForStaff, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import { getCachedWorkflow } from "@/lib/services/workflowCache";
+import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
 
 // ──────────────────────────────────────────────
 // Types
@@ -98,26 +99,36 @@ export async function getPendingApprovals(
 
       const steps = await prisma.leaveWorkflowStep.findMany({
         where: { approver_type: { in: approvableTypes as ApproverType[] } },
-        include: { workflow: { select: { position_id: true } } },
+        select: { approval_level: true, workflow: { select: { position_id: true } } },
       });
 
-      const orConditions = steps.map((s) => ({
-        leave: {
-          ...leaveConditions,
-          staff: {
-            department_id: userStaff.department_id,
-            position_id: s.workflow.position_id,
-          },
-        },
-        approval_status: ApprovalStatus.pending,
-        approver_id: null,
-        approval_level: s.approval_level,
-      }));
+      const levels = [...new Set(steps.map((s) => s.approval_level))];
+      const positions = [...new Set(steps.map((s) => s.workflow.position_id))];
 
-      if (orConditions.length > 0) {
+      if (levels.length > 0) {
+        const staffFilter: Prisma.StaffInfoWhereInput = {
+          department_id: userStaff.department_id,
+          position_id: { in: positions },
+        };
+        if (filters?.search) {
+          staffFilter.staff_code = { contains: filters.search, mode: "insensitive" };
+        }
+
+        // Single indexed query using (approval_status, approver_id) instead of many OR conditions
+        const where: Prisma.LeaveApprovalWhereInput = {
+          approval_status: ApprovalStatus.pending,
+          approver_id: null,
+          approval_level: { in: levels },
+          leave: {
+            ...leaveConditions,
+            leave_status: LeaveStatus.pending,
+            staff: staffFilter,
+          },
+        };
+
         const [approvals, total] = await Promise.all([
           prisma.leaveApproval.findMany({
-            where: { OR: orConditions },
+            where,
             include: {
               leave: {
                 include: {
@@ -130,7 +141,7 @@ export async function getPendingApprovals(
             skip: (page - 1) * limit,
             take: limit,
           }),
-          prisma.leaveApproval.count({ where: { OR: orConditions } }),
+          prisma.leaveApproval.count({ where }),
         ]);
 
         return {
@@ -207,6 +218,27 @@ export async function getPendingApprovals(
 // Advance Helper
 // ──────────────────────────────────────────────
 
+// Splits an inclusive [start, end] date range into per-calendar-year day counts,
+// so multi-year leaves are charged to the correct annual quota.
+function splitDaysByYear(start: Date, end: Date): Map<number, number> {
+  const dayCounts = new Map<number, number>();
+  const s = new Date(start);
+  s.setHours(0, 0, 0, 0);
+  const e = new Date(end);
+  e.setHours(0, 0, 0, 0);
+
+  if (e < s) throw new Error("End date before start date.");
+
+  const sTime = s.getTime();
+  const eTime = e.getTime();
+  for (let y = s.getFullYear(); y <= e.getFullYear(); y++) {
+    const yearStart = Math.max(sTime, new Date(y, 0, 1).getTime());
+    const yearEnd = Math.min(eTime, new Date(y + 1, 0, 1).getTime() - 1);
+    dayCounts.set(y, Math.round((yearEnd - yearStart) / 86_400_000) + 1);
+  }
+  return dayCounts;
+}
+
 export async function updateUsedDaysOnApproval(
   leaveId: string,
   tx?: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$use" | "$transaction" | "$extends">,
@@ -219,47 +251,55 @@ export async function updateUsedDaysOnApproval(
       leave_type_id: true,
       total_days: true,
       start_date: true,
+      end_date: true,
     },
   });
 
-  if (!leave || !leave.total_days || !leave.start_date) return;
+  if (!leave || !leave.total_days) return;
 
-  const year = leave.start_date.getFullYear();
+  const startDate = leave.start_date ?? leave.end_date;
+  if (!startDate) return;
+  const endDate = leave.end_date ?? startDate;
 
-  const quota = await db.userLeaveLimit.findUnique({
-    where: {
-      staff_id_leave_type_id_year: {
+  // Split total days by calendar year so the quota used is accurate per year
+  const dayCounts = splitDaysByYear(startDate, endDate);
+
+  for (const [year, days] of dayCounts) {
+    const quota = await db.userLeaveLimit.findUnique({
+      where: {
+        staff_id_leave_type_id_year: {
+          staff_id: leave.staff_id,
+          leave_type_id: leave.leave_type_id,
+          year,
+        },
+      },
+      select: { max_days: true, used_days: true },
+    });
+
+    // Only enforce the annual quota if a limit row is defined for that year
+    if (quota && Number(quota.used_days) + days > Number(quota.max_days)) {
+      throw new Error("ไม่สามารถอนุมัติใบลาได้เนื่องจากสะสมวันลารวมเกินโควตาที่กำหนด");
+    }
+
+    const increment = new Prisma.Decimal(days);
+    await db.userLeaveLimit.upsert({
+      where: {
+        staff_id_leave_type_id_year: {
+          staff_id: leave.staff_id,
+          leave_type_id: leave.leave_type_id,
+          year,
+        },
+      },
+      update: { used_days: { increment } },
+      create: {
         staff_id: leave.staff_id,
         leave_type_id: leave.leave_type_id,
         year,
+        used_days: increment,
+        max_days: quota ? quota.max_days : new Prisma.Decimal(0),
       },
-    },
-    select: { max_days: true, used_days: true },
-  });
-
-  const newUsedDays = (quota ? Number(quota.used_days) : 0) + Number(leave.total_days);
-  const maxDays = quota ? Number(quota.max_days) : 0;
-  if (newUsedDays > maxDays) {
-    throw new Error("ไม่สามารถอนุมัติใบลาได้เนื่องจากสะสมวันลารวมเกินโควตาที่กำหนด");
+    });
   }
-
-  await db.userLeaveLimit.upsert({
-    where: {
-      staff_id_leave_type_id_year: {
-        staff_id: leave.staff_id,
-        leave_type_id: leave.leave_type_id,
-        year,
-      },
-    },
-    update: { used_days: { increment: Number(leave.total_days) } },
-    create: {
-      staff_id: leave.staff_id,
-      leave_type_id: leave.leave_type_id,
-      year,
-      used_days: leave.total_days,
-      max_days: new Prisma.Decimal(0),
-    },
-  });
 }
 
 async function advanceLeaveApproval(
@@ -342,6 +382,7 @@ export async function updateApprovalStatus(
   status: ApprovalStatus,
   comment?: string,
 ) {
+  invalidateDashboardKpi();
   const supervisor = await prisma.staffInfo.findUnique({
     where: { staff_id: staffId, is_active: true },
     select: { department_id: true },
@@ -446,6 +487,7 @@ export async function bulkUpdateApprovalStatus(
   status: ApprovalStatus,
   comment?: string,
 ) {
+  invalidateDashboardKpi();
   const supervisor = await prisma.staffInfo.findUnique({
     where: { staff_id: staffId, is_active: true },
     select: { department_id: true },
@@ -736,6 +778,7 @@ export async function hrUpdateApprovalStatus(
   status: ApprovalStatus,
   comment?: string,
 ) {
+  invalidateDashboardKpi();
   const isHR = await checkHRRole(staffId);
   if (!isHR) throw new Error("Unauthorized: HR role required.");
 
@@ -811,6 +854,7 @@ export async function hrBulkUpdateApprovalStatus(
   status: ApprovalStatus,
   comment?: string,
 ) {
+  invalidateDashboardKpi();
   const isHR = await checkHRRole(staffId);
   if (!isHR) throw new Error("Unauthorized: HR role required.");
 

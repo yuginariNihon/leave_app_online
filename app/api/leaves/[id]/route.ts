@@ -35,6 +35,9 @@ export async function GET(
     return NextResponse.json({ data: detail });
   } catch (error) {
     console.error("Failed to fetch leave detail", error);
+    if (error instanceof Error && error.message === "Forbidden") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     return NextResponse.json(
       { error: "Failed to fetch leave detail." },
       { status: 500 },

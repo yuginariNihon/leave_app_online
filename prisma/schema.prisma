@@ -277,6 +277,9 @@ model DataLeave {
   @@index([leave_case_id])
   @@index([leave_status])
   @@index([start_date, end_date])
+  @@index([staff_id, leave_status])
+  @@index([created_at])
+  @@index([created_at, leave_status])
 }
 
 model LeaveApproval {
@@ -300,6 +303,8 @@ model LeaveApproval {
   @@unique([leave_id, approval_level])
   @@index([approver_id])
   @@index([approval_status])
+  @@index([approval_status, approver_id])
+  @@index([approver_id, approval_status])
 }
 
 model LeaveAttachment {
@@ -428,6 +433,7 @@ model LoginHistory {
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@index([user_id])
+  @@index([ip_address, is_success, login_at])
 }
 
 model StaffSupervisor {

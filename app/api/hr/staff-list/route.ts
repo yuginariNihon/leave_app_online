@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       status: searchParams.get("status") || undefined,
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 10,
-    });
+    }, session.roles.includes("SUPER_ADMIN"));
 
     const headersList = await headers();
     logReadAccess(session.userId, session.staffId, "staff-list", undefined, headersList.get("x-forwarded-for")?.split(",")[0].trim(), headersList.get("user-agent") ?? undefined);

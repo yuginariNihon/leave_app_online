@@ -2,10 +2,12 @@ import { LeaveStatus, ApprovalStatus, Prisma, EmploymentStatus, LeavePeriod } fr
 import type { ApproverType } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import type { LeaveFormOptions } from "@/lib/TypeSchema";
+import z from "zod";
 import { randomBytes } from "crypto";
 import { toDateOnly, countInclusiveDays, hashPassword } from "@/lib/utils";
 import { checkApproverExists, APPROVER_TYPE_LABELS } from "@/lib/services/approverUtils";
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
+import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
 
 export type CreateLeaveRequestInput = {
   staffId: string;
@@ -91,6 +93,17 @@ export async function validateLeaveRequestDetails(
 }
 
 /**
+ * Determines whether two leave periods genuinely overlap on the same date.
+ * A full_day conflicts with any period; morning + afternoon do not conflict.
+ */
+function periodsOverlap(a: LeavePeriod | undefined, b: LeavePeriod | undefined): boolean {
+  const pa = a ?? "full_day";
+  const pb = b ?? "full_day";
+  if (pa === "full_day" || pb === "full_day") return true;
+  return pa === pb;
+}
+
+/**
  * Creates a leave request record in the database.
  */
 export async function createLeaveRequest(input: CreateLeaveRequestInput) {
@@ -107,16 +120,17 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
   if (!staff) throw new Error("Staff not found.");
 
   // ตรวจสอบการทับซ้อนของช่วงเวลาลาที่มีสถานะ pending/approved อยู่แล้ว
-  const overlapLeave = await prisma.dataLeave.findFirst({
+  // (morning + afternoon ในวันเดียวกันไม่ถือว่าทับซ้อนกัน)
+  const overlapLeaves = await prisma.dataLeave.findMany({
     where: {
       staff_id: input.staffId,
       leave_status: { in: [LeaveStatus.pending, LeaveStatus.approved] },
       start_date: { lte: endDate },
       end_date: { gte: startDate },
     },
-    select: { leave_id: true },
+    select: { leave_id: true, leave_period: true },
   });
-  if (overlapLeave) {
+  if (overlapLeaves.some((o) => periodsOverlap(input.leavePeriod as LeavePeriod | undefined, o.leave_period))) {
     throw new Error("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
   }
 
@@ -212,6 +226,7 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
     return created;
   });
 
+  invalidateDashboardKpi();
   return leave;
 }
 
@@ -253,7 +268,8 @@ export async function updateLeaveRequest(
   const totalDays = input.totalDays ?? countInclusiveDays(startDate, endDate);
 
   // ตรวจสอบการทับซ้อนของช่วงเวลาลากับใบลาอื่น (ไม่รวมใบปัจจุบัน)
-  const overlapLeave = await prisma.dataLeave.findFirst({
+  // (morning + afternoon ในวันเดียวกันไม่ถือว่าทับซ้อนกัน)
+  const overlapLeaves = await prisma.dataLeave.findMany({
     where: {
       staff_id: staffId,
       leave_id: { not: leaveId },
@@ -261,13 +277,13 @@ export async function updateLeaveRequest(
       start_date: { lte: endDate },
       end_date: { gte: startDate },
     },
-    select: { leave_id: true },
+    select: { leave_id: true, leave_period: true },
   });
-  if (overlapLeave) {
+  if (overlapLeaves.some((o) => periodsOverlap(input.leavePeriod as LeavePeriod | undefined, o.leave_period))) {
     throw new Error("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
   }
 
-  return prisma.dataLeave.update({
+  const updated = await prisma.dataLeave.update({
     where: { leave_id: leaveId },
     data: {
       leave_type_id: input.leaveTypeId,
@@ -280,6 +296,8 @@ export async function updateLeaveRequest(
       updated_at: new Date(),
     },
   });
+  invalidateDashboardKpi();
+  return updated;
 }
 
 export async function cancelLeaveRequest(leaveId: string, staffId: string, cancelReason?: string) {
@@ -320,6 +338,7 @@ export async function cancelLeaveRequest(leaveId: string, staffId: string, cance
     }),
   ]);
 
+  invalidateDashboardKpi();
   return updatedLeave;
 }
 
@@ -384,7 +403,10 @@ export async function getLeaveHistoryByStaffId(
   };
 
   if (status && status !== "all") {
-    where.leave_status = status as LeaveStatus;
+    const statusFilter = z.enum(["pending", "approved", "rejected", "cancelled"]).safeParse(status);
+    if (statusFilter.success) {
+      where.leave_status = statusFilter.data;
+    }
   }
 
   if (leaveTypeId) {
@@ -505,8 +527,8 @@ export type LeaveDetailResponse = {
 
 export async function getLeaveDetailById(
   leaveId: string,
-  sessionStaffId?: string,
-  sessionRoles?: string[],
+  sessionStaffId: string,
+  sessionRoles: string[],
 ): Promise<LeaveDetailResponse | null> {
   const leave = await prisma.dataLeave.findUnique({
     where: { leave_id: leaveId },
@@ -559,44 +581,43 @@ export async function getLeaveDetailById(
 
   if (!leave) return null;
 
-  // Authorization guard (defense-in-depth)
-  if (sessionStaffId && sessionRoles) {
-    const isOwner = leave.staff_id === sessionStaffId;
-    const isHR = sessionRoles.some((r) => r === "HR" || r === "SUPER_ADMIN");
-    let isSupervisor = false;
-    if (!isOwner && !isHR) {
-      const supervisorRecord = await prisma.staffSupervisor.findUnique({
-        where: {
-          staff_id_supervisor_id: {
-            staff_id: leave.staff_id,
-            supervisor_id: sessionStaffId,
-          },
+  // Authorization guard (always enforced)
+  const isOwner = leave.staff_id === sessionStaffId;
+  const isHR = sessionRoles.some((r) => r === "HR" || r === "SUPER_ADMIN");
+  let isSupervisor = false;
+  if (!isOwner && !isHR) {
+    const supervisorRecord = await prisma.staffSupervisor.findUnique({
+      where: {
+        staff_id_supervisor_id: {
+          staff_id: leave.staff_id,
+          supervisor_id: sessionStaffId,
         },
-      });
-      isSupervisor = !!supervisorRecord;
-    }
-    if (!isOwner && !isHR && !isSupervisor) {
-      throw new Error("Forbidden");
-    }
+      },
+    });
+    isSupervisor = !!supervisorRecord;
+  }
+  if (!isOwner && !isHR && !isSupervisor) {
+    throw new Error("Forbidden");
   }
 
-  // Fetch workflow steps to get position names for pending approvals
-  const workflow = await prisma.leaveWorkflow.findFirst({
-    where: { position_id: leave.staff.position_id, is_active: true },
-    include: { steps: { select: { approval_level: true, approver_type: true } } },
-  });
-
+  // Fetch workflow steps to get position names for pending approvals + leave quota in parallel
   const currentYear = new Date().getFullYear();
-  const leaveLimit = await prisma.userLeaveLimit.findUnique({
-    where: {
-      staff_id_leave_type_id_year: {
-        staff_id: leave.staff_id,
-        leave_type_id: leave.leave_type_id,
-        year: currentYear,
+  const [workflow, leaveLimit] = await Promise.all([
+    prisma.leaveWorkflow.findFirst({
+      where: { position_id: leave.staff.position_id, is_active: true },
+      include: { steps: { select: { approval_level: true, approver_type: true } } },
+    }),
+    prisma.userLeaveLimit.findUnique({
+      where: {
+        staff_id_leave_type_id_year: {
+          staff_id: leave.staff_id,
+          leave_type_id: leave.leave_type_id,
+          year: currentYear,
+        },
       },
-    },
-    select: { max_days: true, used_days: true },
-  });
+      select: { max_days: true, used_days: true },
+    }),
+  ]);
 
   return {
     leaveId: leave.leave_id,
@@ -849,6 +870,7 @@ export type StaffListFilters = {
 
 export async function getStaffList(
   filters: StaffListFilters,
+  isSuperAdmin = false,
 ): Promise<{ data: StaffListItem[]; total: number; totalPages: number }> {
   const { search, departmentId, status, page = 1, limit = 10 } = filters;
 
@@ -868,14 +890,16 @@ export async function getStaffList(
     where.is_active = false;
   }
 
-  // exclude SUPER_ADMIN from staff list
-  where.NOT = {
-    staffRoles: {
-      some: {
-        role: { role_name: "SUPER_ADMIN" },
+  // Only SUPER_ADMIN can see SUPER_ADMIN users; hide them from everyone else
+  if (!isSuperAdmin) {
+    where.NOT = {
+      staffRoles: {
+        some: {
+          role: { role_name: "SUPER_ADMIN" },
+        },
       },
-    },
-  };
+    };
+  }
 
   const [total, staff] = await Promise.all([
     prisma.staffInfo.count({ where }),
@@ -1069,17 +1093,30 @@ export async function updateStaff(
   });
 
   if (data.email !== undefined) {
+    const newEmail = data.email?.trim() ?? null;
+
+    // Ensure the email is not already used by another user
+    if (newEmail) {
+      const emailOwner = await prisma.user.findUnique({
+        where: { email: newEmail },
+        select: { staff_id: true },
+      });
+      if (emailOwner && emailOwner.staff_id !== id) {
+        throw new Error("อีเมลนี้ถูกใช้งานโดยพนักงานคนอื่นในระบบแล้ว");
+      }
+    }
+
     if (staff.user) {
       await prisma.user.update({
         where: { staff_id: id },
-        data: { email: data.email || null },
+        data: { email: newEmail },
       });
-    } else if (data.email) {
+    } else if (newEmail) {
       const passwordHash = await hashPassword(staff.phoneNumber || randomBytes(5).toString("hex"));
       await prisma.user.create({
         data: {
           staff_id: id,
-          email: data.email,
+          email: newEmail,
           password_hash: passwordHash,
           password_changed_at: new Date(),
         },
@@ -1264,17 +1301,19 @@ export async function importStaff(
   let success = 0;
 
   // Pre-load lookup maps for O(1) case-insensitive matching (avoids N+1 + mode:insensitive)
-  const [allDepartments, allPositions, allSections, allEmploymentTypes] = await Promise.all([
+  const [allDepartments, allPositions, allSections, allEmploymentTypes, allRoles] = await Promise.all([
     prisma.department.findMany({ where: { is_active: true }, select: { department_id: true, department_name: true } }),
     prisma.position.findMany({ where: { is_active: true }, select: { position_id: true, position_name: true } }),
     prisma.section.findMany({ where: { is_active: true }, select: { section_id: true, section_name: true, department_id: true } }),
     prisma.employmentType.findMany({ where: { is_active: true }, select: { employment_type_id: true, name: true } }),
+    prisma.role.findMany({ select: { role_id: true, role_name: true } }),
   ]);
 
   const deptMap = new Map(allDepartments.map((d) => [d.department_name.toLowerCase(), d.department_id]));
   const posMap = new Map(allPositions.map((p) => [p.position_name.toLowerCase(), p.position_id]));
   const sectionMap = new Map(allSections.map((s) => [`${s.department_id}:${s.section_name.toLowerCase()}`, s.section_id]));
   const etMap = new Map(allEmploymentTypes.map((e) => [e.name.toLowerCase(), e.employment_type_id]));
+  const roleMap = new Map(allRoles.map((r) => [r.role_name, r.role_id]));
 
   await prisma.$transaction(async (tx) => {
     const activeLeaveTypes = await tx.leaveType.findMany({
@@ -1332,32 +1371,26 @@ export async function importStaff(
           },
         });
 
-        // Default role based on position
+        // Default role based on position (O(1) lookup via preloaded roleMap)
         const posName = row.positionName?.toLowerCase() || "";
         const isApproverPos = ["general manager", "manager", "senior supervisor", "supervisor", "director"].includes(posName);
         const isEmployeePos = posName === "operator" || posName === "staff";
         const defaultRoleName = isApproverPos ? "APPROVER" : isEmployeePos ? "Employee" : "STAFF";
-        let staffRole = await tx.role.findUnique({
-          where: { role_name: defaultRoleName },
-          select: { role_id: true },
-        });
-        if (!staffRole) {
-          const fallbacks: Record<string, string[]> = {
-            APPROVER: ["STAFF", "Employee"],
-            Employee: ["STAFF"],
-            STAFF: ["Employee"],
-          };
+        const fallbacks: Record<string, string[]> = {
+          APPROVER: ["STAFF", "Employee"],
+          Employee: ["STAFF"],
+          STAFF: ["Employee"],
+        };
+        let roleId = roleMap.get(defaultRoleName);
+        if (!roleId) {
           for (const fallback of fallbacks[defaultRoleName] ?? []) {
-            staffRole = await tx.role.findUnique({
-              where: { role_name: fallback },
-              select: { role_id: true },
-            });
-            if (staffRole) break;
+            roleId = roleMap.get(fallback);
+            if (roleId) break;
           }
         }
-        if (staffRole) {
+        if (roleId) {
           await tx.staffRole.create({
-            data: { staff_id: createdStaff.staff_id, role_id: staffRole.role_id },
+            data: { staff_id: createdStaff.staff_id, role_id: roleId },
           });
         }
 

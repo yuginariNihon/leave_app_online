@@ -25,49 +25,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Force change password guard
+  // Session checks — single DB lookup per request covering:
+  // (1) force-change-password guard, (2) HR dashboard redirect, (3) HR dashboard guard
   if (hasSession && pathname.startsWith("/dashboard") && pathname !== "/dashboard/reset-password") {
     try {
       const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
       if (token) {
-        const hashedToken = hashToken(token);
-        let session = await prisma.session.findUnique({
-          where: { token: hashedToken },
-          select: {
-            expires_at: true,
-            user: { select: { force_change_password: true } },
-          },
-        });
-        if (!session) {
-          session = await prisma.session.findUnique({
-            where: { token },
-            select: {
-              expires_at: true,
-              user: { select: { force_change_password: true } },
-            },
-          });
-        }
-        if (session && session.expires_at.getTime() >= Date.now() && session.user?.force_change_password) {
-          return NextResponse.redirect(new URL("/dashboard/reset-password?force=true", request.url));
-        }
-      }
-    } catch {
-      // Silently fail if DB query errors; allow request to proceed
-    }
-  }
-
-  // HR dashboard redirect — HR/SUPER_ADMIN users should go to /dashboard/hr
-  if (hasSession && pathname === "/dashboard") {
-    try {
-      const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-      if (token) {
-        const hashedToken = hashToken(token);
-        let session = await prisma.session.findUnique({
-          where: { token: hashedToken },
+        const session = await prisma.session.findUnique({
+          where: { token: hashToken(token) },
           select: {
             expires_at: true,
             user: {
               select: {
+                force_change_password: true,
                 staff: {
                   select: {
                     staffRoles: {
@@ -79,95 +49,31 @@ export async function proxy(request: NextRequest) {
             },
           },
         });
-        if (!session) {
-          session = await prisma.session.findUnique({
-            where: { token },
-            select: {
-              expires_at: true,
-              user: {
-                select: {
-                  staff: {
-                    select: {
-                      staffRoles: {
-                        select: { role: { select: { role_name: true } } },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          });
-        }
-        if (session && session.expires_at.getTime() >= Date.now()) {
-          const roleNames = session.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
-          if (roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN")) {
+
+        const isValid = !!session && session.expires_at.getTime() >= Date.now();
+        const roleNames = session?.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
+        const isHR = roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN");
+
+        if (pathname === "/dashboard/hr") {
+          // HR dashboard guard — only HR or SUPER_ADMIN
+          if (!isValid || !isHR) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+        } else {
+          if (isValid && session.user?.force_change_password) {
+            return NextResponse.redirect(new URL("/dashboard/reset-password?force=true", request.url));
+          }
+          // HR dashboard redirect — HR/SUPER_ADMIN users should go to /dashboard/hr
+          if (pathname === "/dashboard" && isHR) {
             return NextResponse.redirect(new URL("/dashboard/hr", request.url));
           }
         }
       }
     } catch {
-      // Silently fail; allow request to proceed
-    }
-  }
-
-  // HR dashboard guard — only HR or SUPER_ADMIN
-  if (hasSession && pathname === "/dashboard/hr") {
-    try {
-      const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-      if (token) {
-        const hashedToken = hashToken(token);
-        let session = await prisma.session.findUnique({
-          where: { token: hashedToken },
-          select: {
-            expires_at: true,
-            user: {
-              select: {
-                staff: {
-                  select: {
-                    staffRoles: {
-                      select: {
-                        role: { select: { role_name: true } },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        });
-        // Fallback: try plaintext token lookup for pre-hashing sessions
-        if (!session) {
-          session = await prisma.session.findUnique({
-            where: { token },
-            select: {
-              expires_at: true,
-              user: {
-                select: {
-                  staff: {
-                    select: {
-                      staffRoles: {
-                        select: {
-                          role: { select: { role_name: true } },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          });
-        }
-        if (!session || session.expires_at.getTime() < Date.now()) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        const roleNames = session.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
-        const isAuthorized = roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN");
-        if (!isAuthorized) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
+      if (pathname === "/dashboard/hr") {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
       }
-    } catch {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      // Silently fail for other pages; allow request to proceed
     }
   }
 

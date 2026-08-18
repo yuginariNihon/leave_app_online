@@ -81,27 +81,6 @@ async function getSessionUserImpl(): Promise<SessionUser | null> {
       },
     });
 
-    // Migration fallback: try plaintext token lookup for pre-hashing sessions
-    if (!session) {
-      session = await prisma.session.findUnique({
-        where: { token },
-        include: {
-          user: {
-            include: {
-              staff: true,
-            },
-          },
-        },
-      });
-      if (session) {
-        // Migrate to hashed token
-        await prisma.session.update({
-          where: { session_id: session.session_id },
-          data: { token: hashedToken },
-        }).catch(() => {});
-      }
-    }
-
     if (!session) {
       return null;
     }

@@ -32,7 +32,7 @@ export const createLeaveRequestSchema = z.object({
   leaveCaseId: z.uuid(),
   startDate: z.string().min(1),
   endDate: z.string().min(1),
-  reason: z.string().trim().min(10).optional(),
+  reason: z.string().trim().min(10, "กรุณากรอกเหตุผลการลาอย่างน้อย 10 ตัวอักษร").max(500, "เหตุผลการลาต้องไม่เกิน 500 ตัวอักษร"),
   totalDays: z.number().positive().optional(),
   leavePeriod: z.enum(["full_day", "morning", "afternoon"]).optional(),
 });

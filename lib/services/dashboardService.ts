@@ -53,7 +53,15 @@ export type RecentActivityItem = {
   timestamp: string;
 };
 
-export async function getDashboardKpiData(): Promise<DashboardKpiData> {
+let dashboardKpiCache: { data: DashboardKpiData; expiresAt: number } | null = null;
+let dashboardKpiInflight: Promise<DashboardKpiData> | null = null;
+const DASHBOARD_KPI_TTL_MS = 30_000;
+
+export function invalidateDashboardKpi() {
+  dashboardKpiCache = null;
+}
+
+async function computeDashboardKpi(): Promise<DashboardKpiData> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -61,7 +69,7 @@ export async function getDashboardKpiData(): Promise<DashboardKpiData> {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const [pendingApprovals, approvedToday, totalLeavesThisMonth, totalLeavesThisYear, activeStaffCount, terminatedStaffCount, leaveToday, avgApprovalData] = await prisma.$transaction([
+  const [pendingApprovals, approvedToday, totalLeavesThisMonth, totalLeavesThisYear, activeStaffCount, terminatedStaffCount, leaveToday, avgApprovalHours] = await Promise.all([
     prisma.dataLeave.count({ where: { leave_status: LeaveStatus.pending } }),
     prisma.dataLeave.count({ where: { leave_status: LeaveStatus.approved, updated_at: { gte: today } } }),
     prisma.dataLeave.count({ where: { created_at: { gte: monthStart } } }),
@@ -75,20 +83,12 @@ export async function getDashboardKpiData(): Promise<DashboardKpiData> {
         end_date: { gte: today },
       },
     }),
-    prisma.dataLeave.findMany({
-      where: { leave_status: LeaveStatus.approved },
-      select: { created_at: true, updated_at: true },
-      take: 1000,
-    }),
+    prisma.$queryRaw<{ avg: number | null }[]>`
+      SELECT AVG(EXTRACT(EPOCH FROM (updated_at - created_at)) / 3600.0)::float8 AS avg
+      FROM "DataLeave"
+      WHERE leave_status = 'approved' AND updated_at > created_at AND created_at >= NOW() - INTERVAL '12 months'
+    `.then((rows) => Math.round(rows[0]?.avg ?? 0)),
   ]);
-
-  let avgApprovalHours = 0;
-  if (avgApprovalData.length > 0) {
-    const totalMs = avgApprovalData.reduce((sum, l) => {
-      return sum + (l.updated_at.getTime() - l.created_at.getTime());
-    }, 0);
-    avgApprovalHours = Math.round(totalMs / avgApprovalData.length / 360000);
-  }
 
   return {
     pendingApprovals,
@@ -100,6 +100,28 @@ export async function getDashboardKpiData(): Promise<DashboardKpiData> {
     leaveToday,
     avgApprovalHours,
   };
+}
+
+export async function getDashboardKpiData(): Promise<DashboardKpiData> {
+  if (dashboardKpiCache && dashboardKpiCache.expiresAt > Date.now()) {
+    return dashboardKpiCache.data;
+  }
+
+  // Single-flight: concurrent callers share one in-progress computation
+  if (dashboardKpiInflight) {
+    return dashboardKpiInflight;
+  }
+
+  dashboardKpiInflight = computeDashboardKpi()
+    .then((data) => {
+      dashboardKpiCache = { data, expiresAt: Date.now() + DASHBOARD_KPI_TTL_MS };
+      return data;
+    })
+    .finally(() => {
+      dashboardKpiInflight = null;
+    });
+
+  return dashboardKpiInflight;
 }
 
 export async function getLeaveTrendData(): Promise<LeaveTrendItem[]> {
@@ -129,14 +151,16 @@ export async function getLeaveTrendData(): Promise<LeaveTrendItem[]> {
 }
 
 export async function getLeaveTypeDistribution(): Promise<LeaveTypeDistItem[]> {
-  const types = await prisma.leaveType.findMany({
-    where: { is_active: true },
-    select: { leave_type_name: true, _count: { select: { leaves: true } } },
-    orderBy: { leave_type_name: "asc" },
-  });
-  return types
-    .filter((t) => t._count.leaves > 0)
-    .map((t) => ({ leaveTypeName: t.leave_type_name, count: t._count.leaves }));
+  const rows = await prisma.$queryRaw<{ leave_type_name: string; count: number }[]>`
+    SELECT lt.leave_type_name, COUNT(dl.leave_id)::int AS count
+    FROM "LeaveType" lt
+    LEFT JOIN "DataLeave" dl ON dl.leave_type_id = lt.leave_type_id
+    WHERE lt.is_active = true
+    GROUP BY lt.leave_type_id, lt.leave_type_name
+    HAVING COUNT(dl.leave_id) > 0
+    ORDER BY lt.leave_type_name ASC
+  `;
+  return rows.map((r) => ({ leaveTypeName: r.leave_type_name, count: Number(r.count) }));
 }
 
 export async function getPendingApprovals(limit = 5): Promise<PendingApprovalItem[]> {
@@ -300,11 +324,17 @@ export async function getDeptLeaveComparison(monthsBack = 6): Promise<DeptLeaveC
 
 export async function getApprovalStatusStats(): Promise<ApprovalStatusStat[]> {
   const entries = Object.entries(STATUS_COLORS);
-  const counts = await prisma.$transaction(
-    entries.map(([status]) => prisma.dataLeave.count({ where: { leave_status: status as LeaveStatus } }))
-  );
+
+  const rows = await prisma.$queryRaw<{ leave_status: string; count: number }[]>`
+    SELECT leave_status, COUNT(*)::int AS count
+    FROM "DataLeave"
+    WHERE leave_status IN ('pending', 'approved', 'rejected', 'cancelled')
+    GROUP BY leave_status
+  `;
+  const countByStatus = new Map(rows.map((r) => [r.leave_status, Number(r.count)]));
+
   return entries
-    .map(([status, color], i) => ({ status, count: counts[i], color }))
+    .map(([status, color]) => ({ status, count: countByStatus.get(status) ?? 0, color }))
     .filter((r) => r.count > 0);
 }
 
@@ -327,23 +357,41 @@ export async function getLeaveCalendarData(year: number, month: number): Promise
   });
 
   const daysInMonth = new Date(year, month, 0).getDate();
+
+  // Bucket approved leaves by actual calendar date (O(total days) instead of O(31 * leaves))
+  const byDate = new Map<string, { staffName: string; leaveTypeName: string }[]>();
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  const dateKey = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+  for (const l of leaves) {
+    if (!l.start_date || !l.end_date) continue;
+    let s = new Date(l.start_date);
+    let e = new Date(l.end_date);
+    if (s > e) [s, e] = [e, s];
+    if (e < monthStart) continue;
+    if (s >= monthEnd) continue;
+    const start = s < monthStart ? monthStart : s;
+    const end = e >= monthEnd ? new Date(monthEnd.getTime() - 1) : e;
+    const entry = { staffName: l.staff.name, leaveTypeName: l.leaveType.leave_type_name };
+    for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
+      const k = dateKey(d);
+      let bucket = byDate.get(k);
+      if (!bucket) {
+        bucket = [];
+        byDate.set(k, bucket);
+      }
+      bucket.push(entry);
+    }
+  }
+
   const days: LeaveCalendarDay[] = [];
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dateObj = new Date(year, month - 1, d);
-    const dateStr = dateObj.toISOString().split("T")[0];
-    const dayLeaves = leaves
-      .filter((l) => {
-        const start = l.start_date?.toISOString().split("T")[0] ?? "";
-        const end = l.end_date?.toISOString().split("T")[0] ?? "";
-        return dateStr >= start && dateStr <= end;
-      })
-      .map((l) => ({ staffName: l.staff.name, leaveTypeName: l.leaveType.leave_type_name }));
-
     days.push({
       date: d,
       isToday: dateObj.getTime() === today.getTime(),
-      leaves: dayLeaves,
+      leaves: byDate.get(dateKey(dateObj)) ?? [],
     });
   }
 
@@ -351,32 +399,25 @@ export async function getLeaveCalendarData(year: number, month: number): Promise
 }
 
 export async function getLeaveBalanceSummary(): Promise<LeaveBalanceSummaryItem[]> {
-  const currentYear = new Date().getFullYear();
+  const rows = await prisma.$queryRaw<
+    { leave_type_name: string; totalStaff: number; totalQuota: number; totalUsed: number }[]
+  >`
+    SELECT lt.leave_type_name,
+           COUNT(ull.limit_id)::int AS "totalStaff",
+           SUM(ull.max_days)::float8 AS "totalQuota",
+           SUM(ull.used_days)::float8 AS "totalUsed"
+    FROM "UserLeaveLimit" ull
+    JOIN "LeaveType" lt ON lt.leave_type_id = ull.leave_type_id
+    WHERE ull.year = ${new Date().getFullYear()}
+    GROUP BY lt.leave_type_name
+    ORDER BY lt.leave_type_name ASC
+  `;
 
-  const limits = await prisma.userLeaveLimit.findMany({
-    where: { year: currentYear },
-    include: { leaveType: { select: { leave_type_name: true } } },
-  });
-
-  const grouped: Record<string, { totalStaff: number; totalQuota: number; totalUsed: number }> = {};
-
-  for (const l of limits) {
-    const name = l.leaveType.leave_type_name;
-    if (!grouped[name]) {
-      grouped[name] = { totalStaff: 0, totalQuota: 0, totalUsed: 0 };
-    }
-    grouped[name].totalStaff++;
-    grouped[name].totalQuota += Number(l.max_days);
-    grouped[name].totalUsed += Number(l.used_days);
-  }
-
-  return Object.entries(grouped)
-    .map(([leaveTypeName, g]) => ({
-      leaveTypeName,
-      totalStaff: g.totalStaff,
-      totalQuota: g.totalQuota,
-      totalUsed: g.totalUsed,
-      totalRemaining: g.totalQuota - g.totalUsed,
-    }))
-    .sort((a, b) => a.leaveTypeName.localeCompare(b.leaveTypeName));
+  return rows.map((r) => ({
+    leaveTypeName: r.leave_type_name,
+    totalStaff: Number(r.totalStaff),
+    totalQuota: Number(r.totalQuota),
+    totalUsed: Number(r.totalUsed),
+    totalRemaining: Number(r.totalQuota) - Number(r.totalUsed),
+  }));
 }

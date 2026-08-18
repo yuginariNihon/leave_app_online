@@ -360,10 +360,6 @@ export default function UserManagementPage() {
           </div>
         )}
 
-
-
-
-
         <Dialog open={!!resetTarget && !resetPasswordResult} onOpenChange={(o) => { if (!o) { setResetTarget(null); setResetPasswordResult(""); } }}>
           <DialogContent className="sm:max-w-[480px] !rounded-xl !p-0 overflow-hidden gap-0 shadow-xl">
             <DialogTitle className="sr-only">รีเซ็ตรหัสผ่าน</DialogTitle>

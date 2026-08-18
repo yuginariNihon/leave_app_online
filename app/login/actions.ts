@@ -67,7 +67,7 @@ export async function loginAction(
         select: { login_at: true },
       });
 
-      if (lastFailure && Date.now() - lastFailure.login_at.getTime() < 3600000) {
+      if (lastFailure && Date.now() - lastFailure.login_at.getTime() < 5 * 60 * 1000) {
         return { message: "Invalid login credentials." };
       }
     }
