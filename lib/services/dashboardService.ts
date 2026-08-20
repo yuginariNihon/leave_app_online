@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { EmploymentStatus, LeaveStatus } from "@/lib/generated/prisma/client";
 
 export type DashboardKpiData = {
@@ -53,12 +54,8 @@ export type RecentActivityItem = {
   timestamp: string;
 };
 
-let dashboardKpiCache: { data: DashboardKpiData; expiresAt: number } | null = null;
-let dashboardKpiInflight: Promise<DashboardKpiData> | null = null;
-const DASHBOARD_KPI_TTL_MS = 30_000;
-
-export function invalidateDashboardKpi() {
-  dashboardKpiCache = null;
+export async function invalidateDashboardKpi() {
+  revalidateTag("dashboard-kpi", "max");
 }
 
 async function computeDashboardKpi(): Promise<DashboardKpiData> {
@@ -102,26 +99,14 @@ async function computeDashboardKpi(): Promise<DashboardKpiData> {
   };
 }
 
+const getCachedKpi = unstable_cache(
+  async () => computeDashboardKpi(),
+  ["dashboard-kpi"],
+  { revalidate: 30, tags: ["dashboard-kpi"] },
+);
+
 export async function getDashboardKpiData(): Promise<DashboardKpiData> {
-  if (dashboardKpiCache && dashboardKpiCache.expiresAt > Date.now()) {
-    return dashboardKpiCache.data;
-  }
-
-  // Single-flight: concurrent callers share one in-progress computation
-  if (dashboardKpiInflight) {
-    return dashboardKpiInflight;
-  }
-
-  dashboardKpiInflight = computeDashboardKpi()
-    .then((data) => {
-      dashboardKpiCache = { data, expiresAt: Date.now() + DASHBOARD_KPI_TTL_MS };
-      return data;
-    })
-    .finally(() => {
-      dashboardKpiInflight = null;
-    });
-
-  return dashboardKpiInflight;
+  return getCachedKpi();
 }
 
 export async function getLeaveTrendData(): Promise<LeaveTrendItem[]> {
