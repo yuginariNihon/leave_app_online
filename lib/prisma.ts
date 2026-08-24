@@ -12,7 +12,14 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL is required to create PrismaClient.");
   }
 
-  const adapter = new PrismaPg({ connectionString });
+  // Supabase session-mode pooler allows only ~15 total clients (shared across
+  // ALL tools/processes). Keep per-process usage tiny: dev spawns several
+  // workers/middleware runtimes, each importing this module.
+  const adapter = new PrismaPg({
+    connectionString,
+    max: 3,
+    idleTimeoutMillis: 10_000,
+  });
 
   return new PrismaClient({ adapter });
 }
