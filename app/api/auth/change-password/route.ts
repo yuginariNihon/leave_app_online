@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { requireSessionUser, SESSION_COOKIE_NAME } from "@/lib/auth";
 import { hashPassword } from "@/lib/utils";
 import bcrypt from "bcryptjs";
@@ -14,8 +15,8 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { currentPassword, newPassword, confirmPassword } = body;
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      return NextResponse.json({ error: "กรุณากรอกรหัสผ่านเดิมและรหัสผ่านใหม่ให้ครบถ้วน" }, { status: 400 });
+    if (!newPassword || !confirmPassword) {
+      return NextResponse.json({ error: "กรุณากรอกรหัสผ่านใหม่ให้ครบถ้วน" }, { status: 400 });
     }
 
     if (newPassword.length < 8) {
@@ -26,22 +27,36 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "รหัสผ่านทั้งสองช่องไม่ตรงกัน" }, { status: 400 });
     }
 
-    if (newPassword === currentPassword) {
-      return NextResponse.json({ error: "รหัสผ่านใหม่ต้องไม่เหมือนกับรหัสผ่านเดิม" }, { status: 400 });
-    }
-
     const user = await prisma.user.findUnique({
       where: { user_id: session.userId },
       select: { password_hash: true, password_changed_at: true, force_change_password: true },
     });
 
-    if (!user?.password_hash) {
+    if (!user) {
       return NextResponse.json({ error: "ไม่พบข้อมูลผู้ใช้ในระบบ" }, { status: 404 });
     }
 
-    const isCurrentPasswordCorrect = await bcrypt.compare(currentPassword, user.password_hash);
-    if (!isCurrentPasswordCorrect) {
-      return NextResponse.json({ error: "รหัสผ่านเดิมไม่ถูกต้อง" }, { status: 400 });
+    // Forced change-password flow: user may not know the old password,
+    // so skip the current-password check entirely.
+    const isForced = user.force_change_password === true;
+
+    if (!isForced) {
+      if (!currentPassword) {
+        return NextResponse.json({ error: "กรุณากรอกรหัสผ่านเดิม" }, { status: 400 });
+      }
+
+      if (newPassword === currentPassword) {
+        return NextResponse.json({ error: "รหัสผ่านใหม่ต้องไม่เหมือนกับรหัสผ่านเดิม" }, { status: 400 });
+      }
+
+      if (!user.password_hash) {
+        return NextResponse.json({ error: "ไม่พบข้อมูลผู้ใช้ในระบบ" }, { status: 404 });
+      }
+
+      const isCurrentPasswordCorrect = await bcrypt.compare(currentPassword, user.password_hash);
+      if (!isCurrentPasswordCorrect) {
+        return NextResponse.json({ error: "รหัสผ่านเดิมไม่ถูกต้อง" }, { status: 400 });
+      }
     }
 
     if (user?.password_changed_at && !user.force_change_password) {
@@ -64,8 +79,14 @@ export async function PATCH(request: NextRequest) {
 
     const currentToken = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
 
+    // Session tokens are stored as SHA-256 hashes. Keep this browser's session
+    // and invalidate sessions on the user's other devices.
+    const currentTokenHash = currentToken
+      ? createHash("sha256").update(currentToken).digest("hex")
+      : undefined;
+
     await prisma.session.deleteMany({
-      where: { user_id: session.userId, token: currentToken ? { not: currentToken } : undefined },
+      where: { user_id: session.userId, token: currentTokenHash ? { not: currentTokenHash } : undefined },
     });
 
     return NextResponse.json({ success: true });

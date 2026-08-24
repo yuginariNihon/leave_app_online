@@ -28,7 +28,7 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
     e.preventDefault();
     setError("");
 
-    if (!currentPassword) {
+    if (!force && !currentPassword) {
       setError("กรุณากรอกรหัสผ่านเดิม");
       return;
     }
@@ -60,7 +60,7 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
       }
       setSuccess(true);
       setTimeout(() => {
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }, 1500);
     } catch {
       setError("เกิดข้อผิดพลาด กรุณาลองใหม่");
@@ -142,7 +142,8 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
             </p>
 
             <form ref={formRef} className="space-y-6" onSubmit={handleSubmit}>
-              {/* Current Password */}
+              {/* Current Password — hidden in forced reset flow */}
+              {!force && (
               <div className="space-y-1">
                 <label className="text-sm font-semibold text-[#111c2d] flex justify-between">
                   <span>Current Password | รหัสผ่านเดิม</span>
@@ -178,6 +179,7 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
                   </button>
                 </div>
               </div>
+              )}
 
               {/* New Password */}
               <div className="space-y-1">

@@ -54,15 +54,24 @@ export async function proxy(request: NextRequest) {
         const roleNames = session?.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
         const isHR = roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN");
 
+        if (!isValid) {
+          const response = NextResponse.redirect(new URL("/login", request.url));
+          response.cookies.delete(SESSION_COOKIE_NAME);
+          return response;
+        }
+
+        // Forced password changes apply to every dashboard route, including
+        // the HR dashboard.
+        if (session.user?.force_change_password) {
+          return NextResponse.redirect(new URL("/dashboard/reset-password?force=true", request.url));
+        }
+
         if (pathname === "/dashboard/hr") {
           // HR dashboard guard — only HR or SUPER_ADMIN
-          if (!isValid || !isHR) {
+          if (!isHR) {
             return NextResponse.redirect(new URL("/dashboard", request.url));
           }
         } else {
-          if (isValid && session.user?.force_change_password) {
-            return NextResponse.redirect(new URL("/dashboard/reset-password?force=true", request.url));
-          }
           // HR dashboard redirect — HR/SUPER_ADMIN users should go to /dashboard/hr
           if (pathname === "/dashboard" && isHR) {
             return NextResponse.redirect(new URL("/dashboard/hr", request.url));
@@ -77,12 +86,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Permission check — only for protected dashboard pages (skip /dashboard/hr, already checked above)
+  // Permission check — only for protected dashboard pages (skip /dashboard, /dashboard/hr and /dashboard/reset-password, already handled above)
   if (
     hasSession &&
     pathname.startsWith("/dashboard") &&
     pathname !== "/dashboard" &&
     pathname !== "/dashboard/hr" &&
+    pathname !== "/dashboard/reset-password" &&
     !USER_PAGES.some((p) => pathname.startsWith(p))
   ) {
     const match = PAGE_KEY_BY_PREFIX.find(([prefix]) => pathname.startsWith(prefix));
