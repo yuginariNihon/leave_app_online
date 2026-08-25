@@ -15,6 +15,7 @@ const USER_PAGES: string[] = [];
 export async function proxy(request: NextRequest) {
   const hasSession = request.cookies.has(SESSION_COOKIE_NAME);
   const { pathname } = request.nextUrl;
+  let roleNames: string[] = [];
 
   // Auth check
   if (pathname.startsWith("/dashboard") && !hasSession) {
@@ -51,7 +52,7 @@ export async function proxy(request: NextRequest) {
         });
 
         const isValid = !!session && session.expires_at.getTime() >= Date.now();
-        const roleNames = session?.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
+        roleNames = session?.user?.staff?.staffRoles?.map((sr) => sr.role.role_name.toUpperCase()) ?? [];
         const isHR = roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN");
 
         if (!isValid) {
@@ -99,20 +100,26 @@ export async function proxy(request: NextRequest) {
     if (match) {
       const pageKey = match[1];
       try {
-        const checkUrl = new URL("/api/internal/check-page-access", request.url);
-        const res = await fetch(checkUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: `${SESSION_COOKIE_NAME}=${request.cookies.get(SESSION_COOKIE_NAME)?.value}`,
-          },
-          body: JSON.stringify({ pathname, pageKey }),
-        });
+        // SUPER_ADMIN bypasses page-level permission checks (original behavior).
+        if (roleNames.includes("SUPER_ADMIN")) {
+          // allowed
+        } else {
+          const resource = await prisma.pageResource.findUnique({
+            where: { page_key: pageKey },
+            select: {
+              rolePermissions: {
+                select: { role: { select: { role_name: true } } },
+              },
+            },
+          });
 
-        if (res.ok) {
-          const data = await res.json();
-          if (!data.allowed) {
-            return NextResponse.redirect(new URL("/dashboard", request.url));
+          if (resource) {
+            const allowed = resource.rolePermissions.some((rp) =>
+              roleNames.includes(rp.role.role_name.toUpperCase()),
+            );
+            if (!allowed) {
+              return NextResponse.redirect(new URL("/dashboard", request.url));
+            }
           }
         }
       } catch {

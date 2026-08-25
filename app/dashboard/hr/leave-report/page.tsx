@@ -26,7 +26,7 @@ import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
 import { statusTextMap } from "@/components/leave-history/types";
-import { formatLeaveDateRange, formatDays, downloadCsv } from "@/lib/utils";
+import { formatLeaveDateRange, formatDays } from "@/lib/utils";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
@@ -142,53 +142,16 @@ export default function LeaveReportPage() {
     return () => { cancelled = true; };
   }, [buildQuery, currentPage]);
 
-  const handleExportCSV = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
-      if (appliedFilters.departmentFilter !== "all") params.set("departmentId", appliedFilters.departmentFilter);
-      if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
-      if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
-      if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
-      params.set("limit", String(total || 1));
+  const handleExportCSV = () => {
+    const params = new URLSearchParams();
+    if (appliedFilters.searchTerm) params.set("search", appliedFilters.searchTerm);
+    if (appliedFilters.departmentFilter !== "all") params.set("departmentId", appliedFilters.departmentFilter);
+    if (appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
+    if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
+    if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
+    params.set("stream", "true");
 
-      const res = await fetch(`/api/hr/leave-report?${params}`);
-      const json = await res.json();
-      if (!res.ok) return;
-
-      const rows: ReportRecord[] = json.data ?? [];
-
-      const headers = [
-        "รหัสพนักงาน",
-        "ชื่อ-นามสกุล",
-        "แผนก",
-        "ประเภทการลา",
-        "วันที่ลา",
-        "จำนวนวัน",
-        "สถานะ",
-      ];
-
-      const csvContent = rows.map((r) => [
-        r.staffCode,
-        r.staffName,
-        r.departmentName ?? "",
-        r.leaveTypeName,
-        formatLeaveDateRange(r.startDate, r.endDate),
-        r.totalDays ? `${Number(r.totalDays)} วัน` : "",
-        statusTextMap[r.status as LeaveStatus] ?? r.status,
-      ]);
-
-      const BOM = "\uFEFF";
-      const csvString =
-        BOM +
-        [headers, ...csvContent]
-          .map((row) => row.map((cell) => `"${cell}"`).join(","))
-          .join("\n");
-
-      downloadCsv(`leave_report_${new Date().toISOString().split("T")[0]}.csv`, csvString);
-    } catch {
-      toast.error("ไม่สามารถส่งออก CSV ได้ กรุณาลองอีกครั้ง");
-    }
+    window.location.href = `/api/hr/leave-report?${params.toString()}`;
   };
 
   const exportPDF = async () => {

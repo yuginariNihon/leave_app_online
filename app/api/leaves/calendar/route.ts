@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
       prisma.$queryRaw<{ holiday_name: string; holiday_date: Date; is_recurring: boolean }[]>`
         SELECT holiday_name, holiday_date, is_recurring
         FROM "Holiday"
-        WHERE EXTRACT(MONTH FROM holiday_date) = ${month + 1}
-          AND (EXTRACT(YEAR FROM holiday_date) = ${year} OR is_recurring = true)
+        WHERE (holiday_date >= ${monthStart}::date AND holiday_date <= ${monthEnd}::date)
+           OR (is_recurring = true AND EXTRACT(MONTH FROM holiday_date) = ${month + 1})
         ORDER BY EXTRACT(DAY FROM holiday_date) ASC
       `,
     ]);
@@ -67,37 +67,48 @@ export async function GET(request: NextRequest) {
       holidayMap.set(dateStr, h.holiday_name);
     }
 
+    // Bucket leaves by calendar date in O(leaves) so day lookup is O(1).
+    const pad2 = (n: number) => String(n).padStart(2, "0");
+    const localKey = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    const bucket = new Map<string, { staffName: string; leaveTypeName: string; departmentName: string }[]>();
+
+    for (const r of rows) {
+      let s = new Date(r.start_date);
+      let e = new Date(r.end_date);
+      if (s > e) [s, e] = [e, s];
+      if (e < monthStart) continue;
+      if (s > monthEnd) continue;
+      const start = s < monthStart ? monthStart : s;
+      const end = e > monthEnd ? monthEnd : e;
+      const entry = {
+        staffName: r.staff_name,
+        leaveTypeName: r.leave_type_name,
+        departmentName: r.department_name,
+      };
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const k = localKey(d);
+        let arr = bucket.get(k);
+        if (!arr) {
+          arr = [];
+          bucket.set(k, arr);
+        }
+        arr.push(entry);
+      }
+    }
+
     const days: {
       date: string; isToday: boolean; count: number;
       leaves: { staffName: string; leaveTypeName: string; departmentName: string }[];
       holidayName: string | null;
     }[] = [];
 
-    function toLocalDateStr(d: Date): string {
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    }
-
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`;
-      const isToday = dateStr === todayStr;
-
-      const dayLeaves = rows
-        .filter((r) => {
-          const start = toLocalDateStr(r.start_date);
-          const end = toLocalDateStr(r.end_date);
-          return dateStr >= start && dateStr <= end;
-        })
-        .map((r) => ({
-          staffName: r.staff_name,
-          leaveTypeName: r.leave_type_name,
-          departmentName: r.department_name,
-        }));
-
       days.push({
         date: dateStr,
-        isToday,
-        count: dayLeaves.length,
-        leaves: dayLeaves,
+        isToday: dateStr === todayStr,
+        count: bucket.get(dateStr)?.length ?? 0,
+        leaves: bucket.get(dateStr) ?? [],
         holidayName: holidayMap.get(dateStr) ?? null,
       });
     }

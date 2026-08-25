@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useProgressRouter } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
@@ -43,7 +44,7 @@ export default function ApprovalRequestsClient({
   initialTotalPages,
   initialTypeOptions,
 }: Props) {
-  const router = useRouter();
+  const router = useProgressRouter();
   const searchParams = useSearchParams();
   const [fetchKey, setFetchKey] = useState(0);
 

@@ -79,17 +79,10 @@ export default function StaffListClient({
   };
 
   useEffect(() => {
-    async function loadDepartments() {
-      try {
-        await fetch("/api/leave-options");
-      } catch {
-        toast.error("ไม่สามารถโหลดตัวกรองแผนกได้");
-      }
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
     }
-    loadDepartments();
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
 
     async function fetchData() {

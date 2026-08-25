@@ -21,6 +21,7 @@ export default function DashboardContent({
 
   return (
     <main
+      id="dashboard-page-content"
       className={cn(
         "flex-grow p-4 md:p-8 mx-auto py-10 w-full",
         hasSidebar && "transition-[margin] duration-200 ease-in-out",

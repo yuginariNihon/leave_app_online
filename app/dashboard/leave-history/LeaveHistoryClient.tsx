@@ -1,18 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useProgressRouter } from "@/components/ProgressBar";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { formatDateOnly, downloadCsv } from "@/lib/utils";
 import { WarningBanner } from "@/components/ui/warning-banner";
 
 import { LeaveFilters } from "@/components/leave-history/LeaveFilters";
 import { LeaveTable } from "@/components/leave-history/LeaveTable";
 import { Pagination } from "@/components/leave-history/Pagination";
 import type { LeaveRecord } from "@/components/leave-history/types";
-import { statusTextMap } from "@/components/leave-history/types";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import type { LeaveHistoryResult } from "@/lib/services/leaveService";
@@ -30,7 +28,7 @@ export default function LeaveHistoryClient({
   initialStartDate,
   initialEndDate,
 }: Props) {
-  const router = useRouter();
+  const router = useProgressRouter();
 
   const [leaveTypeOptions, setLeaveTypeOptions] = useState(initialTypeOptions);
   const monthStart = initialStartDate;
@@ -132,45 +130,9 @@ export default function LeaveHistoryClient({
     };
   }, [buildQuery, currentPage]);
 
-  const handleExportCSV = async () => {
-    try {
-      const qs = buildQuery(1, true);
-      const res = await fetch(`/api/leaves/history?${qs}`);
-      const json = await res.json();
-
-      if (!res.ok) return;
-
-      const rows: LeaveRecord[] = json.data ?? [];
-
-      const headers = [
-        "วันที่เขียนใบลา",
-        "วันที่ลา",
-        "ประเภทการลา",
-        "จำนวนวันที่ลา",
-        "สถานะ",
-      ];
-
-      const csvContent = rows.map((r) => [
-        formatDateOnly(r.createdAt),
-        r.startDate
-          ? `${formatDateOnly(r.startDate)}${r.endDate && r.startDate !== r.endDate ? ` - ${formatDateOnly(r.endDate)}` : ""}`
-          : "",
-        r.leaveTypeName,
-        r.totalDays ? `${Number(r.totalDays)} วัน` : "",
-        statusTextMap[r.status] ?? r.status,
-      ]);
-
-      const BOM = "\uFEFF";
-      const csvString =
-        BOM +
-        [headers, ...csvContent]
-          .map((row) => row.map((cell) => `"${cell}"`).join(","))
-          .join("\n");
-
-      downloadCsv(`leave_history_${new Date().toISOString().split("T")[0]}.csv`, csvString);
-    } catch {
-      toast.error("ไม่สามารถส่งออก CSV ได้ กรุณาลองอีกครั้ง");
-    }
+  const handleExportCSV = () => {
+    const qs = `${buildQuery(1, true)}&stream=true`;
+    window.location.href = `/api/leaves/history?${qs}`;
   };
 
   return (

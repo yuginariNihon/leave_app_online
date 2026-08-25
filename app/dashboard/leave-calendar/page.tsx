@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useProgressRouter } from "@/components/ProgressBar";
 import { ChevronLeft, ChevronRight, User, Bell, Info, X, Sun, ArrowRight } from "lucide-react";
 
 import { WarningBanner } from "@/components/ui/warning-banner";
@@ -36,7 +36,7 @@ function getLeaveStyle(type: string) {
 }
 
 export default function LeaveCalendarPage() {
-  const router = useRouter();
+  const router = useProgressRouter();
   const { roles } = useUser();
   const isHR = roles.includes("HR") || roles.includes("SUPER_ADMIN");
   const now = new Date();

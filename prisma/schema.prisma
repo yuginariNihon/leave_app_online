@@ -212,6 +212,7 @@ model StaffInfo {
   @@index([position_id])
   @@index([section_id])
   @@index([employment_status])
+  @@index([department_id])
 }
 
 // =========================
@@ -276,6 +277,8 @@ model DataLeave {
   @@index([leave_type_id])
   @@index([leave_case_id])
   @@index([leave_status])
+  @@index([updated_at])
+  @@index([leave_status, updated_at])
   @@index([start_date, end_date])
   @@index([staff_id, leave_status])
   @@index([created_at])

@@ -5,6 +5,8 @@ import { MainHeader } from "@/components/MainHeader";
 import { MainFooter } from "@/components/MainFooter";
 import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
 import DashboardContent from "@/components/DashboardContent";
+import { ViewTransitions } from "next-view-transitions";
+import { ProgressProvider } from "@/components/ProgressBar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireSessionUser();
@@ -15,10 +17,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="min-h-screen bg-background flex flex-col font-sans">
         <MainHeader user={userProps} />
         <div className="flex flex-1">
-          <SidebarMenu />
-          <DashboardContent>
-            {children}
-          </DashboardContent>
+          <ProgressProvider>
+            <ViewTransitions>
+              <SidebarMenu />
+              <DashboardContent>
+                {children}
+              </DashboardContent>
+            </ViewTransitions>
+          </ProgressProvider>
         </div>
         <MainFooter />
       </div>

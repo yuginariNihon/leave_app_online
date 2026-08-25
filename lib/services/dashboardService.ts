@@ -56,6 +56,10 @@ export type RecentActivityItem = {
 
 export async function invalidateDashboardKpi() {
   revalidateTag("dashboard-kpi", "max");
+  revalidateTag("dashboard-trend", "max");
+  revalidateTag("dashboard-type-dist", "max");
+  revalidateTag("dashboard-dept-comp", "max");
+  revalidateTag("dashboard-status-stats", "max");
 }
 
 async function computeDashboardKpi(): Promise<DashboardKpiData> {
@@ -109,7 +113,7 @@ export async function getDashboardKpiData(): Promise<DashboardKpiData> {
   return getCachedKpi();
 }
 
-export async function getLeaveTrendData(): Promise<LeaveTrendItem[]> {
+async function computeLeaveTrendData(): Promise<LeaveTrendItem[]> {
   const rows = await prisma.$queryRaw<{ month: Date; count: bigint }[]>`
     SELECT DATE_TRUNC('month', created_at)::date AS month, COUNT(*)::int AS count
     FROM "DataLeave"
@@ -135,7 +139,12 @@ export async function getLeaveTrendData(): Promise<LeaveTrendItem[]> {
   return result;
 }
 
-export async function getLeaveTypeDistribution(): Promise<LeaveTypeDistItem[]> {
+export const getLeaveTrendData = unstable_cache(computeLeaveTrendData, ["dashboard-trend"], {
+  revalidate: 30,
+  tags: ["dashboard-trend"],
+});
+
+async function computeLeaveTypeDistribution(): Promise<LeaveTypeDistItem[]> {
   const rows = await prisma.$queryRaw<{ leave_type_name: string; count: number }[]>`
     SELECT lt.leave_type_name, COUNT(dl.leave_id)::int AS count
     FROM "LeaveType" lt
@@ -147,6 +156,11 @@ export async function getLeaveTypeDistribution(): Promise<LeaveTypeDistItem[]> {
   `;
   return rows.map((r) => ({ leaveTypeName: r.leave_type_name, count: Number(r.count) }));
 }
+
+export const getLeaveTypeDistribution = unstable_cache(computeLeaveTypeDistribution, ["dashboard-type-dist"], {
+  revalidate: 30,
+  tags: ["dashboard-type-dist"],
+});
 
 export async function getPendingApprovals(limit = 5): Promise<PendingApprovalItem[]> {
   const leaves = await prisma.dataLeave.findMany({
@@ -287,7 +301,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "#6b7280",
 };
 
-export async function getDeptLeaveComparison(monthsBack = 6): Promise<DeptLeaveComparisonItem[]> {
+async function computeDeptLeaveComparison(monthsBack = 6): Promise<DeptLeaveComparisonItem[]> {
   const since = new Date();
   since.setMonth(since.getMonth() - monthsBack);
 
@@ -307,7 +321,12 @@ export async function getDeptLeaveComparison(monthsBack = 6): Promise<DeptLeaveC
   }));
 }
 
-export async function getApprovalStatusStats(): Promise<ApprovalStatusStat[]> {
+export const getDeptLeaveComparison = unstable_cache(computeDeptLeaveComparison, ["dashboard-dept-comp"], {
+  revalidate: 30,
+  tags: ["dashboard-dept-comp"],
+});
+
+async function computeApprovalStatusStats(): Promise<ApprovalStatusStat[]> {
   const entries = Object.entries(STATUS_COLORS);
 
   const rows = await prisma.$queryRaw<{ leave_status: string; count: number }[]>`
@@ -322,6 +341,11 @@ export async function getApprovalStatusStats(): Promise<ApprovalStatusStat[]> {
     .map(([status, color]) => ({ status, count: countByStatus.get(status) ?? 0, color }))
     .filter((r) => r.count > 0);
 }
+
+export const getApprovalStatusStats = unstable_cache(computeApprovalStatusStats, ["dashboard-status-stats"], {
+  revalidate: 30,
+  tags: ["dashboard-status-stats"],
+});
 
 export async function getLeaveCalendarData(year: number, month: number): Promise<LeaveCalendarDay[]> {
   const monthStart = new Date(year, month - 1, 1);

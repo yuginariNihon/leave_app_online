@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { ExternalLink } from "lucide-react"
 import type { PendingApprovalItem } from "@/lib/services/dashboardService"
 

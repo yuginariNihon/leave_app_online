@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useProgressRouter } from "@/components/ProgressBar";
 import { useUser } from "@/lib/user-context";
 import {
   GitBranch, LayoutDashboard, ShieldCheck, History, Users, UserPlus, Upload,
@@ -46,7 +47,7 @@ function iconClass(isActive: boolean) {
 }
 
 export function SidebarMenu() {
-  const router = useRouter();
+  const router = useProgressRouter();
   const pathname = usePathname();
   const { roles, forceChangePassword } = useUser();
   const { open, toggleSidebar, openMobile, setOpenMobile } = useSidebar();
