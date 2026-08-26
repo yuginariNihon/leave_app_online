@@ -1,6 +1,7 @@
 "use client"
 
 import { Clock, ShieldCheck, FileText, Users, UserX, CalendarCheck, Timer } from "lucide-react"
+import { motion } from "motion/react"
 import type { DashboardKpiData } from "@/lib/services/dashboardService"
 
 const cards = [
@@ -17,11 +18,18 @@ const cards = [
 export function KpiCards({ data }: { data: DashboardKpiData }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {cards.map((card) => {
+      {cards.map((card, i) => {
         const Icon = card.icon
         const value = data[card.key as keyof DashboardKpiData]
         return (
-          <div key={card.key} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-2">
+          <motion.div
+            key={card.key}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: i * 0.05, ease: "easeOut" }}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-2"
+          >
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center`}>
                 <Icon className={`w-5 h-5 ${card.color}`} />
@@ -33,7 +41,7 @@ export function KpiCards({ data }: { data: DashboardKpiData }) {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         )
       })}
     </div>

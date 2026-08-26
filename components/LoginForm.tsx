@@ -6,13 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoginOverlay } from "@/components/LoginOverlay";
 
 export function LoginForm() {
   const initialState: LoginState = {};
   const [state, action, pending] = useActionState(loginAction, initialState);
 
   return (
-    <form className="flex flex-col gap-6" action={action}>
+    <>
+      <LoginOverlay visible={pending} />
+      <form className="flex flex-col gap-6" action={action}>
       <div className="flex flex-col gap-2">
         <Label
           htmlFor="identifier"
@@ -88,6 +91,7 @@ export function LoginForm() {
       >
         {pending ? "Logging in..." : "Log in"}
       </Button>
-    </form>
+      </form>
+    </>
   );
 }

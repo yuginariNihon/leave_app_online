@@ -80,7 +80,7 @@ export default function WorkflowsPage() {
           </div>
           <Button
             onClick={() => router.push("/dashboard/hr/workflows/add")}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1a1a40] text-white rounded-xl text-sm font-semibold hover:bg-[#2a2a5a] transition-colors"
+            className="flex items-center gap-2 px-4 py-2 h-10 bg-[#1a1a40] text-white rounded-xl text-sm font-semibold hover:bg-[#2a2a5a] transition-colors"
           >
             <Plus className="w-4 h-4" />
             เพิ่ม

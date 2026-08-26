@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { ShieldCheck, History, List, CalendarDays } from "lucide-react";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { Reveal } from "@/components/Reveal";
 import { getDashboardKpiData } from "@/lib/services/dashboardService";
 import { KpiCards } from "./KpiCards";
 import { SectionSkeleton, TrendChartSection, TypePieChartSection, DeptComparisonSection, StatusStatsSection, PendingApprovalSection, TodaysLeaveSection, UpcomingLeaveSection, RecentActivitiesSection } from "./DashboardSections";
@@ -34,94 +35,118 @@ export default async function HrDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link
-          href="/dashboard/approval-requests/hr"
-          className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
-        >
-          <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
-            <ShieldCheck className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="font-semibold text-[#1a1a40]">อนุมัติคำขอลา (HR)</p>
-            <p className="text-sm text-slate-500">ตรวจสอบและอนุมัติคำขอลาที่รอดำเนินการ</p>
-          </div>
-        </Link>
+        <Reveal>
+          <Link
+            href="/dashboard/approval-requests/hr"
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-[#1a1a40]">อนุมัติคำขอลา (HR)</p>
+              <p className="text-sm text-slate-500">ตรวจสอบและอนุมัติคำขอลาที่รอดำเนินการ</p>
+            </div>
+          </Link>
+        </Reveal>
 
-        <Link
-          href="/dashboard/approval-requests/history?roleType=hr"
-          className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
-        >
-          <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
-            <History className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="font-semibold text-[#1a1a40]">ประวัติการอนุมัติ</p>
-            <p className="text-sm text-slate-500">ดูประวัติการอนุมัติทั้งหมด</p>
-          </div>
-        </Link>
+        <Reveal delay={0.06}>
+          <Link
+            href="/dashboard/approval-requests/history?roleType=hr"
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
+              <History className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-[#1a1a40]">ประวัติการอนุมัติ</p>
+              <p className="text-sm text-slate-500">ดูประวัติการอนุมัติทั้งหมด</p>
+            </div>
+          </Link>
+        </Reveal>
 
-        <Link
-          href="/dashboard/leave-history"
-          className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
-        >
-          <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
-            <List className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="font-semibold text-[#1a1a40]">รายการลา</p>
-            <p className="text-sm text-slate-500">ดูรายการคำขอลาทั้งหมด</p>
-          </div>
-        </Link>
+        <Reveal delay={0.12}>
+          <Link
+            href="/dashboard/leave-history"
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
+              <List className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-[#1a1a40]">รายการลา</p>
+              <p className="text-sm text-slate-500">ดูรายการคำขอลาทั้งหมด</p>
+            </div>
+          </Link>
+        </Reveal>
 
-        <Link
-          href="/dashboard/leave-calendar"
-          className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
-        >
-          <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
-            <CalendarDays className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <p className="font-semibold text-[#1a1a40]">ปฏิทินการลา</p>
-            <p className="text-sm text-slate-500">ดูปฏิทินการลาของพนักงาน</p>
-          </div>
-        </Link>
+        <Reveal delay={0.18}>
+          <Link
+            href="/dashboard/leave-calendar"
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
+              <CalendarDays className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="font-semibold text-[#1a1a40]">ปฏิทินการลา</p>
+              <p className="text-sm text-slate-500">ดูปฏิทินการลาของพนักงาน</p>
+            </div>
+          </Link>
+        </Reveal>
       </div>
 
       <KpiCards data={kpiData} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Suspense fallback={<SectionSkeleton className="h-72" />}>
-          <TrendChartSection />
+          <Reveal>
+            <TrendChartSection />
+          </Reveal>
         </Suspense>
         <Suspense fallback={<SectionSkeleton className="h-72" />}>
-          <TypePieChartSection />
+          <Reveal delay={0.06}>
+            <TypePieChartSection />
+          </Reveal>
         </Suspense>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Suspense fallback={<SectionSkeleton className="h-72" />}>
-          <DeptComparisonSection />
+          <Reveal>
+            <DeptComparisonSection />
+          </Reveal>
         </Suspense>
         <Suspense fallback={<SectionSkeleton className="h-72" />}>
-          <StatusStatsSection />
+          <Reveal delay={0.06}>
+            <StatusStatsSection />
+          </Reveal>
         </Suspense>
       </div>
 
       <Suspense fallback={<SectionSkeleton className="h-72" />}>
-        <PendingApprovalSection />
+        <Reveal>
+          <PendingApprovalSection />
+        </Reveal>
       </Suspense>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Suspense fallback={<SectionSkeleton className="h-48" />}>
-          <TodaysLeaveSection />
+          <Reveal>
+            <TodaysLeaveSection />
+          </Reveal>
         </Suspense>
         <Suspense fallback={<SectionSkeleton className="h-48" />}>
-          <UpcomingLeaveSection />
+          <Reveal delay={0.06}>
+            <UpcomingLeaveSection />
+          </Reveal>
         </Suspense>
       </div>
 
       <Suspense fallback={<SectionSkeleton className="h-64" />}>
-        <RecentActivitiesSection />
+        <Reveal>
+          <RecentActivitiesSection />
+        </Reveal>
       </Suspense>
     </div>
 
