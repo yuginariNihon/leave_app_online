@@ -436,6 +436,7 @@ model LoginHistory {
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@index([user_id])
+  @@index([user_id, is_success, login_at])
   @@index([ip_address, is_success, login_at])
 }
 

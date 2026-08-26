@@ -9,8 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { usePathname } from "next/navigation";
-import { useTransitionRouter } from "next-view-transitions";
+import { usePathname, useRouter } from "next/navigation";
 
 type ProgressCtx = { start: () => void; finish: () => void };
 const Ctx = createContext<ProgressCtx>({ start: () => {}, finish: () => {} });
@@ -20,19 +19,19 @@ export function useProgress() {
 }
 
 export function useProgressRouter() {
-  const router = useTransitionRouter();
+  const router = useRouter();
   const { start } = useProgress();
   return {
     ...router,
     push: (href: string) => {
       start();
-      (router as { push: (h: string) => void }).push(href);
+      router.push(href);
     },
     replace: (href: string) => {
       start();
-      (router as { replace: (h: string) => void }).replace(href);
+      router.replace(href);
     },
-  } as typeof router;
+  };
 }
 
 export function ProgressProvider({ children }: { children: ReactNode }) {

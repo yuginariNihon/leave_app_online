@@ -29,68 +29,59 @@ export async function loginAction(
     return { message: "Please enter your employee ID/email and password." };
   }
 
-  // Per-IP rate limit
-  if (ipAddress) {
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const ipFailures = await prisma.loginHistory.count({
-      where: {
-        ip_address: ipAddress,
-        is_success: false,
-        login_at: { gte: fiveMinutesAgo },
-      },
-    });
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
-    if (ipFailures >= 10) {
-      return { message: "Invalid login credentials." };
-    }
-  }
+  // Group 1: Parallel — IP rate limit + user lookup
+  const [ipFailures, user] = await Promise.all([
+    ipAddress
+      ? prisma.loginHistory.count({
+          where: {
+            ip_address: ipAddress,
+            is_success: false,
+            login_at: { gte: fiveMinutesAgo },
+          },
+        })
+      : Promise.resolve(0),
+    findUserByIdentifier(identifier),
+  ]);
 
-  const user = await findUserByIdentifier(identifier);
-
-  if (user) {
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const recentFailures = await prisma.loginHistory.count({
-      where: {
-        user_id: user.user_id,
-        is_success: false,
-        login_at: { gte: fiveMinutesAgo },
-      },
-    });
-
-    if (recentFailures >= 5) {
-      const lastFailure = await prisma.loginHistory.findFirst({
-        where: {
-          user_id: user.user_id,
-          is_success: false,
-        },
-        orderBy: { login_at: "desc" },
-        select: { login_at: true },
-      });
-
-      if (lastFailure && Date.now() - lastFailure.login_at.getTime() < 5 * 60 * 1000) {
-        return { message: "Invalid login credentials." };
-      }
-    }
+  if (ipFailures >= 10) {
+    return { message: "Invalid login credentials." };
   }
 
   if (!user?.password_hash || !user.is_active || !user.staff?.is_active) {
     return { message: "Invalid login credentials." };
   }
 
-  const passwordMatches = await bcrypt.compare(password, user.password_hash);
+  // Group 2: user failure check
+  const recentFailures = await prisma.loginHistory.count({
+    where: {
+      user_id: user.user_id,
+      is_success: false,
+      login_at: { gte: fiveMinutesAgo },
+    },
+  });
 
-  await createLoginHistory(user.user_id, "password", passwordMatches, ipAddress, userAgent);
-
-  if (!passwordMatches) {
+  if (recentFailures >= 5) {
     return { message: "Invalid login credentials." };
   }
 
-  await updateLastLogin(user.user_id);
+  const passwordMatches = await bcrypt.compare(password, user.password_hash);
 
-  const staffRoles = await prisma.staffRole.findMany({
-    where: { staff_id: user.staff.staff_id },
-    include: { role: { select: { role_name: true } } },
-  });
+  if (!passwordMatches) {
+    await createLoginHistory(user.user_id, "password", false, ipAddress, userAgent);
+    return { message: "Invalid login credentials." };
+  }
+
+  // Group 3: Parallel — writes + role lookup
+  const [staffRoles] = await Promise.all([
+    prisma.staffRole.findMany({
+      where: { staff_id: user.staff.staff_id },
+      include: { role: { select: { role_name: true } } },
+    }),
+    createLoginHistory(user.user_id, "password", true, ipAddress, userAgent),
+    updateLastLogin(user.user_id),
+  ]);
 
   const isHR = staffRoles.some((r) => r.role.role_name === "HR" || r.role.role_name === "SUPER_ADMIN");
 

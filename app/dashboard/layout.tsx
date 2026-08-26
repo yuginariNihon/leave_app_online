@@ -5,7 +5,6 @@ import { MainHeader } from "@/components/MainHeader";
 import { MainFooter } from "@/components/MainFooter";
 import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
 import DashboardContent from "@/components/DashboardContent";
-import { ViewTransitions } from "next-view-transitions";
 import { ProgressProvider } from "@/components/ProgressBar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -18,12 +17,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <MainHeader user={userProps} />
         <div className="flex flex-1">
           <ProgressProvider>
-            <ViewTransitions>
-              <SidebarMenu />
-              <DashboardContent>
-                {children}
-              </DashboardContent>
-            </ViewTransitions>
+            <SidebarMenu />
+            <DashboardContent>
+              {children}
+            </DashboardContent>
           </ProgressProvider>
         </div>
         <MainFooter />

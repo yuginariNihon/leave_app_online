@@ -1,7 +1,7 @@
 
 import { requireSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Link } from "next-view-transitions";
+import Link from "next/link";
 import { Suspense } from "react";
 import { ShieldCheck, History, List, CalendarDays } from "lucide-react";
 

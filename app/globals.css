@@ -165,22 +165,3 @@
   transition-timing-function: ease-in-out !important;
 }
 
-
-/* ===== Dashboard view transitions (native View Transitions API) ===== */
-::view-transition-old(root) {
-  animation-duration: 160ms;
-  animation-timing-function: ease-in-out;
-}
-
-::view-transition-new(root) {
-  animation-duration: 220ms;
-  animation-delay: 90ms;
-  animation-timing-function: ease-in-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation: none !important;
-  }
-}
