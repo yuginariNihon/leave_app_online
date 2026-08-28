@@ -352,6 +352,7 @@ model UserLeaveLimit {
 
   @@unique([staff_id, leave_type_id, year])
   @@index([leave_type_id])
+  @@index([year, leave_type_id])
 }
 
 model EmploymentType {
@@ -450,6 +451,7 @@ model StaffSupervisor {
   supervisor StaffInfo @relation("Supervisor", fields: [supervisor_id], references: [staff_id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([staff_id, supervisor_id])
+  @@index([supervisor_id])
 }
 
 model LeaveWorkflow {
@@ -521,6 +523,7 @@ model Holiday {
   updated_at    DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   @@unique([holiday_date, holiday_name])
+  @@index([holiday_date])
 }
 
 model AuditLog {

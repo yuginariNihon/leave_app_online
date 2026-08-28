@@ -4,6 +4,8 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 import { useUser } from "@/lib/user-context";
+import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function DashboardContent({
   children,
@@ -12,6 +14,7 @@ export default function DashboardContent({
 }: React.HTMLAttributes<HTMLElement>) {
   const { open } = useSidebar();
   const { roles } = useUser();
+  const pathname = usePathname();
   const hasSidebar = roles.some((r) => ["HR", "SUPER_ADMIN", "APPROVER"].includes(r));
 
   const marginLeft = useMemo(() => {
@@ -30,7 +33,17 @@ export default function DashboardContent({
       style={{ marginLeft }}
       {...props}
     >
-      {children}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
     </main>
   );
 }

@@ -5,7 +5,7 @@ import type { LeaveFormOptions } from "@/lib/TypeSchema";
 import z from "zod";
 import { randomBytes } from "crypto";
 import { toDateOnly, countInclusiveDays, hashPassword } from "@/lib/utils";
-import { checkApproverExists, APPROVER_TYPE_LABELS } from "@/lib/services/approverUtils";
+import { checkApproversExist, APPROVER_TYPE_LABELS } from "@/lib/services/approverUtils";
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
 
@@ -148,20 +148,17 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
   }
 
   // 3. Determine auto-skip for each step (sequential: stop after first pending)
-  const stepStatuses = await Promise.all(
-    workflow.steps.map(async (step) => {
-      const hasApprover = await checkApproverExists(
-        input.staffId,
-        staff.department_id,
-        step.approver_type,
-      );
-      return {
-        step,
-        hasApprover,
-        isAutoApproved: false,
-      };
-    }),
+  const approverTypes = workflow.steps.map((step) => step.approver_type);
+  const approverResults = await checkApproversExist(
+    input.staffId,
+    staff.department_id,
+    approverTypes,
   );
+  const stepStatuses = workflow.steps.map((step, i) => ({
+    step,
+    hasApprover: approverResults[i],
+    isAutoApproved: false,
+  }));
 
   // 4. Force steps after first pending to not auto-skip
   let firstPendingLevel: number | null = null;
@@ -1322,17 +1319,30 @@ export async function importStaff(
     });
     const currentYear = new Date().getFullYear();
 
+    // Preload existing staff codes once (avoids per-row findUnique duplicate check)
+    const existingCodes = await tx.staffInfo.findMany({
+      select: { staff_code: true },
+    });
+    const seenCodes = new Set(existingCodes.map((s) => s.staff_code));
+
+    // Batch accumulators for the pure-bulk per-row writes
+    const staffRoleData: { staff_id: string; role_id: string }[] = [];
+    const leaveLimitData: {
+      staff_id: string;
+      leave_type_id: string;
+      year: number;
+      max_days: number;
+      used_days: number;
+    }[] = [];
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       try {
-        const existingStaff = await tx.staffInfo.findUnique({
-          where: { staff_code: row.staffCode },
-          select: { staff_id: true },
-        });
-        if (existingStaff) {
+        if (seenCodes.has(row.staffCode)) {
           errors.push({ row: i + 1, message: `รหัสพนักงาน ${row.staffCode} มีอยู่ในระบบแล้ว` });
           continue;
         }
+        seenCodes.add(row.staffCode);
 
         const departmentId = deptMap.get(row.departmentName?.toLowerCase() ?? "");
         if (!departmentId) {
@@ -1389,9 +1399,7 @@ export async function importStaff(
           }
         }
         if (roleId) {
-          await tx.staffRole.create({
-            data: { staff_id: createdStaff.staff_id, role_id: roleId },
-          });
+          staffRoleData.push({ staff_id: createdStaff.staff_id, role_id: roleId });
         }
 
         if (row.email) {
@@ -1411,22 +1419,12 @@ export async function importStaff(
         }
 
         for (const lt of activeLeaveTypes) {
-          await tx.userLeaveLimit.upsert({
-            where: {
-              staff_id_leave_type_id_year: {
-                staff_id: createdStaff.staff_id,
-                leave_type_id: lt.leave_type_id,
-                year: currentYear,
-              },
-            },
-            create: {
-              staff_id: createdStaff.staff_id,
-              leave_type_id: lt.leave_type_id,
-              year: currentYear,
-              max_days: lt.max_days_per_year ?? 0,
-              used_days: 0,
-            },
-            update: {},
+          leaveLimitData.push({
+            staff_id: createdStaff.staff_id,
+            leave_type_id: lt.leave_type_id,
+            year: currentYear,
+            max_days: lt.max_days_per_year ?? 0,
+            used_days: 0,
           });
         }
 
@@ -1434,6 +1432,14 @@ export async function importStaff(
       } catch (err) {
         errors.push({ row: i + 1, message: err instanceof Error ? err.message : "Unknown error" });
       }
+    }
+
+    // Flush pure-bulk writes in batched createMany calls
+    if (staffRoleData.length > 0) {
+      await tx.staffRole.createMany({ data: staffRoleData, skipDuplicates: true });
+    }
+    if (leaveLimitData.length > 0) {
+      await tx.userLeaveLimit.createMany({ data: leaveLimitData, skipDuplicates: true });
     }
   });
 

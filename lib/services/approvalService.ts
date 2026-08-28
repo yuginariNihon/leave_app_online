@@ -2,7 +2,7 @@ import { ApprovalStatus, LeaveStatus, EmploymentStatus } from "@/lib/generated/p
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import type { ApproverType } from "@/lib/generated/prisma/enums";
-import { checkApproverExists, checkApproverForStaff, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
+import { checkApproverExists, checkApproverForStaff, checkApproverForStaffBatch, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import { getCachedWorkflow } from "@/lib/services/workflowCache";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
 
@@ -529,7 +529,9 @@ export async function bulkUpdateApprovalStatus(
   });
   const workflowMap = new Map(workflows.map((w) => [w.position_id, w]));
 
-  // Verify authority for each approval in the batch (using maps, no per-item queries)
+  // Verify authority for each approval in the batch — collect (dept, approverType)
+  // pairs, dedupe, then resolve all position names + counts via a single batched call
+  const authorityChecks: { departmentId: string; approverType: string }[] = [];
   for (const a of approvals) {
     const owner = ownerMap.get(a.leave.staff_id);
     if (!owner) throw new Error("Leave owner not found.");
@@ -538,12 +540,27 @@ export async function bulkUpdateApprovalStatus(
     const step = workflow?.steps.find((s) => s.approval_level === a.approval_level);
     if (!step) throw new Error("Workflow step not found.");
 
-    const isStaff = await checkApproverForStaff(
-      staffId,
-      owner.department_id,
-      step.approver_type,
-    );
-    if (!isStaff) {
+    authorityChecks.push({ departmentId: owner.department_id, approverType: step.approver_type });
+  }
+
+  // Deduplicate identical (departmentId, approverType) pairs, then resolve all
+  // position names + counts once via a single batched call
+  const uniqueByKey = new Map<string, { departmentId: string; approverType: string }>();
+  authorityChecks.forEach((chk) => {
+    const key = `${chk.departmentId}::${chk.approverType}`;
+    if (!uniqueByKey.has(key)) uniqueByKey.set(key, chk);
+  });
+  const uniquePairs = Array.from(uniqueByKey.values());
+  const uniqueResults = await checkApproverForStaffBatch(staffId, uniquePairs);
+  const resultByKey = new Map<string, boolean>();
+  Array.from(uniqueByKey.keys()).forEach((key, i) => resultByKey.set(key, uniqueResults[i]));
+
+  for (const a of approvals) {
+    const owner = ownerMap.get(a.leave.staff_id);
+    const workflow = workflowMap.get(owner!.position_id);
+    const step = workflow?.steps.find((s) => s.approval_level === a.approval_level);
+    const key = `${owner!.department_id}::${step!.approver_type}`;
+    if (!resultByKey.get(key)) {
       throw new Error(
         "You do not have the authority to approve one or more of the selected steps.",
       );
