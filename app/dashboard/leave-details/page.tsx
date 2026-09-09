@@ -166,6 +166,16 @@ export default function LeaveDetailsPage() {
     ? `#NFT-${detail.leaveId.slice(0, 4)}`
     : detail.referenceId ?? "";
 
+  const decidedApproval = [...detail.approvals]
+    .filter(
+      (a) =>
+        (a.status === "approved" || a.status === "rejected") &&
+        a.approvedAt !== null,
+    )
+    .sort((a, b) => a.level - b.level)
+    .pop();
+  const decisionTime = decidedApproval?.approvedAt ?? undefined;
+
   return (
     <div className="min-h-screen bg-[#fcf8fc] flex flex-col font-sans">
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 md:px-8 py-10">
@@ -191,6 +201,7 @@ export default function LeaveDetailsPage() {
             title="รายละเอียดคำขอลา"
             referenceId={displayReferenceId}
             status={detail.status}
+            statusDate={decisionTime}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-3">

@@ -40,7 +40,8 @@ export function LeaveDetailsApprovalSidebar({
   const isCancelled = status === LeaveStatus.cancelled;
   const isPending = status === LeaveStatus.pending;
 
-  const latestApproval = approvals.length > 0 ? approvals[approvals.length - 1] : null;
+  const latestApproval =
+    [...approvals].reverse().find((a) => a.approvedAt) ?? null;
 
   return (
     <div className="bg-slate-50/50 p-6 md:p-8 space-y-8">

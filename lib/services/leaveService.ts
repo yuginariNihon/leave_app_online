@@ -9,6 +9,11 @@ import { checkApproversExist, APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } fr
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
 
+const SUPERVISOR_POSITION_NAMES = new Set([
+  ...APPROVER_POSITION_NAMES.Supervisor,
+  ...APPROVER_POSITION_NAMES.Senior_Supervisor,
+]);
+
 export type CreateLeaveRequestInput = {
   staffId: string;
   leaveTypeId: string;
@@ -582,6 +587,7 @@ export async function getLeaveDetailById(
   const isOwner = leave.staff_id === sessionStaffId;
   const isHR = sessionRoles.some((r) => r === "HR" || r === "SUPER_ADMIN");
   let isSupervisor = false;
+  let isDeptSupervisor = false;
   let isApprover = false;
 
   const pendingApprovals = leave.approvals.filter(
@@ -599,10 +605,7 @@ export async function getLeaveDetailById(
     });
     isSupervisor = !!supervisorRecord;
 
-    // Approver access — mirror the approval list logic: the user's position
-    // must match an approvable step of the leave's own workflow and they must
-    // be in the same department.
-    if (isSupervisor === false && pendingApprovals.length > 0) {
+    if (isSupervisor === false) {
       const userStaff = await prisma.staffInfo.findUnique({
         where: { staff_id: sessionStaffId },
         select: {
@@ -610,27 +613,43 @@ export async function getLeaveDetailById(
           position: { select: { position_name: true } },
         },
       });
-      const positionName = userStaff?.position?.position_name;
+      const positionName = userStaff?.position?.position_name ?? null;
       const sameDepartment =
         userStaff?.department_id != null &&
         leave.staff.department_id === userStaff.department_id;
 
-      if (positionName && sameDepartment) {
+      // Department supervisor positions can view every leave (pending and
+      // approved) within their own department.
+      isDeptSupervisor =
+        sameDepartment &&
+        positionName != null &&
+        SUPERVISOR_POSITION_NAMES.has(positionName);
+
+      // Assigned/former approver on this leave (approval history).
+      if (leave.approvals.some((a) => a.approver_id === sessionStaffId)) {
+        isApprover = true;
+      }
+
+      // User's position maps to an approvable pending level (pending list),
+      // same department only.
+      if (
+        !isDeptSupervisor &&
+        !isApprover &&
+        positionName &&
+        sameDepartment &&
+        pendingApprovals.length > 0
+      ) {
         const approvableTypes = Object.entries(APPROVER_POSITION_NAMES)
           .filter(([_, names]) => names.includes(positionName))
           .map(([type]) => type) as ApproverType[];
 
         if (approvableTypes.length > 0) {
-          const workflow = await prisma.leaveWorkflow.findFirst({
-            where: { position_id: leave.staff.position_id, is_active: true },
-            select: {
-              steps: { select: { approval_level: true, approver_type: true } },
-            },
+          const steps = await prisma.leaveWorkflowStep.findMany({
+            where: { approver_type: { in: approvableTypes } },
+            select: { approval_level: true },
           });
           const approvableLevels = new Set(
-            (workflow?.steps ?? [])
-              .filter((s) => approvableTypes.includes(s.approver_type))
-              .map((s) => s.approval_level),
+            steps.map((s) => s.approval_level),
           );
           isApprover = pendingApprovals.some((a) =>
             approvableLevels.has(a.approval_level),
@@ -640,7 +659,7 @@ export async function getLeaveDetailById(
     }
   }
 
-  if (!isOwner && !isHR && !isSupervisor && !isApprover) {
+  if (!isOwner && !isHR && !isSupervisor && !isDeptSupervisor && !isApprover) {
     throw new Error("Forbidden");
   }
 

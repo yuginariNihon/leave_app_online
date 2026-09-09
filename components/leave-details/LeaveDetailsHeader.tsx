@@ -1,10 +1,12 @@
 import { CheckCircle2, XCircle, Ban, Clock } from "lucide-react";
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
+import { formatDateTime } from "@/lib/utils";
 
 type LeaveDetailsHeaderProps = {
   title: string;
   referenceId: string;
   status: string;
+  statusDate?: string;
 };
 
 const statusTextMap: Record<string, string> = {
@@ -18,6 +20,7 @@ export function LeaveDetailsHeader({
   title,
   referenceId,
   status,
+  statusDate,
 }: LeaveDetailsHeaderProps) {
   const isApproved = status === LeaveStatus.approved;
   const isRejected = status === LeaveStatus.rejected;
@@ -44,7 +47,9 @@ export function LeaveDetailsHeader({
           {isRejected && <XCircle className="w-12 h-12 shrink-0 fill-red-700 text-white" />}
           {isCancelled && <Ban className="w-12 h-12 shrink-0 text-slate-600" />}
           {isPending && <Clock className="w-12 h-12 shrink-0 fill-amber-700 text-white" />}
-          {statusTextMap[status] ?? status}
+          <div className="flex flex-col items-start gap-1">
+            <span className="leading-tight">{statusTextMap[status] ?? status}</span>
+          </div>
         </div>
       </div>
     </div>

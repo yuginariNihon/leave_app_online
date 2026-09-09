@@ -78,17 +78,17 @@ export function formatThaiDate(iso: string | null): string {
 export function formatThaiShortDate(iso: string | null): string {
   if (!iso) return "-";
   const d = new Date(iso);
-  return `${d.getUTCDate()} ${d.toLocaleDateString("th-TH", { month: "short" })} ${String(d.getUTCFullYear() + 543).slice(-2)}`;
+  return `${d.getDate()} ${d.toLocaleDateString("th-TH", { month: "short" })} ${String(d.getFullYear() + 543).slice(-2)}`;
 }
 
 export function formatThaiDateTime(iso: string | null): string {
   if (!iso) return "-";
   const d = new Date(iso);
-  const day = d.getUTCDate();
+  const day = d.getDate();
   const month = d.toLocaleDateString("th-TH", { month: "short" });
-  const year = String(d.getUTCFullYear() + 543).slice(-2);
-  const hours = d.getUTCHours().toString().padStart(2, "0");
-  const minutes = d.getUTCMinutes().toString().padStart(2, "0");
+  const year = String(d.getFullYear() + 543).slice(-2);
+  const hours = d.getHours().toString().padStart(2, "0");
+  const minutes = d.getMinutes().toString().padStart(2, "0");
   return `${day} ${month} ${year} | ${hours}:${minutes} น.`;
 }
 

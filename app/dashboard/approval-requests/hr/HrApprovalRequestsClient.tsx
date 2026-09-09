@@ -136,20 +136,28 @@ export default function HrApprovalRequestsClient({
     };
   }, [buildQuery, currentPage, fetchKey]);
 
+  const approvalResult = searchParams.get("approvalResult");
+  const handledApprovalResultRef = useRef<string | null>(null);
+
   useEffect(() => {
-    const status = searchParams.get("approvalResult");
-    if (status === "approved") {
+    if (approvalResult !== "approved" && approvalResult !== "rejected") {
+      handledApprovalResultRef.current = null;
+      return;
+    }
+    if (handledApprovalResultRef.current === approvalResult) return;
+    handledApprovalResultRef.current = approvalResult;
+
+    if (approvalResult === "approved") {
       toast.success("อนุมัติเรียบร้อยแล้ว", {
         className: "!bg-white !text-green-500 !border-green-500 !border-2",
       });
-      router.replace("/dashboard/approval-requests/hr");
-    } else if (status === "rejected") {
+    } else {
       toast.error("ไม่อนุมัติเรียบร้อยแล้ว", {
         className: "!bg-white !text-red-500 !border-red-500 !border-2",
       });
-      router.replace("/dashboard/approval-requests/hr");
     }
-  }, [router, searchParams]);
+    router.replace("/dashboard/approval-requests/hr");
+  }, [approvalResult, router]);
 
 
 
