@@ -197,11 +197,11 @@ export default function UserManagementPage() {
             <h1 className="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-[#070235]">จัดการผู้ใช้</h1>
             <p className="text-[14px] leading-[20px] text-[#47464f]">Manage user accounts and login access.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative w-full md:w-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#787680] w-[20px] h-[20px]" />
               <Input
-                className="pl-10 h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px] w-[200px]"
+                className="pl-10 h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px] w-full md:w-[200px]"
                 placeholder="ค้นหาพนักงาน..."
                 value={search}
                 onChange={(e) => setFilter("search", e.target.value)}
@@ -209,7 +209,7 @@ export default function UserManagementPage() {
             </div>
             
             <select
-              className="h-11 border border-[#c8c5d0] rounded-lg px-3 text-[14px] bg-white focus-visible:ring-secondary/20 outline-none"
+              className="h-11 border border-[#c8c5d0] rounded-lg px-3 text-[14px] bg-white focus-visible:ring-secondary/20 outline-none w-full md:w-auto"
               value={activeFilter}
               onChange={(e) => setFilter("activeFilter", e.target.value)}
             >

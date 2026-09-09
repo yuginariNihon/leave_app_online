@@ -98,7 +98,7 @@ export function LeaveDetailsMainInfo({
             <UserCheck className="w-4 h-4" />
             ผู้รับผิดชอบงานแทน
           </label>
-          <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl w-fit min-w-[300px]">
+          <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-xl w-full sm:w-fit sm:min-w-[300px]">
             <Avatar className="w-10 h-10 border border-white shadow-sm">
               <AvatarImage src="" alt={supervisor.name} />
               <AvatarFallback>{supervisor.name[0]}</AvatarFallback>

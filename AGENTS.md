@@ -26,7 +26,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   - Password fallback: `phoneNumber` empty → `crypto.randomBytes(5).toString("hex")` (10 chars).
   - `/api/debug-db` — dev-only guard; generic error message (no stack).
   - `/api/leaves/[id]` — generic error without stack.
-  - Auth: `sameSite: "strict"`; sliding expiration; SHA-256 token hashing.
+  - Auth: `sameSite: "strict"`; SHA-256 token hashing; session fixed 1-hour expiry (no sliding renewal).
   - Login rate limit: 5 failures / 5 min → 30s delay.
   - CSV sanitize: prefix `=`, `+`, `-`, `@` with `'`.
   - HR deactivation guard: cannot deactivate other HR/SUPER_ADMIN.
@@ -45,7 +45,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Key Decisions
 - `sameSite: "strict"` instead of CSRF tokens.
-- Sliding expiration: extend if < 30 min remaining.
+- Session: fixed 1-hour expiry (`SESSION_MAX_AGE_SECONDS = 60 * 60`) — no sliding renewal.
 - `.next` cache clean occasionally for stale route types.
 - Prisma enum types → server; `@/lib/generated/prisma/enums` const objects → client.
 
@@ -67,7 +67,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `lib/services/approvalService.ts`: `getApprovalHistory` HR guard.
 - `lib/services/rolePermissionService.ts`: Default pages + per-page upsert.
 - `lib/services/userService.ts`: LoginHistory with IP + user-agent.
-- `lib/auth.ts`: Session creation (sameSite strict), sliding expiration, token hashing.
+- `lib/auth.ts`: Session creation (sameSite strict, fixed 1-hour expiry), SHA-256 token hashing.
 - `app/api/leaves/route.ts`: Status hardcoded to `LeaveStatus.pending`.
 - `app/api/leaves/[id]/route.ts`: Generic error (no stack).
 - `app/api/leaves/detail/route.ts`: Uses `detail.staffId`.

@@ -138,26 +138,23 @@ export default function LeaveHistoryClient({
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">
       <main className="flex-grow p-4 md:p-8 mx-auto py-10 transition-all duration-300 ease-in-out w-full">
-        <AppBreadcrumb
-          items={[{ label: "Home", href: "/dashboard" }, { label: "Leave History" }]}
-          className="mb-4"
-        />
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-md mb-6">
-          <div>
-            <h1 className="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-[#070235]">ประวัติการลา</h1>
-            <p className="text-[15px] leading-[20px] text-[#47464f]">View and manage your leave request history.</p>
-          </div>
+        <div className="w-full mb-8 flex items-center justify-between gap-2">
+          <AppBreadcrumb
+            items={[{ label: "Home", href: "/dashboard" }, { label: "Leave History" }]}
+          />
+          <Button
+            variant="ghost"
+            className="flex shrink-0 items-center gap-2 h-10 text-[#070235] font-semibold hover:bg-[#070235]/5"
+            onClick={() => router.push("/dashboard")}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">ย้อนกลับ</span>
+          </Button>
+        </div>
 
-            <div className="flex items-center gap-4 mb-4">
-              <Button
-                variant="ghost"
-                className="flex items-center gap-2 text-[#47464f] hover:text-[#070235] h-11"
-                onClick={() => router.push("/dashboard")}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                ย้อนกลับ
-              </Button>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-[#070235]">ประวัติการลา</h1>
+          <p className="text-[15px] leading-[20px] text-[#47464f]">View and manage your leave request history.</p>
         </div>
 
         <WarningBanner message={leaveTypeError} className="mb-4" />

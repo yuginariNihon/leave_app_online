@@ -169,18 +169,18 @@ export default function LeaveDetailsPage() {
   return (
     <div className="min-h-screen bg-[#fcf8fc] flex flex-col font-sans">
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 md:px-8 py-10">
-        <AppBreadcrumb
-          items={[{ label: "Home", href: "/dashboard" }, { label: "Leave Details" }]}
-          className="mb-4"
-        />
-        <div className="mb-8 flex justify-between items-center">
+        
+        <div className="w-full mb-8 flex items-center justify-between gap-2">
+          <AppBreadcrumb
+            items={[{ label: "Home", href: "/dashboard" }, { label: "Leave Details" }]}
+          />
           <Button
             variant="ghost"
-            className="flex items-center gap-2 text-[#1a1a40] font-semibold hover:bg-[#1a1a40]/5"
+            className="flex items-center gap-2 h-10 text-[#1a1a40] font-semibold hover:bg-[#1a1a40]/5 shrink-0"
             onClick={() => router.back()}
           >
             <ArrowLeft className="w-4 h-4" />
-            กลับไปหน้าประวัติ
+            <span className="hidden sm:inline">กลับไปหน้าประวัติ</span>
           </Button>
         </div>
 

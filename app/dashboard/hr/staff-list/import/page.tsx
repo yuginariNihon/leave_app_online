@@ -146,7 +146,7 @@ export default function ImportStaffPage() {
                     onClick={() => router.back()}
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    ย้อนกลับ
+                    <span className="hidden sm:inline">ย้อนกลับ</span>
                   </Button>
                   
                 </div>

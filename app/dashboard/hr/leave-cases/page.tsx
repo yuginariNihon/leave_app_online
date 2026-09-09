@@ -98,11 +98,11 @@ export default function LeaveCasesPage() {
             <h1 className="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-[#070235]">จัดการกรณีการลา</h1>
             <p className="text-[14px] leading-[20px] text-[#47464f]">Manage leave cases and their associated leave types.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative w-full md:w-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#787680] w-[20px] h-[20px]" />
               <Input
-                className="pl-10 h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px] w-[200px]"
+                className="pl-10 h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px] w-full md:w-[200px]"
                 placeholder="ค้นหาชื่อกรณี..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

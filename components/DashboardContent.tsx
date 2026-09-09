@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 import { useUser } from "@/lib/user-context";
 import { usePathname } from "next/navigation";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function DashboardContent({
@@ -15,12 +16,13 @@ export default function DashboardContent({
   const { open } = useSidebar();
   const { roles } = useUser();
   const pathname = usePathname();
+  const isMobile = useIsMobile();
   const hasSidebar = roles.some((r) => ["HR", "SUPER_ADMIN", "APPROVER"].includes(r));
 
   const marginLeft = useMemo(() => {
-    if (!hasSidebar) return "0px";
+    if (!hasSidebar || isMobile) return "0px";
     return open ? "280px" : "80px";
-  }, [open, hasSidebar]);
+  }, [open, hasSidebar, isMobile]);
 
   return (
     <main

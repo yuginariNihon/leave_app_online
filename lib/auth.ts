@@ -6,7 +6,7 @@ import { cache } from "react";
 
 export const SESSION_COOKIE_NAME = "leave_app_db_session";
 
-const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24;
+const SESSION_MAX_AGE_SECONDS = 60 * 60;
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");

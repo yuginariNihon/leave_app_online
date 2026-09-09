@@ -102,14 +102,18 @@ export default function ApprovalDetailNewPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FD] p-6 md:p-10">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        <AppBreadcrumb
-          items={[{ label: "Home", href: "/dashboard" }, { label: "Approvals" }, { label: "Detail" }]}
-          className="mb-4"
-        />
-        {/* Top Navigation */}
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => router.back()} className="text-[#46464f] hover:text-[#131645] font-medium gap-2 p-0">
-            <ArrowLeft className="w-4 h-4" /> กลับหน้ารายการคำขอลา
+        <div className="w-full mb-8 flex items-center justify-between gap-2">
+          <AppBreadcrumb
+            items={[{ label: "Home", href: "/dashboard" }, { label: "Approvals" }, { label: "Detail" }]}
+          />
+          {/* Top Navigation */}
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="flex shrink-0 items-center gap-2 font-medium text-[#46464f] hover:text-[#131645] p-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">กลับหน้ารายการคำขอลา</span>
           </Button>
           
         </div>

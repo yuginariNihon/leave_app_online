@@ -33,7 +33,7 @@ export function LeaveDetailsHeader({
       <div className="flex items-center">
         <div
           className={`
-            border px-12 py-7 min-h-[100px] rounded-2xl flex items-center gap-6 text-2xl font-black shadow-lg
+            border px-6 md:px-12 py-7 min-h-[100px] rounded-2xl flex items-center gap-4 md:gap-6 text-2xl font-black shadow-lg
             ${isApproved ? "bg-green-100 text-green-700 border-green-200" : ""}
             ${isRejected ? "bg-red-100 text-red-700 border-red-200" : ""}
             ${isCancelled ? "bg-slate-100 text-slate-600 border-slate-200" : ""}
