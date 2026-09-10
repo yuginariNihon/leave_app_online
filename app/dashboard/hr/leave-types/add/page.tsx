@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Tags } from "lucide-react";
+import { ArrowLeft, Tags, Loader2 } from "lucide-react";
 import { LeaveTypeForm } from "@/components/hr/leave-types/LeaveTypeForm";
 import type { CreateLeaveTypeValues, UpdateLeaveTypeValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
@@ -40,6 +40,14 @@ export default function AddLeaveTypePage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+      {submitting && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#F8FAFC]/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-[#1a1a40]" />
+            <p className="font-bold text-[#1a1a40]">กำลังบันทึก...</p>
+          </div>
+        </div>
+      )}
       <main className="flex-1 overflow-y-auto">
         <section className="flex-1 px-4 md:px-10 py-8 md:py-12 bg-[#F8FAFC]">
           <div className="max-w-4xl mx-auto">
@@ -62,8 +70,9 @@ export default function AddLeaveTypePage() {
                 <div className="">
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-2 text-white hover:text-[#100d41]"
+                    className="flex items-center gap-2 text-white hover:text-[#100d41] disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => router.back()}
+                    disabled={submitting}
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span className="hidden sm:inline">ย้อนกลับ</span>

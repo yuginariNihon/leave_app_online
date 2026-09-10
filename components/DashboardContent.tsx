@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { useUser } from "@/lib/user-context";
 import { usePathname } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 
 export default function DashboardContent({
   children,
@@ -35,17 +35,14 @@ export default function DashboardContent({
       style={{ marginLeft }}
       {...props}
     >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-        >
-          {children}
-        </motion.div>
-      </AnimatePresence>
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+      >
+        {children}
+      </motion.div>
     </main>
   );
 }

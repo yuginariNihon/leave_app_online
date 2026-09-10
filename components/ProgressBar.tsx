@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -21,20 +22,23 @@ export function useProgress() {
 export function useProgressRouter() {
   const router = useRouter();
   const { start } = useProgress();
-  return {
-    ...router,
-    push: (href: string) => {
-      start();
-      router.push(href);
-    },
-    replace: (href: string) => {
-      start();
-      router.replace(href);
-    },
-  };
+  return useMemo(
+    () => ({
+      ...router,
+      push: (href: string) => {
+        start();
+        router.push(href);
+      },
+      replace: (href: string) => {
+        start();
+        router.replace(href);
+      },
+    }),
+    [router, start],
+  );
 }
 
-export function ProgressProvider({ children }: { children: ReactNode }) {
+function TopProgressBar() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -47,11 +51,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     if (hide.current) window.clearTimeout(hide.current);
     if (inc.current) window.clearInterval(inc.current);
     if (showTimer.current) window.clearTimeout(showTimer.current);
-    setProgress(8);
+    setProgress(15);
     inc.current = window.setInterval(() => {
-      setProgress((p) => (p >= 90 ? p : Math.min(90, p + (90 - p) * 0.1 + 1)));
+      setProgress((p) => (p >= 90 ? p : p + (90 - p) * 0.1));
     }, 200);
-    showTimer.current = window.setTimeout(() => setVisible(true), 250);
+    showTimer.current = window.setTimeout(() => setVisible(true), 200);
   }, []);
 
   const finish = useCallback(() => {
@@ -64,35 +68,17 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     hide.current = window.setTimeout(() => {
       setVisible(false);
       setProgress(0);
-    }, 300);
+    }, 250);
   }, []);
 
   useEffect(() => {
     const onStart = () => start();
     const onFinish = () => finish();
-    const onClick = (e: MouseEvent) => {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      const a = (e.target as HTMLElement)?.closest("a");
-      if (!a) return;
-      const href = a.getAttribute("href");
-      if (!href || href.startsWith("http") || href.startsWith("#") || a.target === "_blank" || a.hasAttribute("download")) return;
-      try {
-        if (new URL(href, location.href).origin !== location.origin) return;
-      } catch {
-        return;
-      }
-      start();
-    };
-    const onPop = () => start();
     window.addEventListener("app:progress-start", onStart);
     window.addEventListener("app:progress-finish", onFinish);
-    document.addEventListener("click", onClick, true);
-    window.addEventListener("popstate", onPop);
     return () => {
       window.removeEventListener("app:progress-start", onStart);
       window.removeEventListener("app:progress-finish", onFinish);
-      document.removeEventListener("click", onClick, true);
-      window.removeEventListener("popstate", onPop);
     };
   }, [start, finish]);
 
@@ -104,18 +90,34 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }, [pathname, finish]);
 
   return (
-    <Ctx.Provider value={{ start, finish }}>
-      {children}
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-[3px]"
+      style={{ opacity: visible ? 1 : 0, transition: "opacity 200ms ease" }}
+    >
       <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-[3px]"
-        style={{ opacity: visible ? 1 : 0, transition: "opacity 200ms ease" }}
-      >
-        <div
-          className="h-full bg-[#0051d5] transition-[width] duration-200 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+        className="h-full bg-[#0051d5] transition-[width] duration-200 ease-out"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+}
+
+export function ProgressProvider({ children }: { children: ReactNode }) {
+  const start = useCallback(() => {
+    window.dispatchEvent(new Event("app:progress-start"));
+  }, []);
+
+  const finish = useCallback(() => {
+    window.dispatchEvent(new Event("app:progress-finish"));
+  }, []);
+
+  const value = useMemo(() => ({ start, finish }), [start, finish]);
+
+  return (
+    <Ctx.Provider value={value}>
+      <TopProgressBar />
+      {children}
     </Ctx.Provider>
   );
 }

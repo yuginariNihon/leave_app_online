@@ -94,8 +94,9 @@ export function StaffForm({
           {onBack && (
             <Button
               variant="ghost"
-              className="flex items-center gap-2 text-white hover:text-[#100d41]"
+              className="flex items-center gap-2 text-white hover:text-[#100d41] disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={onBack}
+              disabled={isSubmitting || isSuccess}
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">ย้อนกลับ</span>
@@ -355,8 +356,9 @@ export function StaffForm({
           <Button
             type="button"
             variant="ghost"
-            className="w-full sm:w-auto h-11 min-w-[140px] text-sm font-semibold text-[#45464d] hover:bg-[#e6e8ea] rounded-xl border border-slate-300"
+            className="w-full sm:w-auto h-11 min-w-[140px] text-sm font-semibold text-[#45464d] hover:bg-[#e6e8ea] rounded-xl border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={onCancel}
+            disabled={isSubmitting || isSuccess}
           >
             ยกเลิก
           </Button>

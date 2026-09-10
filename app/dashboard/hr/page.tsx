@@ -7,16 +7,12 @@ import { ShieldCheck, History, List, CalendarDays } from "lucide-react";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { Reveal } from "@/components/Reveal";
-import { getDashboardKpiData } from "@/lib/services/dashboardService";
-import { KpiCards } from "./KpiCards";
-import { SectionSkeleton, TrendChartSection, TypePieChartSection, DeptComparisonSection, StatusStatsSection, PendingApprovalSection, TodaysLeaveSection, UpcomingLeaveSection, RecentActivitiesSection } from "./DashboardSections";
+import { SectionSkeleton, KpiSection, TrendChartSection, TypePieChartSection, DeptComparisonSection, StatusStatsSection, PendingApprovalSection, TodaysLeaveSection, UpcomingLeaveSection, RecentActivitiesSection } from "./DashboardSections";
 
 export default async function HrDashboardPage() {
   const user = await requireSessionUser();
   const isHR = user.roles.includes("HR") || user.roles.includes("SUPER_ADMIN");
   if (!isHR) redirect("/dashboard");
-
-  const kpiData = await getDashboardKpiData();
 
   return (
 
@@ -96,7 +92,11 @@ export default async function HrDashboardPage() {
         </Reveal>
       </div>
 
-      <KpiCards data={kpiData} />
+      <Suspense fallback={<SectionSkeleton className="h-48" />}>
+        <Reveal>
+          <KpiSection />
+        </Reveal>
+      </Suspense>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Suspense fallback={<SectionSkeleton className="h-72" />}>

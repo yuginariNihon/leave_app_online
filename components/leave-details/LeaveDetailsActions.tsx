@@ -57,8 +57,9 @@ export function LeaveDetailsActions({
         <AlertDialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <Button
             variant="outline"
-            className="border-red-200 text-red-600 px-10 h-14 rounded-xl font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-all flex items-center gap-3"
+            className="border-red-200 text-red-600 px-10 h-14 rounded-xl font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => setDialogOpen(true)}
+            disabled={isCancelling}
           >
             <XCircle className="w-5 h-5" />
             ยกเลิกคำขอลา
@@ -150,10 +151,11 @@ export function LeaveDetailsActions({
       {isPending && (
         <Button
           variant="secondary"
-          className="bg-white border border-gray-200 text-[#1a1a40] px-8 h-14 rounded-xl font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center gap-3"
+          className="bg-white border border-gray-200 text-[#1a1a40] px-8 h-14 rounded-xl font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => {
             router.push(`/dashboard/leave-request/edit?leaveId=${leaveId}`);
           }}
+          disabled={isCancelling}
         >
           <Edit className="w-5 h-5" />
           แก้ไขข้อมูล

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateLeaveRequest, validateLeaveRequestDetails } from "@/lib/services/leaveService";
+import { updateLeaveRequest, validateLeaveRequestDetails, LeaveRequestValidationError } from "@/lib/services/leaveService";
 import { getLeaveDetailById } from "@/lib/services/leaveService";
 import { getSessionUser } from "@/lib/auth";
 import { createLeaveRequestSchema } from "@/lib/TypeSchema";
@@ -99,7 +99,10 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    if (error instanceof LeaveRequestValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 422 });
+    }
     return NextResponse.json({ error: "Failed to update leave request." }, { status: 400 });
   }
 }

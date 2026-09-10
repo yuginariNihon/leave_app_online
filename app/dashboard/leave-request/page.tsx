@@ -15,7 +15,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 
-import { ArrowLeft, CalendarDays } from "lucide-react";
+import { ArrowLeft, CalendarDays, Loader2 } from "lucide-react";
 import { currentSubmitTime } from "@/lib/utils";
 
 import {
@@ -184,8 +184,31 @@ export default function LeaveRequestPage() {
     setShowSuccessDialog(true);
   };
 
+  const handleSuccessDialogClose = () => {
+    setShowSuccessDialog(false);
+    form.reset({
+      leaveTypeId: "",
+      leaveCaseId: "",
+      startDate: "",
+      endDate: "",
+      reason: "",
+      leavePeriod: "full_day",
+    });
+    setSubmitError("");
+    setSubmitTime("");
+    router.replace("/dashboard/leave-history");
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f9ff] flex flex-col font-sans">
+      {form.formState.isSubmitting && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#f8f9ff]/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-[#100d41]" />
+            <p className="font-bold text-[#100d41]">กำลังส่งคำขอ...</p>
+          </div>
+        </div>
+      )}
       <main className="flex-grow p-4 md:p-8 max-w-4xl mx-auto w-full">
         <AppBreadcrumb
           items={[{ label: "Home", href: "/dashboard" }, { label: "Leave Request" }]}
@@ -204,8 +227,9 @@ export default function LeaveRequestPage() {
               <div className="">
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 text-white hover:text-[#100d41] h-11"
+                  className="flex items-center gap-2 text-white hover:text-[#100d41] h-11 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => router.back()}
+                  disabled={form.formState.isSubmitting}
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">ย้อนกลับ</span>
@@ -288,8 +312,9 @@ export default function LeaveRequestPage() {
             )}
             <Button
               variant="outline"
-              className="w-full md:w-auto px-10 h-12 border-gray-300 text-slate-600 hover:bg-white font-semibold transition-all"
+              className="w-full md:w-auto px-10 h-12 border-gray-300 text-slate-600 hover:bg-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => router.back()}
+              disabled={form.formState.isSubmitting}
             >
               ยกเลิก
             </Button>
@@ -297,7 +322,7 @@ export default function LeaveRequestPage() {
             <LoadingButton
               type="submit"
               form="leave-request-form"
-              disabled={isQuotaExceeded}
+              disabled={form.formState.isSubmitting || isQuotaExceeded}
               isLoading={form.formState.isSubmitting}
               loadingText="กำลังส่งคำขอ..."
               className="w-full md:w-auto px-10 h-12 bg-[#100d41] text-white hover:bg-[#1a1752] font-semibold shadow-lg shadow-[#100d41]/20 transition-all active:scale-95"
@@ -309,7 +334,11 @@ export default function LeaveRequestPage() {
 
         <SuccessDialog
           open={showSuccessDialog}
-          onOpenChange={setShowSuccessDialog}
+          onOpenChange={(open) => {
+            setShowSuccessDialog(open);
+            if (!open) handleSuccessDialogClose();
+          }}
+          onClose={handleSuccessDialogClose}
           submitTime={submitTime}
           toastMessage="ยื่นคำขอลาเรียบร้อย"
           styleAlert={styleAlertTextSuccess.toString()}

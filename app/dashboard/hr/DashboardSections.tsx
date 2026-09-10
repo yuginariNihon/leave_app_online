@@ -1,4 +1,5 @@
-import { getLeaveTrendData, getLeaveTypeDistribution, getPendingApprovals, getTodaysLeave, getUpcomingLeave, getRecentActivities, getDeptLeaveComparison, getApprovalStatusStats } from "@/lib/services/dashboardService";
+import { getLeaveTrendData, getLeaveTypeDistribution, getPendingApprovals, getTodaysLeave, getUpcomingLeave, getRecentActivities, getDeptLeaveComparison, getApprovalStatusStats, getDashboardKpiData } from "@/lib/services/dashboardService";
+import { KpiCards } from "./KpiCards";
 import { LeaveTrendChart } from "./LeaveTrendChart";
 import { LeaveTypePieChart } from "./LeaveTypePieChart";
 import { DeptLeaveComparison } from "./DeptLeaveComparison";
@@ -14,6 +15,11 @@ export function SectionSkeleton({ className }: { className?: string }) {
       className={`animate-pulse rounded-2xl border border-slate-200 bg-slate-100/70 ${className ?? ""}`}
     />
   );
+}
+
+export async function KpiSection() {
+  const data = await getDashboardKpiData();
+  return <KpiCards data={data} />;
 }
 
 export async function TrendChartSection() {

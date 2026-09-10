@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   createLeaveRequest,
   validateLeaveRequestDetails,
+  LeaveRequestValidationError,
   type CreateLeaveRequestInput,
 } from "@/lib/services/leaveService";
 import {
@@ -141,6 +142,10 @@ export async function POST(request: Request) {
       { status: 201 },
     );
   } catch (error) {
+    if (error instanceof LeaveRequestValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 422 });
+    }
+
     console.error("Failed to create leave request", error);
 
     return NextResponse.json(

@@ -12,6 +12,28 @@ function hashToken(token: string): string {
 
 const USER_PAGES: string[] = [];
 
+type CachedPageRoles = { roles: string[]; expiresAt: number };
+const pageRoleCache = new Map<string, CachedPageRoles>();
+
+async function getCachedPageRoles(pageKey: string): Promise<string[]> {
+  const cached = pageRoleCache.get(pageKey);
+  const now = Date.now();
+  if (cached && cached.expiresAt > now) return cached.roles;
+
+  const resource = await prisma.pageResource.findUnique({
+    where: { page_key: pageKey },
+    select: {
+      rolePermissions: {
+        select: { role: { select: { role_name: true } } },
+      },
+    },
+  });
+
+  const roles = resource?.rolePermissions.map((rp) => rp.role.role_name.toUpperCase()) ?? [];
+  pageRoleCache.set(pageKey, { roles, expiresAt: now + 60_000 });
+  return roles;
+}
+
 export async function proxy(request: NextRequest) {
   const hasSession = request.cookies.has(SESSION_COOKIE_NAME);
   const { pathname } = request.nextUrl;
@@ -104,22 +126,10 @@ export async function proxy(request: NextRequest) {
         if (roleNames.includes("SUPER_ADMIN")) {
           // allowed
         } else {
-          const resource = await prisma.pageResource.findUnique({
-            where: { page_key: pageKey },
-            select: {
-              rolePermissions: {
-                select: { role: { select: { role_name: true } } },
-              },
-            },
-          });
-
-          if (resource) {
-            const allowed = resource.rolePermissions.some((rp) =>
-              roleNames.includes(rp.role.role_name.toUpperCase()),
-            );
-            if (!allowed) {
-              return NextResponse.redirect(new URL("/dashboard", request.url));
-            }
+          const allowedRoles = await getCachedPageRoles(pageKey);
+          const allowed = allowedRoles.some((r) => roleNames.includes(r));
+          if (!allowed) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
           }
         }
       } catch {

@@ -21,9 +21,10 @@ interface SuccessDialogProps {
   redirectTo?: string;
   toastMessage?: string;
   styleAlert?: string;
+  onClose?: () => void;
 }
 
-export function SuccessDialog({ open, onOpenChange, submitTime, title, statusText, redirectTo, toastMessage, styleAlert }: SuccessDialogProps) {
+export function SuccessDialog({ open, onOpenChange, submitTime, title, statusText, redirectTo, toastMessage, styleAlert, onClose }: SuccessDialogProps) {
   const router = useRouter();
   const displayTitle = title ?? "ยื่นคำขอลาเรียบร้อย";
   const displayStatus = statusText ?? "รอการอนุมัติ";
@@ -78,10 +79,15 @@ export function SuccessDialog({ open, onOpenChange, submitTime, title, statusTex
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  router.push(redirectTo ?? "/dashboard/leave-history");
-                  toast.success(toastMessage, {
-                    className: styleAlert,
-                   });
+                  if (onClose) {
+                    onClose();
+                    onOpenChange(false);
+                  } else {
+                    router.push(redirectTo ?? "/dashboard/leave-history");
+                    toast.success(toastMessage, {
+                      className: styleAlert,
+                     });
+                  }
                 }}
                 className="h-12 w-40 rounded-lg border-2 border-slate-900 bg-white text-slate-900 font-bold text-sm hover:bg-slate-50 transition-all active:scale-95 shadow-none"
               >

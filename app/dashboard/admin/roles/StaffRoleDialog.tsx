@@ -115,8 +115,9 @@ export function StaffRoleDialog({ open, onOpenChange, staff, roleOptions, onSave
           <Button
             type="button"
             variant="ghost"
-            className="text-[#45464d] hover:text-[#0F172A] font-semibold rounded-xl h-11 min-w-[100px] border border-slate-300 transition-all active:scale-95"
+            className="text-[#45464d] hover:text-[#0F172A] font-semibold rounded-xl h-11 min-w-[100px] border border-slate-300 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => onOpenChange(false)}
+            disabled={saving}
           >
             ยกเลิก
           </Button>

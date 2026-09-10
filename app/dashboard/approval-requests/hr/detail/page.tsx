@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -26,6 +26,7 @@ import {
   Info,
   ListOrdered,
   FileCheck2,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { MdCancel } from "react-icons/md";
@@ -44,6 +45,7 @@ export default function HrApprovalDetailPage() {
   const [processing, setProcessing] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const processingRef = useRef(false);
 
   useEffect(() => {
     if (!leaveId) {
@@ -70,12 +72,14 @@ export default function HrApprovalDetailPage() {
   }, [leaveId]);
 
   const handleAction = async (status: "approved" | "rejected", comment?: string) => {
+    if (processingRef.current) return;
     const pendingApproval = detail?.approvals?.find((a) => a.status === "pending");
     if (!pendingApproval) {
       toast.error("ไม่พบรายการรออนุมัติ");
       return;
     }
 
+    processingRef.current = true;
     setProcessing(true);
     try {
       const res = await fetch(`/api/leaves/approvals/hr/${pendingApproval.approvalId}`, {
@@ -89,7 +93,7 @@ export default function HrApprovalDetailPage() {
       router.replace(`/dashboard/approval-requests/hr?approvalResult=${status}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "ไม่สามารถดำเนินการได้");
-    } finally {
+      processingRef.current = false;
       setProcessing(false);
       setRejectDialogOpen(false);
       setRejectReason("");
@@ -101,6 +105,14 @@ export default function HrApprovalDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FD] p-6 md:p-10">
+      {processing && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-[#131645]" />
+            <p className="font-bold text-[#131645]">กำลังดำเนินการ...</p>
+          </div>
+        </div>
+      )}
       <div className="max-w-[1400px] mx-auto space-y-6">
         <div className="w-full mb-8 flex items-center justify-between gap-2">
           <AppBreadcrumb
@@ -109,7 +121,8 @@ export default function HrApprovalDetailPage() {
           <Button
             variant="ghost"
             onClick={() => router.back()}
-            className="flex shrink-0 items-center gap-2 font-medium text-[#46464f] hover:text-[#131645] p-0"
+            disabled={processing}
+            className="flex shrink-0 items-center gap-2 font-medium text-[#46464f] hover:text-[#131645] p-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">กลับหน้ารายการคำขอลา (HR)</span>
@@ -221,9 +234,10 @@ export default function HrApprovalDetailPage() {
                   </AlertDialogCancel>
                   <LoadingButton
                     onClick={() => handleAction("rejected", rejectReason)}
+                    disabled={processing}
                     isLoading={processing}
                     loadingText="กำลังดำเนินการ..."
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 h-auto rounded-lg shadow-md transition-all active:scale-[0.98] mt-3"
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 h-auto rounded-lg shadow-md transition-all active:scale-[0.98] mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     ยืนยันการไม่อนุมัติ
                   </LoadingButton>
@@ -232,10 +246,10 @@ export default function HrApprovalDetailPage() {
             </AlertDialog>
 
             <div className="flex justify-end gap-4 pt-4">
-              <LoadingButton size="lg" className="px-10 h-14 bg-white border-2 border-[#b7102a] text-[#b7102a] hover:bg-[#b7102a] hover:text-white rounded-xl font-bold" onClick={() => setRejectDialogOpen(true)} isLoading={processing} loadingText="กำลังดำเนินการ...">
+              <LoadingButton size="lg" disabled={processing} className="px-10 h-14 bg-white border-2 border-[#b7102a] text-[#b7102a] hover:bg-[#b7102a] hover:text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => setRejectDialogOpen(true)} isLoading={processing} loadingText="กำลังดำเนินการ...">
                 <XCircle className="w-5 h-5 mr-2" /> ไม่อนุมัติ
               </LoadingButton>
-              <LoadingButton size="lg" className="px-10 h-14 bg-[#131645] hover:bg-black text-white rounded-xl font-bold" onClick={() => handleAction("approved")} isLoading={processing} loadingText="กำลังดำเนินการ...">
+              <LoadingButton size="lg" disabled={processing} className="px-10 h-14 bg-[#131645] hover:bg-black text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => handleAction("approved")} isLoading={processing} loadingText="กำลังดำเนินการ...">
                 <CheckCircle className="w-5 h-5 mr-2" /> อนุมัติคำขอ
               </LoadingButton>
             </div>

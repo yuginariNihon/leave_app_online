@@ -8,6 +8,7 @@ import { WarningBanner } from "@/components/ui/warning-banner";
 import type { StaffMasterData } from "@/lib/services/leaveService";
 import type { CreateStaffValues, UpdateStaffValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { Loader2 } from "lucide-react";
 
 export default function AddStaffPage() {
   const router = useRouter();
@@ -71,6 +72,14 @@ export default function AddStaffPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+      {submitting && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#F8FAFC]/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-[#1a1a40]" />
+            <p className="font-bold text-[#1a1a40]">กำลังบันทึก...</p>
+          </div>
+        </div>
+      )}
       <main className="flex-1 overflow-y-auto">
         <section className="flex-1 px-4 md:px-10 py-8 md:py-12 bg-[#F8FAFC]">
           <div className="max-w-4xl mx-auto">

@@ -16,7 +16,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 
-import { ArrowLeft, CalendarDays } from "lucide-react";
+import { ArrowLeft, CalendarDays, Loader2 } from "lucide-react";
 
 import { SuccessDialog } from "@/components/leave-request/SuccessDialog";
 import { styleAlertTextSuccess } from "@/lib/utils";
@@ -227,6 +227,14 @@ export default function EditLeavePage() {
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] flex flex-col font-sans">
+      {submitting && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#f8f9ff]/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-[#100d41]" />
+            <p className="font-bold text-[#100d41]">กำลังบันทึก...</p>
+          </div>
+        </div>
+      )}
       <main className="flex-grow p-4 md:p-8 max-w-4xl mx-auto w-full">
         <AppBreadcrumb
           items={[
@@ -249,8 +257,9 @@ export default function EditLeavePage() {
               <div className="">
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 text-white hover:text-[#100d41] h-11"
+                  className="flex items-center gap-2 text-white hover:text-[#100d41] h-11 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => router.push("/dashboard/leave-history")}
+                  disabled={submitting}
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">ย้อนกลับ</span>
@@ -291,7 +300,7 @@ export default function EditLeavePage() {
           <CardFooter className="bg-slate-50 px-6 py-6 border-t border-gray-100 flex flex-col md:flex-row justify-end gap-4">
             <Button
               variant="outline"
-              className="w-full md:w-auto px-10 h-12 border-gray-300 text-slate-600 hover:bg-white font-semibold transition-all"
+              className="w-full md:w-auto px-10 h-12 border-gray-300 text-slate-600 hover:bg-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => router.push("/dashboard/leave-history")}
               disabled={submitting}
             >

@@ -14,6 +14,8 @@ const SUPERVISOR_POSITION_NAMES = new Set([
   ...APPROVER_POSITION_NAMES.Senior_Supervisor,
 ]);
 
+export class LeaveRequestValidationError extends Error {}
+
 export type CreateLeaveRequestInput = {
   staffId: string;
   leaveTypeId: string;
@@ -136,7 +138,7 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
     select: { leave_id: true, leave_period: true },
   });
   if (overlapLeaves.some((o) => periodsOverlap(input.leavePeriod as LeavePeriod | undefined, o.leave_period))) {
-    throw new Error("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
+    throw new LeaveRequestValidationError("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
   }
 
   // 2. Find workflow by position (1-to-1 schema)
@@ -282,7 +284,7 @@ export async function updateLeaveRequest(
     select: { leave_id: true, leave_period: true },
   });
   if (overlapLeaves.some((o) => periodsOverlap(input.leavePeriod as LeavePeriod | undefined, o.leave_period))) {
-    throw new Error("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
+    throw new LeaveRequestValidationError("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
   }
 
   const updated = await prisma.dataLeave.update({

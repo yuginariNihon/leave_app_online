@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { Loader2 } from "lucide-react";
 
 type ResetPasswordFormProps = {
   name: string;
@@ -68,6 +69,14 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
 
   return (
     <>
+    {loading && (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#f9f9ff]/80 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 animate-spin text-[#4648d4]" />
+          <p className="font-bold text-[#111c2d]">กำลังบันทึก...</p>
+        </div>
+      </div>
+    )}
     <div className="min-h-screen bg-[#f9f9ff] p-6">
       <div className="max-w-[1400px] mx-auto">
         <div className="max-w-6xl mx-auto w-full mb-6">
@@ -236,7 +245,8 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
                 <button
                   type="button"
                   onClick={() => router.push("/dashboard")}
-                  className="bg-transparent border border-[#c7c4d7] text-[#464554] px-6 py-3 rounded-lg text-sm font-semibold hover:bg-[#f0f3ff] transition-all cursor-pointer w-full"
+                  disabled={loading}
+                  className="bg-transparent border border-[#c7c4d7] text-[#464554] px-6 py-3 rounded-lg text-sm font-semibold hover:bg-[#f0f3ff] transition-all cursor-pointer w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel | ยกเลิก
                 </button>
