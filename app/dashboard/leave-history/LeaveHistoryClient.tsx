@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProgressRouter } from "@/components/ProgressBar";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { WarningBanner } from "@/components/ui/warning-banner";
@@ -29,6 +30,7 @@ export default function LeaveHistoryClient({
   initialEndDate,
 }: Props) {
   const router = useProgressRouter();
+  const searchParams = useSearchParams();
 
   const [leaveTypeOptions, setLeaveTypeOptions] = useState(initialTypeOptions);
   const monthStart = initialStartDate;
@@ -134,6 +136,26 @@ export default function LeaveHistoryClient({
     const qs = `${buildQuery(1, true)}&stream=true`;
     window.location.href = `/api/leaves/history?${qs}`;
   };
+
+  const requestResult = searchParams.get("requestResult");
+  const handledRequestResultRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (requestResult !== "success" && requestResult !== "updated") {
+      handledRequestResultRef.current = null;
+      return;
+    }
+    if (handledRequestResultRef.current === requestResult) return;
+    handledRequestResultRef.current = requestResult;
+
+    toast.success(
+      requestResult === "success"
+        ? "ยื่นคำขอลาเรียบร้อยแล้ว"
+        : "แก้ไขคำขอลาเรียบร้อยแล้ว",
+      { className: "!bg-white !text-green-500 !border-green-500 !border-2" },
+    );
+    router.replace("/dashboard/leave-history");
+  }, [requestResult, router]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">

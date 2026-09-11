@@ -53,9 +53,6 @@ export function SidebarMenu() {
   const { open, toggleSidebar, openMobile, setOpenMobile } = useSidebar();
   const isMobile = useIsMobile();
 
-  const isHR = roles.includes("HR") || roles.includes("SUPER_ADMIN");
-  const isApprover = roles.includes("APPROVER");
-  if (!isHR && !isApprover) return null;
   const [hrMenuExpanded, setHrMenuExpanded] = useState(true);
   const [systemMenuExpanded, setSystemMenuExpanded] = useState(true);
   const [staffListExpanded, setStaffListExpanded] = useState(false);
@@ -64,6 +61,10 @@ export function SidebarMenu() {
   const [leaveTypesExpanded, setLeaveTypesExpanded] = useState(false);
   const [empTypesExpanded, setEmpTypesExpanded] = useState(false);
   const [leaveCasesExpanded, setLeaveCasesExpanded] = useState(false);
+
+  const isHR = roles.includes("HR") || roles.includes("SUPER_ADMIN");
+  const isApprover = roles.includes("APPROVER");
+  if (!isHR && !isApprover) return null;
 
   const handleNav = (path: string) => {
     if (isMobile) setOpenMobile(false);
@@ -479,7 +480,7 @@ export function SidebarMenu() {
         <SidebarGroup className={cn("transition-all duration-200 ease-in-out", open ? "" : "px-0")}>
           {open && (
             <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              การอนุมัติ
+              การอนุมัติสำหรับหัวหน้างาน
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
@@ -571,7 +572,7 @@ export function SidebarMenu() {
     <>
       {/* Header */}
       <SidebarHeader className={cn("px-6 py-6 border-b border-[#d8dadc]/50 transition-all duration-200 ease-in-out", open ? "" : "px-3")}>
-        <div className={cn("flex items-center gap-3", !isMobile && open ? "" : "justify-center")}>
+        <div className="w-full flex items-start gap-3">
           <button
             onClick={isMobile ? () => setOpenMobile(false) : toggleSidebar}
             className="bg-[#0F172A] text-white p-2 rounded-[8px] flex items-center justify-center hover:bg-slate-800 transition-colors cursor-pointer border-0"

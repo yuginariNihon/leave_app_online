@@ -104,7 +104,7 @@ export default function ApprovalDetailNewPage() {
   if (error || !detail) return <div className="min-h-screen flex items-center justify-center text-red-500">{error || "ไม่พบข้อมูล"}</div>;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FD] p-6 md:p-10">
+    <div className="min-h-screen bg-[#F8F9FD] p-6 md:p-10 pb-28 md:pb-28 lg:pb-10">
       {processing && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4">
@@ -123,7 +123,7 @@ export default function ApprovalDetailNewPage() {
             variant="ghost"
             onClick={() => router.back()}
             disabled={processing}
-            className="flex shrink-0 items-center gap-2 font-medium text-[#46464f] hover:text-[#131645] p-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex shrink-0 items-center gap-2 font-medium text-[#46464f] hover:text-[#131645] px-4 py-2 rounded-lg bg-[#e4e2ef] hover:bg-[#d8d5e8] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">กลับหน้ารายการคำขอลา</span>
@@ -132,7 +132,7 @@ export default function ApprovalDetailNewPage() {
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-[#131645] mb-1">รายละเอียดคำขอลา</h1>
             <p className="text-[#46464f] text-sm">รหัสอ้างอิง: #NFT-{detail.leaveId.slice(0,4)}</p>
@@ -250,7 +250,7 @@ export default function ApprovalDetailNewPage() {
               </AlertDialogContent>
             </AlertDialog>
 
-            <div className="flex justify-end gap-4 pt-4">
+            <div className="hidden lg:flex justify-end gap-4 pt-4">
               <LoadingButton size="lg" disabled={processing} className="px-10 h-14 bg-white border-2 border-[#b7102a] text-[#b7102a] hover:bg-[#b7102a] hover:text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => setRejectDialogOpen(true)} isLoading={processing} loadingText="กำลังดำเนินการ...">
                 <XCircle className="w-5 h-5 mr-2" /> ไม่อนุมัติ
               </LoadingButton>
@@ -335,6 +335,25 @@ export default function ApprovalDetailNewPage() {
             </Card>
           </div>
         </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-2 gap-3 border-t border-[#e4e2ef] bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+        <button
+          type="button"
+          onClick={() => setRejectDialogOpen(true)}
+          disabled={processing}
+          className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white border-2 border-[#b7102a] text-[#b7102a] text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <XCircle className="w-5 h-5" /> ไม่อนุมัติ
+        </button>
+        <button
+          type="button"
+          onClick={() => handleAction("approved")}
+          disabled={processing}
+          className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#131645] hover:bg-black text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <CheckCircle className="w-5 h-5" /> อนุมัติคำขอ
+        </button>
       </div>
     </div>
   );

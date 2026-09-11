@@ -122,14 +122,14 @@ export default function HrApprovalDetailPage() {
             variant="ghost"
             onClick={() => router.back()}
             disabled={processing}
-            className="flex shrink-0 items-center gap-2 font-medium text-[#46464f] hover:text-[#131645] p-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex shrink-0 items-center gap-2 font-medium text-[#46464f] hover:text-[#131645] px-4 py-2 rounded-lg bg-[#e4e2ef] hover:bg-[#d8d5e8] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">กลับหน้ารายการคำขอลา (HR)</span>
           </Button>
         </div>
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-[#131645] mb-1">รายละเอียดคำขอลา</h1>
             <p className="text-[#46464f] text-sm">รหัสอ้างอิง: #NFT-{detail.leaveId.slice(0,4)}</p>

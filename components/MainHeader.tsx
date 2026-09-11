@@ -89,7 +89,7 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
         </div>
 
         {/**For Approver — only Approver or SUPER_ADMIN */}
-        {(user.roles.includes("APPROVER") || user.roles.includes("SUPER_ADMIN")) && (
+        {/*(user.roles.includes("APPROVER") || user.roles.includes("SUPER_ADMIN")) && (
           <div>
             <Button
               variant="ghost"
@@ -99,7 +99,7 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
               <ClipboardList className="text-white !h-5 !w-5"/>
             </Button>
           </div>
-        )}
+        )*/}
 
         {/**For SUPER_ADMIN */}
         {(user.roles.includes("SUPER_ADMIN")) && (

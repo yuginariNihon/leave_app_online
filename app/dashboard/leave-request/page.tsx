@@ -18,12 +18,8 @@ import {
 import { ArrowLeft, CalendarDays, Loader2 } from "lucide-react";
 import { currentSubmitTime } from "@/lib/utils";
 
-import {
-  LeaveForm
-} from "@/components/leave-request/LeaveForm";
+import { LeaveForm } from "@/components/leave-request/LeaveForm";
 
-import { SuccessDialog } from "@/components/leave-request/SuccessDialog";
-import { styleAlertTextSuccess } from "@/lib/utils";
 import { leaveFormSchema, LeaveFormValues } from "@/lib/TypeSchema";
 import { useLeaveOptions } from "@/hooks/useLeaveOptions";
 import { WarningBanner, WarningBannerGroup } from "@/components/ui/warning-banner";
@@ -35,13 +31,12 @@ export default function LeaveRequestPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [submitTime, setSubmitTime] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [leaveQuota, setLeaveQuota] = useState<LeaveQuotaMap>({});
   const [holidays, setHolidays] = useState<string[]>([]);
   const [holidayError, setHolidayError] = useState("");
   const [quotaError, setQuotaError] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const { leaveTypeOptions, leaveCaseOptions, optionsLoading, optionsError } = useLeaveOptions();
 
@@ -155,7 +150,6 @@ export default function LeaveRequestPage() {
       return;
     }
 
-    setSubmitTime(currentSubmitTime());
     const response = await fetch("/api/leaves", {
       method: "POST",
       headers: {
@@ -181,27 +175,16 @@ export default function LeaveRequestPage() {
       return;
     }
 
-    setShowSuccessDialog(true);
-  };
-
-  const handleSuccessDialogClose = () => {
-    setShowSuccessDialog(false);
-    form.reset({
-      leaveTypeId: "",
-      leaveCaseId: "",
-      startDate: "",
-      endDate: "",
-      reason: "",
-      leavePeriod: "full_day",
-    });
-    setSubmitError("");
-    setSubmitTime("");
-    router.replace("/dashboard/leave-history");
+    const submittedAt = currentSubmitTime();
+    setIsSuccess(true);
+    router.replace(
+      `/dashboard/leave-request/success?submittedAt=${encodeURIComponent(submittedAt)}`,
+    );
   };
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] flex flex-col font-sans">
-      {form.formState.isSubmitting && (
+      {(form.formState.isSubmitting || isSuccess) && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#f8f9ff]/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-12 h-12 animate-spin text-[#100d41]" />
@@ -227,7 +210,7 @@ export default function LeaveRequestPage() {
               <div className="">
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 text-white hover:text-[#100d41] h-11 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 text-white hover:text-[#100d41] h-11 rounded-lg bg-white/15 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => router.back()}
                   disabled={form.formState.isSubmitting}
                 >
@@ -331,18 +314,6 @@ export default function LeaveRequestPage() {
             </LoadingButton>
           </CardFooter>
         </Card>
-
-        <SuccessDialog
-          open={showSuccessDialog}
-          onOpenChange={(open) => {
-            setShowSuccessDialog(open);
-            if (!open) handleSuccessDialogClose();
-          }}
-          onClose={handleSuccessDialogClose}
-          submitTime={submitTime}
-          toastMessage="ยื่นคำขอลาเรียบร้อย"
-          styleAlert={styleAlertTextSuccess.toString()}
-        />
       </main>
     </div>
   );

@@ -153,7 +153,7 @@ export default function LeaveDetailsPage() {
     return (
       <div className="min-h-screen bg-[#fcf8fc] flex flex-col items-center justify-center gap-4 font-sans">
         <p className="text-red-500">{error ?? "ไม่พบข้อมูล"}</p>
-        <Button variant="outline" onClick={() => router.back()}>
+        <Button variant="outline" className="bg-[#1a1a40]/5 hover:bg-[#1a1a40]/10" onClick={() => router.back()}>
           กลับ
         </Button>
       </div>
@@ -186,7 +186,7 @@ export default function LeaveDetailsPage() {
           />
           <Button
             variant="ghost"
-            className="flex items-center gap-2 h-10 text-[#1a1a40] font-semibold hover:bg-[#1a1a40]/5 shrink-0"
+            className="flex items-center gap-2 h-10 text-[#1a1a40] font-semibold bg-[#1a1a40]/5 hover:bg-[#1a1a40]/10 shrink-0"
             onClick={() => router.back()}
           >
             <ArrowLeft className="w-4 h-4" />

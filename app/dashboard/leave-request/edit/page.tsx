@@ -257,7 +257,7 @@ export default function EditLeavePage() {
               <div className="">
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 text-white hover:text-[#100d41] h-11 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 text-white hover:text-[#100d41] h-11 rounded-lg bg-white/15 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => router.push("/dashboard/leave-history")}
                   disabled={submitting}
                 >

@@ -12,6 +12,7 @@ import {
   getLeaveRightsByStaffId,
   getRecentLeavesByStaffId,
 } from "@/lib/services/leaveService";
+import { BottomActionBar } from "@/components/BottomActionBar";
 import { redirect } from "next/navigation";
 export default async function DashboardPage() {
   const user = await requireSessionUser();
@@ -26,7 +27,7 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="min-h-full flex flex-col">
+    <div className="min-h-full flex flex-col pb-24 lg:pb-0">
       <DashboardIntro userName={profile.name} />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8 flex flex-col gap-6">
@@ -39,6 +40,7 @@ export default async function DashboardPage() {
           <LeaveRights rights={rights} />
         </aside>
       </div>
+      <BottomActionBar />
     </div>
   );
 }

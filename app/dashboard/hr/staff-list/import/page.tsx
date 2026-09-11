@@ -150,7 +150,7 @@ export default function ImportStaffPage() {
                 <div className="flex items-center gap-3">
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-2 text-white hover:text-[#100d41] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 text-white hover:text-[#100d41] rounded-lg bg-white/15 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => router.back()}
                     disabled={importing}
                   >
