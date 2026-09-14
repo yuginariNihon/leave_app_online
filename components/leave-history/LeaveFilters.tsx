@@ -12,6 +12,7 @@ import {
 interface LeaveFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  hideSearch?: boolean;
   statusFilter?: string;
   onStatusChange?: (value: string) => void;
   typeFilter: string;
@@ -34,6 +35,7 @@ interface LeaveFiltersProps {
 export function LeaveFilters({
   searchTerm,
   onSearchChange,
+  hideSearch = false,
   statusFilter = "all",
   onStatusChange,
   typeFilter,
@@ -57,15 +59,17 @@ export function LeaveFilters({
     <div className="space-y-6 mb-8">
       {/* Top Row: Filters */}
       <div className="flex flex-wrap items-center gap-4">
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-          <Input
-            className="pl-10 h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl"
-            placeholder="ค้นหารหัสพนักงาน..."
-            value={searchTerm ?? ""}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
+        {!hideSearch && (
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <Input
+              className="pl-10 h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl"
+              placeholder="ค้นหารหัสพนักงาน..."
+              value={searchTerm ?? ""}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </div>
+        )}
 
         {/* Date Filter */}
         <div className="flex items-center gap-2 w-full md:w-auto">
@@ -117,7 +121,7 @@ export function LeaveFilters({
         )}
         {onSearchSubmit && (
           <Button onClick={onSearchSubmit} className="h-11 px-6 rounded-xl">
-            ค้นหา
+            {hideSearch ? "กรองข้อมูล" : "ค้นหา"}
           </Button>
         )}
       </div>

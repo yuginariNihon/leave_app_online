@@ -24,6 +24,7 @@ import { leaveFormSchema, LeaveFormValues } from "@/lib/TypeSchema";
 import { useLeaveOptions } from "@/hooks/useLeaveOptions";
 import { WarningBanner, WarningBannerGroup } from "@/components/ui/warning-banner";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
 
 export type LeaveQuotaMap = Record<string, { usedDays: number; maxDays: number; remaining: number }>;
 
@@ -32,6 +33,7 @@ export default function LeaveRequestPage() {
   const searchParams = useSearchParams();
 
   const [submitError, setSubmitError] = useState("");
+  const [showErrorOverlay, setShowErrorOverlay] = useState(false);
   const [leaveQuota, setLeaveQuota] = useState<LeaveQuotaMap>({});
   const [holidays, setHolidays] = useState<string[]>([]);
   const [holidayError, setHolidayError] = useState("");
@@ -147,6 +149,7 @@ export default function LeaveRequestPage() {
       setSubmitError(
         `วันลาที่ขอ (${dayCount} วัน) เกินจำนวนวันที่เหลืออยู่ (${quota.remaining} วัน) สำหรับประเภทการลานี้`
       );
+      setShowErrorOverlay(true);
       return;
     }
 
@@ -172,6 +175,7 @@ export default function LeaveRequestPage() {
       setSubmitError(
         result?.error ?? "Unable to submit leave request. Please try again.",
       );
+      setShowErrorOverlay(true);
       return;
     }
 
@@ -192,6 +196,12 @@ export default function LeaveRequestPage() {
           </div>
         </div>
       )}
+      <ResultErrorOverlay
+        open={showErrorOverlay}
+        title="ยื่นคำขอลาไม่สำเร็จ"
+        message={submitError}
+        onClose={() => setShowErrorOverlay(false)}
+      />
       <main className="flex-grow p-4 md:p-8 max-w-4xl mx-auto w-full">
         <AppBreadcrumb
           items={[{ label: "Home", href: "/dashboard" }, { label: "Leave Request" }]}
@@ -288,11 +298,6 @@ export default function LeaveRequestPage() {
           </CardContent>
 
           <CardFooter className="bg-slate-50 px-6 py-6 border-t border-gray-100 flex flex-col md:flex-row justify-end gap-4">
-            {submitError && (
-              <p className="w-full text-sm font-medium text-red-600 md:mr-auto md:w-auto">
-                {submitError}
-              </p>
-            )}
             <Button
               variant="outline"
               className="w-full md:w-auto px-10 h-12 border-gray-300 text-slate-600 hover:bg-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"

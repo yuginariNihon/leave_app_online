@@ -28,6 +28,7 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
   const [isSigningOut, startSignOutTransition] = useTransition();
   const { setOpenMobile } = useSidebar();
   const initial = user.name.trim().charAt(0).toUpperCase() || "U";
+  const hasSidebar = user.roles.some((r) => ["HR", "SUPER_ADMIN", "APPROVER"].includes(r));
 
   if (pathname?.startsWith("/login")) return null;
 
@@ -115,7 +116,8 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
           </div>
         )}
 
-        <DropdownMenu>
+        <div className={hasSidebar ? "hidden md:block" : ""}>
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm">
               {initial}
@@ -147,7 +149,8 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
               {isSigningOut ? "Signing out..." : "Sign out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );

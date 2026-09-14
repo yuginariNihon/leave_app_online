@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { usePathname } from "next/navigation";
 import { useProgressRouter } from "@/components/ProgressBar";
 import { useUser } from "@/lib/user-context";
+import { logoutAction } from "@/app/login/actions";
 import {
   GitBranch, LayoutDashboard, ShieldCheck, History, Users, UserPlus, Upload,
   BarChart3, Building2, Briefcase, Tags, Menu, ChevronDown, ChevronRight, Plus, UserCog,
-  ClipboardList, X, CaseSensitive, Shield, CalendarDays, FileText,
+  ClipboardList, X, CaseSensitive, Shield, CalendarDays, FileText, LogOut, Lock,
 } from "lucide-react";
 import {
   Sidebar as SidebarRoot,
@@ -49,9 +50,10 @@ function iconClass(isActive: boolean) {
 export function SidebarMenu() {
   const router = useProgressRouter();
   const pathname = usePathname();
-  const { roles, forceChangePassword } = useUser();
+  const { name, email, roles, forceChangePassword } = useUser();
   const { open, toggleSidebar, openMobile, setOpenMobile } = useSidebar();
   const isMobile = useIsMobile();
+  const [isSigningOut, startSignOutTransition] = useTransition();
 
   const [hrMenuExpanded, setHrMenuExpanded] = useState(true);
   const [systemMenuExpanded, setSystemMenuExpanded] = useState(true);
@@ -607,15 +609,48 @@ export function SidebarMenu() {
     return (
       <>
         {openMobile && (
-          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setOpenMobile(false)} />
+          <div className="fixed inset-0 z-[105] bg-black/40" onClick={() => setOpenMobile(false)} />
         )}
         <div
           className={cn(
-            "fixed top-16 left-0 bottom-0 z-50 w-[280px] bg-white border-r border-[#d8dadc] shadow-sm flex flex-col transition-transform duration-200 ease-in-out",
+            "fixed top-16 left-0 bottom-0 z-[110] w-[280px] bg-white border-r border-[#d8dadc] shadow-sm flex flex-col transition-transform duration-200 ease-in-out",
             openMobile ? "translate-x-0" : "-translate-x-full",
           )}
         >
           {sidebarContent}
+          <div className="mt-auto border-t border-[#d8dadc] p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm shrink-0">
+                {name.trim().charAt(0).toUpperCase() || "U"}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#0F172A] truncate">{name}</p>
+                <p className="text-xs text-[#6b7280] truncate">{email}</p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-col gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpenMobile(false);
+                  router.push("/dashboard/reset-password");
+                }}
+                className="flex items-center gap-2.5 rounded-[8px] px-3 py-2.5 text-sm font-medium text-[#374151] hover:bg-[#f2f4f6] transition-colors cursor-pointer border-0"
+              >
+                <Lock className="w-[18px] h-[18px] text-slate-400" />
+                เปลี่ยนรหัสผ่าน
+              </button>
+              <button
+                type="button"
+                disabled={isSigningOut}
+                onClick={() => startSignOutTransition(() => { logoutAction(); })}
+                className="flex items-center gap-2.5 rounded-[8px] px-3 py-2.5 text-sm font-semibold text-[#ef4444] hover:bg-red-50 transition-colors cursor-pointer border-0 disabled:opacity-60"
+              >
+                <LogOut className="w-[18px] h-[18px] text-[#ef4444]" />
+                {isSigningOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
+              </button>
+            </div>
+          </div>
         </div>
       </>
     );

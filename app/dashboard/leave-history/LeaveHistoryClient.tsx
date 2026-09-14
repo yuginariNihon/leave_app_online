@@ -186,6 +186,7 @@ export default function LeaveHistoryClient({
             <LeaveFilters
               searchTerm={searchTerm}
               onSearchChange={(v) => setFilter("searchTerm", v)}
+              hideSearch
               statusFilter={statusFilter}
               onStatusChange={(v) => setFilter("statusFilter", v)}
               typeFilter={typeFilter}

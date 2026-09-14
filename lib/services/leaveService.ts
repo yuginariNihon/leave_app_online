@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import type { LeaveFormOptions } from "@/lib/TypeSchema";
 import z from "zod";
 import { randomBytes } from "crypto";
-import { toDateOnly, countInclusiveDays, hashPassword } from "@/lib/utils";
+import { toDateOnly, countInclusiveDays, hashPassword, buildLeaveReferenceId } from "@/lib/utils";
 import { checkApproversExist, APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
@@ -366,6 +366,7 @@ export type LeaveHistoryFilters = {
 
 export type LeaveHistoryItem = {
   leaveId: string;
+  referenceId: string;
   leaveTypeName: string;
   leaveCaseName: string;
   startDate: string | null;
@@ -463,6 +464,7 @@ export async function getLeaveHistoryByStaffId(
   return {
     data: data.map((item) => ({
       leaveId: item.leave_id,
+      referenceId: buildLeaveReferenceId(item.leave_id),
       leaveTypeName: item.leaveType.leave_type_name,
       leaveCaseName: item.leaveCase.case_name,
       startDate: item.start_date?.toISOString() ?? null,

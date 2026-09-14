@@ -18,8 +18,6 @@ import {
 
 import { ArrowLeft, CalendarDays, Loader2 } from "lucide-react";
 
-import { SuccessDialog } from "@/components/leave-request/SuccessDialog";
-import { styleAlertTextSuccess } from "@/lib/utils";
 import { leaveFormSchema, LeaveFormValues } from "@/lib/TypeSchema";
 import { LeaveForm } from "@/components/leave-request/LeaveForm";
 import { getEditLeaveId } from "@/lib/navigation-state";
@@ -27,12 +25,14 @@ import { currentSubmitTime, dateOnly } from "@/lib/utils";
 import { useLeaveOptions } from "@/hooks/useLeaveOptions";
 import { WarningBanner } from "@/components/ui/warning-banner";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
 
 export default function EditLeavePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showErrorOverlay, setShowErrorOverlay] = useState(false);
   const [submitTime, setSubmitTime] = useState("");
   const [leaveId, setLeaveId] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(true);
@@ -180,11 +180,15 @@ export default function EditLeavePage() {
         throw new Error(json.error ?? "Failed to update leave request");
       }
 
-      setShowSuccessDialog(true);
+      setIsSuccess(true);
+      router.replace(
+        `/dashboard/leave-request/success?mode=edit&submittedAt=${encodeURIComponent(submitTime)}&leaveId=${encodeURIComponent(leaveId)}`,
+      );
     } catch (err) {
       setSubmitError(
         err instanceof Error ? err.message : "Failed to update leave request",
       );
+      setShowErrorOverlay(true);
     } finally {
       setSubmitting(false);
     }
@@ -227,7 +231,7 @@ export default function EditLeavePage() {
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] flex flex-col font-sans">
-      {submitting && (
+      {(submitting || isSuccess) && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#f8f9ff]/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-12 h-12 animate-spin text-[#100d41]" />
@@ -235,6 +239,12 @@ export default function EditLeavePage() {
           </div>
         </div>
       )}
+      <ResultErrorOverlay
+        open={showErrorOverlay}
+        title="แก้ไขคำขอลาไม่สำเร็จ"
+        message={submitError}
+        onClose={() => setShowErrorOverlay(false)}
+      />
       <main className="flex-grow p-4 md:p-8 max-w-4xl mx-auto w-full">
         <AppBreadcrumb
           items={[
@@ -272,12 +282,6 @@ export default function EditLeavePage() {
             {optionsError && (
               <p className="mb-6 text-sm font-medium text-red-600">
                 {optionsError}
-              </p>
-            )}
-
-            {submitError && (
-              <p className="mb-6 text-sm font-medium text-red-600">
-                {submitError}
               </p>
             )}
 
@@ -319,20 +323,6 @@ export default function EditLeavePage() {
             </LoadingButton>
           </CardFooter>
         </Card>
-
-        <SuccessDialog
-          open={showSuccessDialog}
-          onOpenChange={(open) => {
-            setShowSuccessDialog(open);
-            if (!open) {
-              router.push("/dashboard/leave-history");
-            }
-          }}
-          submitTime={submitTime}
-          title="ยืนยันการแก้ไขคำขอลา"
-          toastMessage="บันทึกการแก้ไขคำขอลาเรียบร้อย"
-          styleAlert={styleAlertTextSuccess.toString()}
-        />
       </main>
     </div>
   );

@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { MdCancel } from "react-icons/md";
-import { formatThaiDate, formatDateTime } from "@/lib/utils";
+import { formatThaiDate, formatDateTime, buildLeaveReferenceId } from "@/lib/utils";
 import type { LeaveDetailResponse } from "@/lib/services/leaveService";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
@@ -132,7 +132,7 @@ export default function HrApprovalDetailPage() {
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-[#131645] mb-1">รายละเอียดคำขอลา</h1>
-            <p className="text-[#46464f] text-sm">รหัสอ้างอิง: #NFT-{detail.leaveId.slice(0,4)}</p>
+            <p className="text-[#46464f] text-sm">รหัสอ้างอิง: {buildLeaveReferenceId(detail.leaveId)}</p>
           </div>
            <div className="bg-[#ffe0b2] h-20 px-6 py-3 rounded-xl flex items-center gap-3">
             <Clock className="w-5 h-5 text-[#E65100] fill-[#E65100]" />

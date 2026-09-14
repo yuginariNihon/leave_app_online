@@ -2,6 +2,7 @@ import { LeaveStatus } from "@/lib/generated/prisma/enums";
 
 export interface LeaveRecord {
   leaveId: string;
+  referenceId: string;
   leaveTypeName: string;
   leaveCaseName: string;
   startDate: string | null;

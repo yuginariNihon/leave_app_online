@@ -32,6 +32,7 @@ export function LeaveTable({ data }: LeaveTableProps) {
     <Table containerClassName="overflow-auto">
         <TableHeader className="sticky top-0 z-10 bg-[#1e1b4b]">
           <TableRow className="hover:bg-transparent border-none">
+            <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] whitespace-nowrap">รหัสคำขอ</TableHead>
             <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] whitespace-nowrap">วันที่เขียนใบลา</TableHead>
             <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] whitespace-nowrap">วันที่ลา</TableHead>
             <TableHead className="text-white font-semibold px-6 py-4 text-[14px] leading-[16px] tracking-[0.02em] whitespace-nowrap">ประเภทการลา</TableHead>
@@ -44,6 +45,9 @@ export function LeaveTable({ data }: LeaveTableProps) {
           {data.length > 0 ? (
             data.map((leave) => (
               <TableRow key={leave.leaveId} className="hover:bg-[#eff4ff]/30 transition-all duration-200">
+                <TableCell className="px-6 py-4 text-[14px] leading-[20px] font-semibold whitespace-nowrap">
+                  {leave.referenceId}
+                </TableCell>
                 <TableCell className="px-6 py-4 text-[14px] leading-[20px] font-semibold whitespace-nowrap">
                   {formatDateOnly(leave.createdAt)}
                 </TableCell>
@@ -74,7 +78,7 @@ export function LeaveTable({ data }: LeaveTableProps) {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-20 text-[#47464f]">
+              <TableCell colSpan={7} className="text-center py-20 text-[#47464f]">
                 <div className="flex flex-col items-center gap-2">
                   <FileText className="w-10 h-10 opacity-20" />
                   <span>ไม่พบข้อมูลที่ค้นหา</span>

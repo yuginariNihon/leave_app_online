@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,12 +9,12 @@ import { LeaveDetailsHeader } from "@/components/leave-details/LeaveDetailsHeade
 import { LeaveDetailsMainInfo } from "@/components/leave-details/LeaveDetailsMainInfo";
 import { LeaveDetailsApprovalSidebar } from "@/components/leave-details/LeaveDetailsApprovalSidebar";
 import { LeaveDetailsActions } from "@/components/leave-details/LeaveDetailsActions";
-import { ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import type { LeaveDetailResponse } from "@/lib/services/leaveService";
 import { getLeaveDetailId } from "@/lib/navigation-state";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, currentSubmitTime, buildLeaveReferenceId } from "@/lib/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
 
 function buildActivities(detail: LeaveDetailResponse) {
   const activities: Array<{ title: string; date: string; isCurrent: boolean; subtitle?: string }> =
@@ -73,6 +74,9 @@ export default function LeaveDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  const [showErrorOverlay, setShowErrorOverlay] = useState(false);
   const searchParams = useSearchParams();
 
   const fetchDetail = useCallback(async () => {
@@ -130,12 +134,23 @@ export default function LeaveDetailsPage() {
         throw new Error(json.error ?? "Failed to cancel leave");
       }
 
-      router.push("/dashboard/leave-history");
-      toast.success("ยกเลิกคำขอลาเรียบร้อยแล้ว");
+      flushSync(() => {
+        setIsSuccess(true);
+      });
+      if (leaveId) {
+        router.replace(
+          `/dashboard/leave-request/success?mode=cancel&submittedAt=${encodeURIComponent(currentSubmitTime())}&leaveId=${encodeURIComponent(leaveId)}`,
+        );
+      } else {
+        router.replace(
+          `/dashboard/leave-request/success?mode=cancel&submittedAt=${encodeURIComponent(currentSubmitTime())}`,
+        );
+      }
     } catch (err) {
-      toast.error(
+      setCancelError(
         err instanceof Error ? err.message : "ไม่สามารถยกเลิกคำขอลาได้",
       );
+      setShowErrorOverlay(true);
     } finally {
       setCancelling(false);
     }
@@ -162,9 +177,7 @@ export default function LeaveDetailsPage() {
 
   const activities = buildActivities(detail);
 
-  const displayReferenceId = detail.leaveId
-    ? `#NFT-${detail.leaveId.slice(0, 4)}`
-    : detail.referenceId ?? "";
+  const displayReferenceId = buildLeaveReferenceId(detail.leaveId);
 
   const decidedApproval = [...detail.approvals]
     .filter(
@@ -179,6 +192,20 @@ export default function LeaveDetailsPage() {
   return (
     <div className="min-h-screen bg-[#fcf8fc] flex flex-col font-sans">
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 md:px-8 py-10">
+        {(cancelling || isSuccess) && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#f8f9ff]/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="w-12 h-12 animate-spin text-[#100d41]" />
+              <p className="font-bold text-[#100d41]">กำลังยกเลิกคำขอ...</p>
+            </div>
+          </div>
+        )}
+        <ResultErrorOverlay
+          open={showErrorOverlay}
+          title="ยกเลิกคำขอลาไม่สำเร็จ"
+          message={cancelError}
+          onClose={() => setShowErrorOverlay(false)}
+        />
         
         <div className="w-full mb-8 flex items-center justify-between gap-2">
           <AppBreadcrumb

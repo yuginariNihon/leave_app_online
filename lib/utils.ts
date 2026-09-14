@@ -56,6 +56,11 @@ export function formatFullDate(iso: string | null): string {
   });
 }
 
+export function buildLeaveReferenceId(leaveId: string | null | undefined): string {
+  if (!leaveId) return "-";
+  return `#LV-${leaveId.slice(0, 8).toUpperCase()}`;
+}
+
 export function formatDateTime(iso: string | null): string {
   if (!iso) return "-";
   const d = new Date(iso);
@@ -127,5 +132,3 @@ export function downloadCsv(filename: string, csvContent: string) {
 export function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, 10);
 }
-
-export const styleAlertTextSuccess = "!bg-white !text-green-700 !border !border-green-500";
