@@ -789,6 +789,30 @@ export async function getHrPendingApprovals(
   };
 }
 
+// ──────────────────────────────────────────────
+// Notification Count (unread badge, derived from pending state)
+// ──────────────────────────────────────────────
+
+export async function getNotificationCount(staffId: string): Promise<number> {
+  const isHR = await checkHRRole(staffId);
+  if (isHR) {
+    return (await getHrPendingApprovals(staffId, 1, 1)).total;
+  }
+
+  const userRoles = await prisma.staffRole.findMany({
+    where: { staff_id: staffId },
+    include: { role: { select: { role_name: true } } },
+  });
+  const isApprover = userRoles.some((r) => r.role.role_name === "APPROVER");
+  if (isApprover) {
+    return (await getPendingApprovals(staffId, 1, 1)).total;
+  }
+
+  return prisma.dataLeave.count({
+    where: { staff_id: staffId, leave_status: LeaveStatus.pending },
+  });
+}
+
 export async function hrUpdateApprovalStatus(
   approvalId: string,
   staffId: string,

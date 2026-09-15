@@ -1,5 +1,5 @@
 "use client";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { logoutAction } from "@/app/login/actions";
 import Image from "next/image";
@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { ClipboardList, Menu } from "lucide-react";
 import { IoSettings } from "react-icons/io5";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -22,6 +22,8 @@ type MainHeaderUser = {
   forceChangePassword: boolean;
 };
 
+const NOTIFICATION_POLL_MS = 60_000;
+
 export function MainHeader({ user }: { user: MainHeaderUser }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -29,6 +31,47 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
   const { setOpenMobile } = useSidebar();
   const initial = user.name.trim().charAt(0).toUpperCase() || "U";
   const hasSidebar = user.roles.some((r) => ["HR", "SUPER_ADMIN", "APPROVER"].includes(r));
+
+  const [notificationCount, setNotificationCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval>;
+
+    const refresh = async () => {
+      try {
+        const res = await fetch("/api/notifications/unread-count", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setNotificationCount(typeof data.count === "number" ? data.count : 0);
+        }
+      } catch {
+        // keep last known value
+      }
+    };
+
+    refresh();
+    timer = setInterval(refresh, NOTIFICATION_POLL_MS);
+    const handleFocus = () => refresh();
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
+
+  const openPending = () => {
+    const roles = user.roles;
+    if (roles.includes("HR") || roles.includes("SUPER_ADMIN")) {
+      router.push("/dashboard/approval-requests/hr");
+    } else if (roles.includes("APPROVER")) {
+      router.push("/dashboard/approval-requests");
+    } else {
+      router.push("/dashboard/leave-history");
+    }
+  };
 
   if (pathname?.startsWith("/login")) return null;
 
@@ -85,7 +128,7 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
             ></path>
           </svg>
           <span className="absolute -top-1 -right-1 bg-[#f59e0b] text-white text-[8px] w-3.5 h-3.5 sm:text-[10px] sm:w-4 sm:h-4 rounded-full flex items-center justify-center">
-            {3}
+            {notificationCount ?? 0}
           </span>
         </div>
 
