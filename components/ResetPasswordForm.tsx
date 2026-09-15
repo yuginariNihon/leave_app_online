@@ -57,6 +57,7 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
         setLoading(false);
         return;
       }
+      setLoading(false);
       setSuccess(true);
       setTimeout(() => {
         window.location.href = "/dashboard";

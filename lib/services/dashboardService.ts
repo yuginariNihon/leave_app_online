@@ -280,20 +280,6 @@ export type ApprovalStatusStat = {
   color: string;
 };
 
-export type LeaveCalendarDay = {
-  date: number;
-  isToday: boolean;
-  leaves: { staffName: string; leaveTypeName: string }[];
-};
-
-export type LeaveBalanceSummaryItem = {
-  leaveTypeName: string;
-  totalStaff: number;
-  totalQuota: number;
-  totalUsed: number;
-  totalRemaining: number;
-};
-
 const STATUS_COLORS: Record<string, string> = {
   pending: "#f59e0b",
   approved: "#10b981",
@@ -347,86 +333,4 @@ export const getApprovalStatusStats = unstable_cache(computeApprovalStatusStats,
   tags: ["dashboard-status-stats"],
 });
 
-export async function getLeaveCalendarData(year: number, month: number): Promise<LeaveCalendarDay[]> {
-  const monthStart = new Date(year, month - 1, 1);
-  const monthEnd = new Date(year, month, 1);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
-  const leaves = await prisma.dataLeave.findMany({
-    where: {
-      leave_status: LeaveStatus.approved,
-      start_date: { lt: monthEnd },
-      end_date: { gte: monthStart },
-    },
-    include: {
-      staff: { select: { name: true } },
-      leaveType: { select: { leave_type_name: true } },
-    },
-  });
-
-  const daysInMonth = new Date(year, month, 0).getDate();
-
-  // Bucket approved leaves by actual calendar date (O(total days) instead of O(31 * leaves))
-  const byDate = new Map<string, { staffName: string; leaveTypeName: string }[]>();
-  const pad2 = (n: number) => String(n).padStart(2, "0");
-  const dateKey = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-
-  for (const l of leaves) {
-    if (!l.start_date || !l.end_date) continue;
-    let s = new Date(l.start_date);
-    let e = new Date(l.end_date);
-    if (s > e) [s, e] = [e, s];
-    if (e < monthStart) continue;
-    if (s >= monthEnd) continue;
-    const start = s < monthStart ? monthStart : s;
-    const end = e >= monthEnd ? new Date(monthEnd.getTime() - 1) : e;
-    const entry = { staffName: l.staff.name, leaveTypeName: l.leaveType.leave_type_name };
-    for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
-      const k = dateKey(d);
-      let bucket = byDate.get(k);
-      if (!bucket) {
-        bucket = [];
-        byDate.set(k, bucket);
-      }
-      bucket.push(entry);
-    }
-  }
-
-  const days: LeaveCalendarDay[] = [];
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateObj = new Date(year, month - 1, d);
-    days.push({
-      date: d,
-      isToday: dateObj.getTime() === today.getTime(),
-      leaves: byDate.get(dateKey(dateObj)) ?? [],
-    });
-  }
-
-  return days;
-}
-
-export async function getLeaveBalanceSummary(): Promise<LeaveBalanceSummaryItem[]> {
-  const rows = await prisma.$queryRaw<
-    { leave_type_name: string; totalStaff: number; totalQuota: number; totalUsed: number }[]
-  >`
-    SELECT lt.leave_type_name,
-           COUNT(ull.limit_id)::int AS "totalStaff",
-           SUM(ull.max_days)::float8 AS "totalQuota",
-           SUM(ull.used_days)::float8 AS "totalUsed"
-    FROM "UserLeaveLimit" ull
-    JOIN "LeaveType" lt ON lt.leave_type_id = ull.leave_type_id
-    WHERE ull.year = ${new Date().getFullYear()}
-    GROUP BY lt.leave_type_name
-    ORDER BY lt.leave_type_name ASC
-  `;
-
-  return rows.map((r) => ({
-    leaveTypeName: r.leave_type_name,
-    totalStaff: Number(r.totalStaff),
-    totalQuota: Number(r.totalQuota),
-    totalUsed: Number(r.totalUsed),
-    totalRemaining: Number(r.totalQuota) - Number(r.totalUsed),
-  }));
-}

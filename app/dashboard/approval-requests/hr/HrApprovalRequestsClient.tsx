@@ -181,6 +181,7 @@ export default function HrApprovalRequestsClient({
           ? "อนุมัติคำขอเรียบร้อยแล้ว"
           : "ไม่อนุมัติคำขอเรียบร้อยแล้ว",
       );
+      setFetchKey((k) => k + 1);
       setSelectedIds([]);
       setCurrentPage(1);
     } catch (err) {
@@ -216,6 +217,7 @@ export default function HrApprovalRequestsClient({
         throw new Error(json.error ?? "Failed to bulk process");
       }
       toast.success(`${label} ${selectedIds.length} รายการเรียบร้อยแล้ว`)
+      setFetchKey((k) => k + 1);
       setSelectedIds([]);
       setCurrentPage(1);
     } catch (err) {

@@ -114,16 +114,20 @@ export async function getPendingApprovals(
           staffFilter.staff_code = { contains: filters.search, mode: "insensitive" };
         }
 
-        // Single indexed query using (approval_status, approver_id) instead of many OR conditions
-        const where: Prisma.LeaveApprovalWhereInput = {
-          approval_status: ApprovalStatus.pending,
-          approver_id: null,
-          approval_level: { in: levels },
+        const orConditions = levels.map((level) => ({
+          approval_level: level,
           leave: {
             ...leaveConditions,
             leave_status: LeaveStatus.pending,
             staff: staffFilter,
+            current_approval_level: level,
           },
+        }));
+
+        const where: Prisma.LeaveApprovalWhereInput = {
+          approval_status: ApprovalStatus.pending,
+          approver_id: null,
+          OR: orConditions,
         };
 
         const [approvals, total] = await Promise.all([
@@ -168,9 +172,32 @@ export async function getPendingApprovals(
   }
 
   // Super admin or fallback — show all pending in department
+  const stepLevels = await prisma.leaveApproval.findMany({
+    where: {
+      approval_status: ApprovalStatus.pending,
+      leave: leaveConditions,
+    },
+    select: { approval_level: true },
+    distinct: ["approval_level"],
+  });
+
+  const fallbackLevels = stepLevels.map((s) => s.approval_level);
+
+  if (fallbackLevels.length === 0) {
+    return { data: [], total: 0, totalPages: 0 };
+  }
+
+  const orConditions = fallbackLevels.map((level) => ({
+    approval_level: level,
+    leave: {
+      ...leaveConditions,
+      current_approval_level: level,
+    },
+  }));
+
   const where: Prisma.LeaveApprovalWhereInput = {
     approval_status: ApprovalStatus.pending,
-    leave: leaveConditions,
+    OR: orConditions,
   };
 
   if (!isSuperAdmin) {
@@ -803,7 +830,7 @@ export async function getNotificationCount(staffId: string): Promise<number> {
     where: { staff_id: staffId },
     include: { role: { select: { role_name: true } } },
   });
-  const isApprover = userRoles.some((r) => r.role.role_name === "APPROVER");
+  const isApprover = userRoles.some((r) => r.role.role_name.toLowerCase() === "approver");
   if (isApprover) {
     return (await getPendingApprovals(staffId, 1, 1)).total;
   }
