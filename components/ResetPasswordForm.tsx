@@ -219,7 +219,7 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#4648d4] hover:bg-[#6063ee] text-white py-4 px-6 rounded-lg font-semibold text-sm uppercase tracking-widest shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer border-none disabled:opacity-60"
+                  className="w-full bg-[#4648d4] hover:bg-[#6063ee] text-white py-4 px-6 rounded-lg font-semibold text-[11px] sm:text-sm uppercase tracking-wider sm:tracking-widest shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer border-none disabled:opacity-60"
                 >
                   {loading ? (
                     <>

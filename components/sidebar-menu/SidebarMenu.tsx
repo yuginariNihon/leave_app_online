@@ -53,7 +53,9 @@ export function SidebarMenu() {
   const { name, email, roles, forceChangePassword } = useUser();
   const { open, toggleSidebar, openMobile, setOpenMobile } = useSidebar();
   const isMobile = useIsMobile();
+  const showLabels = isMobile || open;
   const [isSigningOut, startSignOutTransition] = useTransition();
+  const [profileMenuExpanded, setProfileMenuExpanded] = useState(false);
 
   const [hrMenuExpanded, setHrMenuExpanded] = useState(true);
   const [systemMenuExpanded, setSystemMenuExpanded] = useState(true);
@@ -110,8 +112,8 @@ export function SidebarMenu() {
   function renderHRSidebar() {
     return (
       <>
-        <SidebarGroup className={cn("transition-all duration-200 ease-in-out", open ? "" : "px-0")}>
-          {open ? (
+        <SidebarGroup className={cn("transition-all duration-200 ease-in-out", showLabels ? "" : "px-0")}>
+          {showLabels ? (
             <div className="flex items-center justify-between px-3 mb-2 cursor-pointer select-none" onClick={() => setHrMenuExpanded(!hrMenuExpanded)}>
               <SidebarGroupLabel className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 เมนู HR
@@ -128,91 +130,91 @@ export function SidebarMenu() {
             <SidebarMenuList className="gap-1">
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.dashboard), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.dashboard), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr")}
-                  tooltip={open ? undefined : "Dashboard"}
+                  tooltip={showLabels ? undefined : "Dashboard"}
                 >
                   <LayoutDashboard className={iconClass(activePaths.dashboard)} />
-                  {open && <span>Dashboard</span>}
+                  {showLabels && <span>Dashboard</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.hrApproval), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.hrApproval), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/approval-requests/hr")}
-                  tooltip={open ? undefined : "อนุมัติคำขอลา (HR)"}
+                  tooltip={showLabels ? undefined : "อนุมัติคำขอลา (HR)"}
                 >
                   <ShieldCheck className={iconClass(activePaths.hrApproval)} />
-                  {open && <span>อนุมัติคำขอลา (HR)</span>}
+                  {showLabels && <span>อนุมัติคำขอลา (HR)</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.hrHistory), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.hrHistory), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/approval-requests/history?roleType=hr")}
-                  tooltip={open ? undefined : "ประวัติการอนุมัติ (HR)"}
+                  tooltip={showLabels ? undefined : "ประวัติการอนุมัติ (HR)"}
                 >
                   <History className={iconClass(activePaths.hrHistory)} />
-                  {open && <span>ประวัติการอนุมัติ (HR)</span>}
+                  {showLabels && <span>ประวัติการอนุมัติ (HR)</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.leaveReport), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.leaveReport), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/leave-report")}
-                  tooltip={open ? undefined : "รายงานการลา"}
+                  tooltip={showLabels ? undefined : "รายงานการลา"}
                 >
                   <BarChart3 className={iconClass(activePaths.leaveReport)} />
-                  {open && <span>รายงานการลา</span>}
+                  {showLabels && <span>รายงานการลา</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.leaveCalendar), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.leaveCalendar), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/leave-calendar")}
-                  tooltip={open ? undefined : "ปฏิทินการลา"}
+                  tooltip={showLabels ? undefined : "ปฏิทินการลา"}
                 >
                   <CalendarDays className={iconClass(activePaths.leaveCalendar)} />
-                  {open && <span>ปฏิทินการลา</span>}
+                  {showLabels && <span>ปฏิทินการลา</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenuList>
           </SidebarGroupContent>
           )}
         </SidebarGroup>
-        <SidebarGroup className={cn("transition-all duration-200 ease-in-out", open ? "" : "px-0")}>
-          <div className={cn("flex items-center justify-between mb-2 cursor-pointer select-none", open ? "px-3" : "justify-center")} onClick={() => setSystemMenuExpanded(!systemMenuExpanded)}>
-            {open && (
+        <SidebarGroup className={cn("transition-all duration-200 ease-in-out", showLabels ? "" : "px-0")}>
+          <div className={cn("flex items-center justify-between mb-2 cursor-pointer select-none", showLabels ? "px-3" : "justify-center")} onClick={() => setSystemMenuExpanded(!systemMenuExpanded)}>
+            {showLabels && (
               <SidebarGroupLabel className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 จัดการระบบ
               </SidebarGroupLabel>
             )}
-            {open && <ChevronDown className={cn("w-[18px] h-[18px] text-slate-300 transition-transform", systemMenuExpanded ? "" : "-rotate-90")} />}
+            {showLabels && <ChevronDown className={cn("w-[18px] h-[18px] text-slate-300 transition-transform", systemMenuExpanded ? "" : "-rotate-90")} />}
           </div>
           {systemMenuExpanded && (
           <SidebarGroupContent>
             <SidebarMenuList className="gap-1">
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.workflows), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.workflows), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/workflows")}
-                  tooltip={open ? undefined : "จัดการลำดับการอนุมัติ"}
+                  tooltip={showLabels ? undefined : "จัดการลำดับการอนุมัติ"}
                 >
                   <GitBranch className={iconClass(activePaths.workflows)} />
-                  {open && <span>จัดการลำดับการอนุมัติ</span>}
+                  {showLabels && <span>จัดการลำดับการอนุมัติ</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.staffList || activePaths.staffListAdd || activePaths.staffListImport), open ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.staffList || activePaths.staffListAdd || activePaths.staffListImport), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/staff-list")}
-                  tooltip={open ? undefined : "รายชื่อพนักงาน"}
+                  tooltip={showLabels ? undefined : "รายชื่อพนักงาน"}
                 >
-                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                  <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                     <Users className={iconClass(activePaths.staffList || activePaths.staffListAdd || activePaths.staffListImport)} />
-                    {open && <span>รายชื่อพนักงาน</span>}
+                    {showLabels && <span>รายชื่อพนักงาน</span>}
                   </div>
-                  {open && (
+                  {showLabels && (
                     <span
                       onClick={(e) => { e.stopPropagation(); setStaffListExpanded(!staffListExpanded); }}
                       className="flex items-center justify-center p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer"
@@ -221,7 +223,7 @@ export function SidebarMenu() {
                     </span>
                   )}
                 </SidebarMenuButton>
-                {open && staffListExpanded && (
+                {showLabels && staffListExpanded && (
                   <div className="ml-3 mt-0.5 space-y-0.5">
                     <SidebarMenuButton className={cn(btnClass(activePaths.staffListAdd), "!py-2")} onClick={() => handleNav("/dashboard/hr/staff-list/add")}>
                       <div className="flex items-center gap-3">
@@ -240,15 +242,15 @@ export function SidebarMenu() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.departments || activePaths.departmentsAdd), open ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.departments || activePaths.departmentsAdd), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/departments")}
-                  tooltip={open ? undefined : "จัดการแผนก"}
+                  tooltip={showLabels ? undefined : "จัดการแผนก"}
                 >
-                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                  <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                     <Building2 className={iconClass(activePaths.departments || activePaths.departmentsAdd)} />
-                    {open && <span>จัดการแผนก</span>}
+                    {showLabels && <span>จัดการแผนก</span>}
                   </div>
-                  {open && (
+                  {showLabels && (
                     <span
                       onClick={(e) => { e.stopPropagation(); setDeptListExpanded(!deptListExpanded); }}
                       className="flex items-center justify-center p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer"
@@ -257,7 +259,7 @@ export function SidebarMenu() {
                     </span>
                   )}
                 </SidebarMenuButton>
-                {open && deptListExpanded && (
+                {showLabels && deptListExpanded && (
                   <div className="ml-3 mt-0.5 space-y-0.5">
                     <SidebarMenuButton className={cn(btnClass(activePaths.departmentsAdd), "!py-2")} onClick={() => handleNav("/dashboard/hr/departments/add")}>
                       <div className="flex items-center gap-3">
@@ -270,15 +272,15 @@ export function SidebarMenu() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.positions || activePaths.positionsAdd), open ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.positions || activePaths.positionsAdd), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/positions")}
-                  tooltip={open ? undefined : "จัดการตำแหน่ง"}
+                  tooltip={showLabels ? undefined : "จัดการตำแหน่ง"}
                 >
-                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                  <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                     <Briefcase className={iconClass(activePaths.positions || activePaths.positionsAdd)} />
-                    {open && <span>จัดการตำแหน่ง</span>}
+                    {showLabels && <span>จัดการตำแหน่ง</span>}
                   </div>
-                  {open && (
+                  {showLabels && (
                     <span
                       onClick={(e) => { e.stopPropagation(); setPosListExpanded(!posListExpanded); }}
                       className="flex items-center justify-center p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer"
@@ -287,7 +289,7 @@ export function SidebarMenu() {
                     </span>
                   )}
                 </SidebarMenuButton>
-                {open && posListExpanded && (
+                {showLabels && posListExpanded && (
                   <div className="ml-3 mt-0.5 space-y-0.5">
                     <SidebarMenuButton className={cn(btnClass(activePaths.positionsAdd), "!py-2")} onClick={() => handleNav("/dashboard/hr/positions/add")}>
                       <div className="flex items-center gap-3">
@@ -300,15 +302,15 @@ export function SidebarMenu() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.leaveTypes || activePaths.leaveTypesAdd), open ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.leaveTypes || activePaths.leaveTypesAdd), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/leave-types")}
-                  tooltip={open ? undefined : "จัดการประเภทการลา"}
+                  tooltip={showLabels ? undefined : "จัดการประเภทการลา"}
                 >
-                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                  <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                     <Tags className={iconClass(activePaths.leaveTypes || activePaths.leaveTypesAdd)} />
-                    {open && <span>จัดการประเภทการลา</span>}
+                    {showLabels && <span>จัดการประเภทการลา</span>}
                   </div>
-                  {open && (
+                  {showLabels && (
                     <span
                       onClick={(e) => { e.stopPropagation(); setLeaveTypesExpanded(!leaveTypesExpanded); }}
                       className="flex items-center justify-center p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer"
@@ -317,7 +319,7 @@ export function SidebarMenu() {
                     </span>
                   )}
                 </SidebarMenuButton>
-                {open && leaveTypesExpanded && (
+                {showLabels && leaveTypesExpanded && (
                   <div className="ml-3 mt-0.5 space-y-0.5">
                     <SidebarMenuButton className={cn(btnClass(activePaths.leaveTypesAdd), "!py-2")} onClick={() => handleNav("/dashboard/hr/leave-types/add")}>
                       <div className="flex items-center gap-3">
@@ -330,15 +332,15 @@ export function SidebarMenu() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.leaveCases || activePaths.leaveCasesAdd), open ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.leaveCases || activePaths.leaveCasesAdd), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/leave-cases")}
-                  tooltip={open ? undefined : "จัดการกรณีการลา"}
+                  tooltip={showLabels ? undefined : "จัดการกรณีการลา"}
                 >
-                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                  <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                     <CaseSensitive className={iconClass(activePaths.leaveCases || activePaths.leaveCasesAdd)} />
-                    {open && <span>จัดการกรณีการลา</span>}
+                    {showLabels && <span>จัดการกรณีการลา</span>}
                   </div>
-                  {open && (
+                  {showLabels && (
                     <span
                       onClick={(e) => { e.stopPropagation(); setLeaveCasesExpanded(!leaveCasesExpanded); }}
                       className="flex items-center justify-center p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer"
@@ -347,7 +349,7 @@ export function SidebarMenu() {
                     </span>
                   )}
                 </SidebarMenuButton>
-                {open && leaveCasesExpanded && (
+                {showLabels && leaveCasesExpanded && (
                   <div className="ml-3 mt-0.5 space-y-0.5">
                     <SidebarMenuButton className={cn(btnClass(activePaths.leaveCasesAdd), "!py-2")} onClick={() => handleNav("/dashboard/hr/leave-cases/add")}>
                       <div className="flex items-center gap-3">
@@ -361,13 +363,13 @@ export function SidebarMenu() {
               {canAccessPage("manage_roles", roles) && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    className={cn(btnClass(activePaths.adminRoles), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                    className={cn(btnClass(activePaths.adminRoles), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                     onClick={() => handleNav("/dashboard/admin/roles")}
-                    tooltip={open ? undefined : "จัดการบทบาทพนักงาน"}
+                    tooltip={showLabels ? undefined : "จัดการบทบาทพนักงาน"}
                   >
-                    <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                    <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                       <Shield className={iconClass(activePaths.adminRoles)} />
-                      {open && <span>จัดการบทบาทพนักงาน</span>}
+                      {showLabels && <span>จัดการบทบาทพนักงาน</span>}
                     </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -375,13 +377,13 @@ export function SidebarMenu() {
               {canAccessPage("manage_page_permissions", roles) && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    className={cn(btnClass(activePaths.adminPagePermissions), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                    className={cn(btnClass(activePaths.adminPagePermissions), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                     onClick={() => handleNav("/dashboard/admin/page-permissions")}
-                    tooltip={open ? undefined : "จัดการสิทธิ์การเข้าถึงหน้า"}
+                    tooltip={showLabels ? undefined : "จัดการสิทธิ์การเข้าถึงหน้า"}
                   >
-                    <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                    <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                       <Shield className={iconClass(activePaths.adminPagePermissions)} />
-                      {open && <span>จัดการสิทธิ์การเข้าถึงหน้า</span>}
+                      {showLabels && <span>จัดการสิทธิ์การเข้าถึงหน้า</span>}
                     </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -389,13 +391,13 @@ export function SidebarMenu() {
               {canAccessPage("manage_staff_roles", roles) && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    className={cn(btnClass(activePaths.staffRoles), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                    className={cn(btnClass(activePaths.staffRoles), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                     onClick={() => handleNav("/dashboard/hr/staff-roles")}
-                    tooltip={open ? undefined : "จัดการสิทธิ์ของพนักงาน"}
+                    tooltip={showLabels ? undefined : "จัดการสิทธิ์ของพนักงาน"}
                   >
-                    <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                    <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                       <UserCog className={iconClass(activePaths.staffRoles)} />
-                      {open && <span>จัดการสิทธิ์ของพนักงาน</span>}
+                      {showLabels && <span>จัดการสิทธิ์ของพนักงาน</span>}
                     </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -403,52 +405,52 @@ export function SidebarMenu() {
               {canAccessPage("manage_sections", roles) && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    className={cn(btnClass(activePaths.sections), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                    className={cn(btnClass(activePaths.sections), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                     onClick={() => handleNav("/dashboard/hr/sections")}
-                    tooltip={open ? undefined : "จัดการแผนกย่อย"}
+                    tooltip={showLabels ? undefined : "จัดการแผนกย่อย"}
                   >
-                    <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                    <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                       <Building2 className={iconClass(activePaths.sections)} />
-                      {open && <span>จัดการแผนกย่อย</span>}
+                      {showLabels && <span>จัดการแผนกย่อย</span>}
                     </div>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.userManagement), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.userManagement), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/user-management")}
-                  tooltip={open ? undefined : "จัดการผู้ใช้"}
+                  tooltip={showLabels ? undefined : "จัดการผู้ใช้"}
                 >
-                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                  <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                     <UserCog className={iconClass(activePaths.userManagement)} />
-                    {open && <span>จัดการผู้ใช้</span>}
+                    {showLabels && <span>จัดการผู้ใช้</span>}
                   </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.holidays), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.holidays), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/holidays")}
-                  tooltip={open ? undefined : "จัดการวันหยุด"}
+                  tooltip={showLabels ? undefined : "จัดการวันหยุด"}
                 >
-                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                  <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                     <CalendarDays className={iconClass(activePaths.holidays)} />
-                    {open && <span>จัดการวันหยุด</span>}
+                    {showLabels && <span>จัดการวันหยุด</span>}
                   </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.employeeTypes || activePaths.employeeTypesAdd), open ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.employeeTypes || activePaths.employeeTypesAdd), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/employee-types")}
-                  tooltip={open ? undefined : "จัดการประเภทพนักงาน"}
+                  tooltip={showLabels ? undefined : "จัดการประเภทพนักงาน"}
                 >
-                  <div className={cn("flex items-center", open ? "gap-3" : "justify-center")}>
+                  <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
                     <UserCog className={iconClass(activePaths.employeeTypes || activePaths.employeeTypesAdd)} />
-                    {open && <span>จัดการประเภทพนักงาน</span>} 
+                    {showLabels && <span>จัดการประเภทพนักงาน</span>} 
                   </div>
-                  {open && (
+                  {showLabels && (
                     <span
                       onClick={(e) => { e.stopPropagation(); setEmpTypesExpanded(!empTypesExpanded); }}
                       className="flex items-center justify-center p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer"
@@ -457,7 +459,7 @@ export function SidebarMenu() {
                     </span>
                   )}
                 </SidebarMenuButton>
-                {open && empTypesExpanded && (
+                {showLabels && empTypesExpanded && (
                   <div className="ml-3 mt-0.5 space-y-0.5">
                     <SidebarMenuButton className={cn(btnClass(activePaths.employeeTypesAdd), "!py-2")} onClick={() => handleNav("/dashboard/hr/employee-types/add")}>
                       <div className="flex items-center gap-3">
@@ -479,8 +481,8 @@ export function SidebarMenu() {
   function renderSupervisorSidebar() {
     return (
       <>
-        <SidebarGroup className={cn("transition-all duration-200 ease-in-out", open ? "" : "px-0")}>
-          {open && (
+        <SidebarGroup className={cn("transition-all duration-200 ease-in-out", showLabels ? "" : "px-0")}>
+          {showLabels && (
             <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
               การอนุมัติสำหรับหัวหน้างาน
             </SidebarGroupLabel>
@@ -489,32 +491,32 @@ export function SidebarMenu() {
             <SidebarMenuList className="gap-1">
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.supervisorApproval), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.supervisorApproval), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/approval-requests")}
-                  tooltip={open ? undefined : "รายการคำขอลา"}
+                  tooltip={showLabels ? undefined : "รายการคำขอลา"}
                 >
                   <ClipboardList className={iconClass(activePaths.supervisorApproval)} />
-                  {open && <span>รายการคำขอลา</span>}
+                  {showLabels && <span>รายการคำขอลา</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.supervisorHistory), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.supervisorHistory), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/approval-requests/history")}
-                  tooltip={open ? undefined : "ประวัติการอนุมัติ"}
+                  tooltip={showLabels ? undefined : "ประวัติการอนุมัติ"}
                 >
                   <History className={iconClass(activePaths.supervisorHistory)} />
-                  {open && <span>ประวัติการอนุมัติ</span>}
+                  {showLabels && <span>ประวัติการอนุมัติ</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.leaveCalendar), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.leaveCalendar), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/leave-calendar")}
-                  tooltip={open ? undefined : "ปฏิทินการลา"}
+                  tooltip={showLabels ? undefined : "ปฏิทินการลา"}
                 >
                   <CalendarDays className={iconClass(activePaths.leaveCalendar)} />
-                  {open && <span>ปฏิทินการลา</span>}
+                  {showLabels && <span>ปฏิทินการลา</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenuList>
@@ -527,7 +529,7 @@ export function SidebarMenu() {
   function renderEmployeeSidebar() {
     return (
       <SidebarGroup>
-        {open && (
+        {showLabels && (
           <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
             เมนูพนักงาน
           </SidebarGroupLabel>
@@ -536,32 +538,32 @@ export function SidebarMenu() {
           <SidebarMenuList className="gap-1">
             <SidebarMenuItem>
               <SidebarMenuButton
-                className={cn(btnClass(activePaths.employeeDashboard), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                className={cn(btnClass(activePaths.employeeDashboard), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                 onClick={() => handleNav("/dashboard")}
-                tooltip={open ? undefined : "หน้าหลัก"}
+                tooltip={showLabels ? undefined : "หน้าหลัก"}
               >
                 <LayoutDashboard className={iconClass(activePaths.employeeDashboard)} />
-                {open && <span>หน้าหลัก</span>}
+                {showLabels && <span>หน้าหลัก</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                className={cn(btnClass(activePaths.leaveRequest), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                className={cn(btnClass(activePaths.leaveRequest), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                 onClick={() => handleNav("/dashboard/leave-request")}
-                tooltip={open ? undefined : "คำขอลา"}
+                tooltip={showLabels ? undefined : "คำขอลา"}
               >
                 <FileText className={iconClass(activePaths.leaveRequest)} />
-                {open && <span>คำขอลา</span>}
+                {showLabels && <span>คำขอลา</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                className={cn(btnClass(activePaths.leaveHistory), open ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                className={cn(btnClass(activePaths.leaveHistory), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                 onClick={() => handleNav("/dashboard/leave-history")}
-                tooltip={open ? undefined : "ประวัติการลา"}
+                tooltip={showLabels ? undefined : "ประวัติการลา"}
               >
                 <History className={iconClass(activePaths.leaveHistory)} />
-                {open && <span>ประวัติการลา</span>}
+                {showLabels && <span>ประวัติการลา</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenuList>
@@ -573,7 +575,7 @@ export function SidebarMenu() {
   const sidebarContent = (
     <>
       {/* Header */}
-      <SidebarHeader className={cn("px-6 py-6 border-b border-[#d8dadc]/50 transition-all duration-200 ease-in-out", open ? "" : "px-3")}>
+      <SidebarHeader className={cn("px-6 py-6 border-b border-[#d8dadc]/50 transition-all duration-200 ease-in-out", showLabels ? "" : "px-3")}>
         <div className="w-full flex items-start gap-3">
           <button
             onClick={isMobile ? () => setOpenMobile(false) : toggleSidebar}
@@ -619,16 +621,28 @@ export function SidebarMenu() {
         >
           {sidebarContent}
           <div className="mt-auto border-t border-[#d8dadc] p-4">
-            <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setProfileMenuExpanded(!profileMenuExpanded)}
+              className="flex w-full items-center gap-3 text-left cursor-pointer border-0 bg-transparent p-0"
+              aria-expanded={profileMenuExpanded}
+            >
               <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm shrink-0">
                 {name.trim().charAt(0).toUpperCase() || "U"}
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-[#0F172A] truncate">{name}</p>
                 <p className="text-xs text-[#6b7280] truncate">{email}</p>
               </div>
-            </div>
-            <div className="mt-3 flex flex-col gap-1">
+              <ChevronDown className={cn("w-[18px] h-[18px] text-slate-400 transition-transform shrink-0", profileMenuExpanded ? "rotate-180" : "")} />
+            </button>
+            <div
+              className={cn(
+                "mt-3 flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-in-out",
+                profileMenuExpanded ? "max-h-24 opacity-100" : "max-h-0 opacity-0 pointer-events-none",
+              )}
+              aria-hidden={!profileMenuExpanded}
+            >
               <button
                 type="button"
                 onClick={() => {
@@ -640,13 +654,13 @@ export function SidebarMenu() {
                 <Lock className="w-[18px] h-[18px] text-slate-400" />
                 เปลี่ยนรหัสผ่าน
               </button>
-              <button
-                type="button"
-                disabled={isSigningOut}
-                onClick={() => startSignOutTransition(() => { logoutAction(); })}
-                className="flex items-center gap-2.5 rounded-[8px] px-3 py-2.5 text-sm font-semibold text-[#ef4444] hover:bg-red-50 transition-colors cursor-pointer border-0 disabled:opacity-60"
-              >
-                <LogOut className="w-[18px] h-[18px] text-[#ef4444]" />
+                <button
+                  type="button"
+                  disabled={isSigningOut}
+                  onClick={() => startSignOutTransition(() => { logoutAction(); })}
+                  className="flex items-center gap-2.5 rounded-[8px] px-3 py-2.5 text-sm font-semibold text-[#ef4444] hover:bg-red-50 transition-colors cursor-pointer border-0 disabled:opacity-60"
+                >
+                  <LogOut className="w-[18px] h-[18px] text-[#ef4444]" />
                 {isSigningOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
               </button>
             </div>
