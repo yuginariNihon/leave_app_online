@@ -90,7 +90,7 @@ export const importStaffSchema = z.object({
   sectionName: z.string().optional().nullable(),
   employmentTypeName: z.string().optional().nullable(),
   phoneNumber: z.string().optional().nullable(),
-  email: z.string().email().optional().nullable(),
+  email: z.string().trim().max(0, "email ว่างได้").or(z.string().email()).optional().nullable(),
   dateOfBirth: z.string().optional().nullable(),
   startDate: z.string().optional().nullable(),
 });

@@ -1,0 +1,5 @@
+staffCode,name,departmentName,positionName,sectionName,employmentTypeName,phoneNumber,email,dateOfBirth,startDate
+NFT2401001,สมชาย ใจดี,HR / GA,Manager,IT,PERMANENT,0812345678,somchai@company.com,1990-05-15,2024-01-01
+NFT2401002,สมหญิง รักงาน,Account,Staff,,PERMANENT,0898765432,somying@company.com,1995-03-20,2024-01-15
+NFT2401003,วิชัย เก่งมาก,Engineer,Supervisor,Technician,PERMANENT,0855556666,,,2024-02-01
+NFT2401004,นฤมล ทำงานเก่ง,QA/QC,Senior Supervisor,R & D,CONTRACT,0844443333,,1992-08-10,2024-03-01

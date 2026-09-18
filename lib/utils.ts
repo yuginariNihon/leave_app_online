@@ -11,6 +11,47 @@ export function toDateOnly(value: string | Date): Date {
   return new Date(`${value}T00:00:00.000Z`);
 }
 
+export function buildUtcDate(year: number, month: number, day: number): Date | null {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return date;
+}
+
+export function parseDateOnly(value: string | null | undefined): Date | null {
+  if (value == null) return null;
+  const s = String(value).trim();
+  if (!s) return null;
+
+  if (/^\d{5}$/.test(s)) {
+    const serial = Number(s);
+    return new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
+  }
+
+  let match = /^(\d{4})(\d{2})(\d{2})$/.exec(s);
+  if (match) return buildUtcDate(Number(match[1]), Number(match[2]), Number(match[3]));
+
+  match = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[T\s].*)?$/.exec(s);
+  if (match) return buildUtcDate(Number(match[1]), Number(match[2]), Number(match[3]));
+
+  match = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})(?:[T\s].*)?$/.exec(s);
+  if (match) {
+    const first = Number(match[1]);
+    const second = Number(match[2]);
+    const year = Number(match[3]);
+    if (second > 12 && first <= 12) return buildUtcDate(year, first, second);
+    return buildUtcDate(year, second, first);
+  }
+
+  return null;
+}
+
 export function countInclusiveDays(startDate: string | Date, endDate: string | Date): number {
   const start = toDateOnly(startDate);
   const end = toDateOnly(endDate);
@@ -127,6 +168,12 @@ export function downloadCsv(filename: string, csvContent: string) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+export function csvCell(value: string | number | null | undefined): string {
+  const s = value == null ? "" : String(value);
+  const sanitized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  return `"${sanitized.replace(/"/g, '""')}"`;
 }
 
 export function hashPassword(plain: string): Promise<string> {

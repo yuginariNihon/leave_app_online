@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Pencil, Power, PowerOff, FileText } from "lucide-react";
+import { Search, Plus, Pencil, Power, PowerOff, FileText, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { downloadCsv, csvCell } from "@/lib/utils";
 import type { SectionListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
 
@@ -85,6 +86,27 @@ export default function SectionsPage() {
     }
   };
 
+  const handleExport = () => {
+    if (filtered.length === 0) {
+      toast.error("ไม่มีข้อมูลให้ส่งออก");
+      return;
+    }
+    const rows = filtered.map((s) => [
+      csvCell(s.sectionCode),
+      csvCell(s.sectionName),
+      csvCell(s.departmentName),
+      csvCell(s.isActive ? "Active" : "Inactive"),
+    ]);
+    const csvContent = [
+      ["รหัสส่วนงาน", "ชื่อส่วนงาน", "แผนก", "สถานะ"],
+      ...rows,
+    ]
+      .map((r) => r.join(","))
+      .join("\n");
+    downloadCsv(`sections_${new Date().toISOString().split("T")[0]}.csv`, `\uFEFF${csvContent}`);
+    toast.success(`ส่งออกข้อมูลส่วนงาน ${filtered.length} รายการเรียบร้อย`);
+  };
+
   return (
         <>
 
@@ -108,6 +130,14 @@ export default function SectionsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              className="h-11 px-4 rounded-lg text-[12px] tracking-[0.05em] uppercase flex items-center gap-2 border-[#c8c5d0] text-[#47464f] hover:bg-slate-50 hover:text-[#070235]"
+            >
+              <Download className="w-[18px] h-[18px]" />
+              Export
+            </Button>
             <Button
               onClick={() => router.push("/dashboard/hr/sections/add")}
               className="bg-[#6063ee] hover:bg-secondary text-white font-semibold rounded-lg h-11 px-4 text-[12px] tracking-[0.05em] uppercase flex items-center gap-2 shadow-sm"

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import type { LeaveFormOptions } from "@/lib/TypeSchema";
 import z from "zod";
 import { randomBytes } from "crypto";
-import { toDateOnly, countInclusiveDays, hashPassword, buildLeaveReferenceId } from "@/lib/utils";
+import { toDateOnly, countInclusiveDays, hashPassword, buildLeaveReferenceId, parseDateOnly } from "@/lib/utils";
 import { checkApproversExist, APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
@@ -1436,6 +1436,18 @@ export async function importStaff(
           employmentTypeId = etMap.get(row.employmentTypeName.toLowerCase());
         }
 
+        const dateOfBirth = parseDateOnly(row.dateOfBirth);
+        if (row.dateOfBirth && !dateOfBirth) {
+          errors.push({ row: i + 1, message: `รูปแบบวันเกิดไม่ถูกต้อง "${row.dateOfBirth}" (ใช้ DD/MM/YYYY หรือ YYYY-MM-DD)` });
+          continue;
+        }
+
+        const startDate = parseDateOnly(row.startDate);
+        if (row.startDate && !startDate) {
+          errors.push({ row: i + 1, message: `รูปแบบวันเริ่มงานไม่ถูกต้อง "${row.startDate}" (ใช้ DD/MM/YYYY หรือ YYYY-MM-DD)` });
+          continue;
+        }
+
         const createdStaff = await tx.staffInfo.create({
           data: {
             staff_code: row.staffCode,
@@ -1445,8 +1457,8 @@ export async function importStaff(
             section_id: sectionId ?? null,
             employment_type_id: employmentTypeId ?? null,
             phoneNumber: row.phoneNumber || null,
-            date_of_birth: row.dateOfBirth ? new Date(row.dateOfBirth) : null,
-            start_date: row.startDate ? new Date(row.startDate) : null,
+            date_of_birth: dateOfBirth,
+            start_date: startDate,
             employment_status: "active",
           },
         });

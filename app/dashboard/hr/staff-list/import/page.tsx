@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, FileText, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, FileText, CheckCircle2, XCircle, AlertCircle, Loader2, Download } from "lucide-react";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 
 type PreviewRow = Record<string, string>;
@@ -77,10 +77,11 @@ export default function ImportStaffPage() {
         const json = await res.json();
         if (!res.ok) {
           if (json.schemaErrors) {
+            setResult({ success: 0, errors: json.schemaErrors.map((e: { row: number; message: string }) => ({ row: e.row, message: e.message })) });
             toast.error(`ข้อมูลไม่ถูกต้อง ${json.schemaErrors.length} รายการ`);
-          } else {
-            throw new Error(json.error ?? "Import failed");
+            return;
           }
+          throw new Error(json.error ?? "Import failed");
         }
         setResult(json);
         if (json.errors?.length === 0) {
@@ -144,6 +145,14 @@ export default function ImportStaffPage() {
                     <p className="text-sm text-[#dae2fd]">
                       อัปโหลดไฟล์ CSV เพื่อนำเข้าข้อมูลพนักงานจำนวนมาก
                     </p>
+                    <a
+                      href="/template-import-staff.csv"
+                      download
+                      className="w-full inline-flex items-center gap-2 text-white hover:text-[#100d41] rounded-lg bg-white/15 hover:bg-white/30 px-4 h-10 text-sm font-medium transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span className="hidden sm:inline">ดาวน์โหลด Template</span>
+                    </a>
                   </div>
                 </div>
                 
@@ -164,6 +173,7 @@ export default function ImportStaffPage() {
               <div className="p-8 space-y-6">
                 {/* Upload Section */}
                 {!file && (
+
                   <div
                     className="border-2 border-dashed border-[#c6c6cd] rounded-2xl p-12 text-center hover:border-[#0F172A] transition-colors cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
@@ -226,7 +236,7 @@ export default function ImportStaffPage() {
                         <div className="text-sm text-blue-700">
                           <p className="font-semibold mb-1">รูปแบบไฟล์ CSV:</p>
                           <p>คอลัมน์ที่จำเป็น: <strong>staffCode</strong>, <strong>name</strong>, <strong>departmentName</strong>, <strong>positionName</strong></p>
-                          <p>คอลัมน์เพิ่มเติม: sectionName, employmentTypeName, phoneNumber, dateOfBirth (YYYY-MM-DD), startDate (YYYY-MM-DD)</p>
+                          <p>คอลัมน์เพิ่มเติม: sectionName, employmentTypeName, phoneNumber, email, dateOfBirth (YYYY-MM-DD), startDate (YYYY-MM-DD)</p>
                         </div>
                       </div>
                     </div>
