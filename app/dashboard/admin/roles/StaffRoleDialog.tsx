@@ -33,26 +33,21 @@ type Props = {
 };
 
 export function StaffRoleDialog({ open, onOpenChange, staff, roleOptions, onSave }: Props) {
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSelected([...staff.roles]);
+      setSelected(staff.roles[0] ?? "");
     }
   }, [open, staff]);
 
-  const toggleRole = (roleName: string) => {
-    setSelected((prev) =>
-      prev.includes(roleName) ? prev.filter((r) => r !== roleName) : [...prev, roleName],
-    );
-  };
-
   const handleSave = async () => {
+    if (!selected) return;
     setSaving(true);
     try {
-      await onSave(staff.staffId, selected);
+      await onSave(staff.staffId, [selected]);
       onOpenChange(false);
     } finally {
       setSaving(false);
@@ -74,7 +69,7 @@ export function StaffRoleDialog({ open, onOpenChange, staff, roleOptions, onSave
 
         <div className="space-y-3 py-4">
           {roleOptions.map((role) => {
-            const isChecked = selected.includes(role.roleName);
+            const isChecked = selected === role.roleName;
 
             return (
               <label
@@ -86,22 +81,23 @@ export function StaffRoleDialog({ open, onOpenChange, staff, roleOptions, onSave
                 }`}
               >
                 <input
-                  type="checkbox"
+                  type="radio"
+                  name="staff-role"
+                  value={role.roleName}
                   checked={isChecked}
-                  disabled={false}
-                  onChange={() => toggleRole(role.roleName)}
+                  onChange={() => setSelected(role.roleName)}
                   className="w-4 h-4 accent-[#1a1a40]"
                 />
                 <div className="flex-1">
                   <span className="text-sm font-semibold text-[#1a1a40]">{role.roleName}</span>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    {role.roleName === "SUPER_ADMIN"
+                    {role.roleName.toUpperCase() === "SUPER_ADMIN"
                       ? "สิทธิ์สูงสุด — เข้าถึงได้ทุกฟังก์ชัน"
-                      : role.roleName === "HR"
+                      : role.roleName.toUpperCase() === "HR"
                       ? "สิทธิ์ทรัพยากรบุคคล — จัดการข้อมูลพนักงานและคำขอลา"
-                      : role.roleName === "APPROVER"
+                      : role.roleName.toUpperCase() === "APPROVER"
                       ? "สิทธิ์ผู้อนุมัติ — อนุมัติคำขอลาของผู้ใต้บังคับบัญชา"
-                      : role.roleName === "STAFF"
+                      : role.roleName.toUpperCase() === "STAFF"
                       ? "สิทธิ์พนักงานทั่วไป — ขอลาและดูประวัติ"
                       : ""}
                   </p>

@@ -77,20 +77,21 @@ export default function EditStaffPage() {
         maxDays: vals.maxDays,
         usedDays: vals.usedDays,
       }));
-      const res = await fetch(`/api/hr/staff/${staffId}/leave-quota`, {
+const res = await fetch(`/api/hr/staff/${staffId}/leave-quota`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quotas }),
       });
-      if (!res.ok) throw new Error("Failed to save quota");
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error ?? "เกิดข้อผิดพลาดภายในระบบ");
       toast.success("อัปเดตสิทธิ์ลาคงเหลือเรียบร้อยแล้ว");
       const refetch = await fetch(`/api/hr/staff/${staffId}/leave-quota`);
       if (refetch.ok) {
         const json = await refetch.json();
         setQuota(json.data ?? []);
       }
-    } catch {
-      toast.error("ไม่สามารถบันทึกสิทธิ์วันลาได้");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "ไม่สามารถบันทึกสิทธิ์วันลาได้");
     } finally {
       setQuotaSaving(false);
     }
@@ -108,14 +109,14 @@ export default function EditStaffPage() {
         body: JSON.stringify(values),
       });
 
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Failed to update");
+const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error ?? "เกิดข้อผิดพลาดในการบันทึก");
 
       toast.success("แก้ไขข้อมูลพนักงานเรียบร้อยแล้ว");
       setSuccess(true);
       setTimeout(() => router.back(), 1500);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Unknown error");
+      setSubmitError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการบันทึก");
     } finally {
       setSubmitting(false);
     }

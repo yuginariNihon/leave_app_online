@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
-import { getStaffDetail, updateStaff } from "@/lib/services/leaveService";
+import { getStaffDetail, updateStaff, StaffUpdateConflictError } from "@/lib/services/leaveService";
 import { updateStaffSchema } from "@/lib/TypeSchema";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
@@ -59,7 +59,7 @@ export async function PUT(
     const parsed = updateStaffSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues.map((e) => e.message).join(", ") },
+        { error: `ข้อมูลไม่ถูกต้อง: ${parsed.error.issues.map((e) => e.message).join(", ")}` },
         { status: 400 },
       );
     }
@@ -69,14 +69,23 @@ export async function PUT(
       select: { staff_id: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+      return NextResponse.json({ error: "ไม่พบข้อมูลพนักงาน (อาจถูกลบไปแล้ว)" }, { status: 404 });
     }
 
     const updated = await updateStaff(id, parsed.data);
     return NextResponse.json({ data: updated });
   } catch (error) {
+    if (error instanceof StaffUpdateConflictError) {
+      return NextResponse.json(
+        { error: `ไม่สามารถบันทึกได้ มีข้อมูลซ้ำ: ${error.message}` },
+        { status: 409 },
+      );
+    }
     console.error("Error in PUT /api/hr/staff/[id]:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่อีกครั้ง" },
+      { status: 500 },
+    );
   }
 }
 

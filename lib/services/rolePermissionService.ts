@@ -19,10 +19,16 @@ export async function seedDefaultPagePermissions() {
   for (const page of DEFAULT_PAGES) {
     const existing = await prisma.pageResource.findUnique({
       where: { page_key: page.pageKey },
-      select: { page_resource_id: true, rolePermissions: { select: { role_id: true } } },
+      select: { page_resource_id: true, page_name: true, group_name: true, rolePermissions: { select: { role_id: true } } },
     });
 
     if (existing) {
+      if (existing.page_name !== page.pageName || existing.group_name !== page.groupName) {
+        await prisma.pageResource.update({
+          where: { page_resource_id: existing.page_resource_id },
+          data: { page_name: page.pageName, group_name: page.groupName },
+        });
+      }
       // Add missing default role permissions for existing pages
       const existingRoleIds = new Set(existing.rolePermissions.map((rp) => rp.role_id));
       for (const roleName of page.defaultRoleNames) {

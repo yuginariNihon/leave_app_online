@@ -17,6 +17,7 @@ export const MENU_ITEMS: MenuItem[] = [
   // ── System management (จัดการระบบ) ──
   { path: "/dashboard/hr/workflows",           pageKey: "manage_workflows",   label: "จัดการลำดับการอนุมัติ",  icon: "GitBranch",       groupName: "จัดการระบบ", roles: ["HR"] },
   { path: "/dashboard/hr/staff-list",          pageKey: "manage_staff",       label: "รายชื่อพนักงาน",        icon: "Users",           groupName: "จัดการระบบ", roles: ["HR"] },
+  { path: "/dashboard/hr/user-management",     pageKey: "manage_users",       label: "จัดการผู้ใช้",           icon: "UserCog",         groupName: "จัดการระบบ", roles: ["HR", "SUPER_ADMIN"] },
   { path: "/dashboard/hr/departments",         pageKey: "manage_departments", label: "จัดการแผนก",            icon: "Building2",       groupName: "จัดการระบบ", roles: ["HR"] },
   { path: "/dashboard/hr/positions",           pageKey: "manage_positions",   label: "จัดการตำแหน่ง",          icon: "Briefcase",       groupName: "จัดการระบบ", roles: ["HR"] },
   { path: "/dashboard/hr/leave-types",         pageKey: "manage_leave_types", label: "จัดการประเภทการลา",      icon: "Tags",            groupName: "จัดการระบบ", roles: ["HR"] },
@@ -25,8 +26,8 @@ export const MENU_ITEMS: MenuItem[] = [
   { path: "/dashboard/hr/sections",            pageKey: "manage_sections",    label: "จัดการแผนกย่อย",        icon: "Building2",       groupName: "จัดการระบบ", roles: ["HR"] },
   { path: "/dashboard/hr/leave-quota",         pageKey: "manage_leave_quota", label: "จัดการสิทธิ์วันลา",      icon: "FileText",        groupName: "จัดการระบบ", roles: ["HR"] },
   { path: "/dashboard/hr/holidays",            pageKey: "manage_holidays",    label: "จัดการวันหยุด",          icon: "CalendarDays",    groupName: "จัดการระบบ", roles: ["HR"] },
-  { path: "/dashboard/hr/user-management",     pageKey: "manage_users",       label: "จัดการผู้ใช้",           icon: "UserCog",         groupName: "จัดการระบบ", roles: ["HR", "SUPER_ADMIN"] },
   { path: "/dashboard/admin/roles",            pageKey: "manage_roles",       label: "จัดการบทบาทพนักงาน",    icon: "Shield",          groupName: "จัดการระบบ", roles: ["SUPER_ADMIN"] },
+  { path: "/dashboard/admin/roles/manage",      pageKey: "manage_roles_crud",  label: "จัดการบทบาท",          icon: "UserCog",         groupName: "จัดการระบบ", roles: ["SUPER_ADMIN"] },
   { path: "/dashboard/hr/staff-roles",         pageKey: "manage_staff_roles", label: "จัดการสิทธิ์ของพนักงาน", icon: "UserCog",         groupName: "จัดการระบบ", roles: ["SUPER_ADMIN"] },
   { path: "/dashboard/admin/page-permissions", pageKey: "manage_page_permissions", label: "จัดการสิทธิ์การเข้าถึงหน้า", icon: "Shield", groupName: "จัดการระบบ", roles: ["SUPER_ADMIN"] },
 

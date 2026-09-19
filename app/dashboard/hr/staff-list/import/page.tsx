@@ -237,6 +237,9 @@ export default function ImportStaffPage() {
                           <p className="font-semibold mb-1">รูปแบบไฟล์ CSV:</p>
                           <p>คอลัมน์ที่จำเป็น: <strong>staffCode</strong>, <strong>name</strong>, <strong>departmentName</strong>, <strong>positionName</strong></p>
                           <p>คอลัมน์เพิ่มเติม: sectionName, employmentTypeName, phoneNumber, email, dateOfBirth (YYYY-MM-DD), startDate (YYYY-MM-DD)</p>
+                          <p className="mt-1 text-blue-600">
+                            หมายเหตุ: ถ้าแก้ไฟล์ด้วย Excel ให้พิมพ์เบอร์โทรโดยมีเครื่องหมาย <strong>&lsquo;</strong> นำหน้า (เช่น <strong>&lsquo;0812345678</strong>) เพื่อกัน Excel ตัดเลข 0 นำหน้า
+                          </p>
                         </div>
                       </div>
                     </div>

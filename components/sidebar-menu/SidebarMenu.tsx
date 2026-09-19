@@ -65,6 +65,7 @@ export function SidebarMenu() {
   const [leaveTypesExpanded, setLeaveTypesExpanded] = useState(false);
   const [empTypesExpanded, setEmpTypesExpanded] = useState(false);
   const [leaveCasesExpanded, setLeaveCasesExpanded] = useState(false);
+  const [permRolesExpanded, setPermRolesExpanded] = useState(false);
 
   const isHR = roles.includes("HR") || roles.includes("SUPER_ADMIN");
   const isApprover = roles.includes("APPROVER");
@@ -92,9 +93,14 @@ export function SidebarMenu() {
     leaveCasesAdd: pathname.startsWith("/dashboard/hr/leave-cases/add"),
     employeeTypes: pathname.startsWith("/dashboard/hr/employee-types") && !pathname.includes("/employee-types/add"),
     employeeTypesAdd: pathname.startsWith("/dashboard/hr/employee-types/add"),
-    adminRoles: pathname.startsWith("/dashboard/admin/roles"),
+    adminRoles: pathname.startsWith("/dashboard/admin/roles") && !pathname.includes("/roles/manage"),
+    adminRolesCrud: pathname.startsWith("/dashboard/admin/roles/manage"),
     adminPagePermissions: pathname.startsWith("/dashboard/admin/page-permissions"),
     staffRoles: pathname.startsWith("/dashboard/hr/staff-roles"),
+    adminRights:
+      pathname.startsWith("/dashboard/admin/roles") ||
+      pathname.startsWith("/dashboard/hr/staff-roles") ||
+      pathname.startsWith("/dashboard/admin/page-permissions"),
     sections: pathname.startsWith("/dashboard/hr/sections"),
     holidays: pathname.startsWith("/dashboard/hr/holidays"),
     userManagement: pathname.startsWith("/dashboard/hr/user-management"),
@@ -206,12 +212,12 @@ export function SidebarMenu() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.staffList || activePaths.staffListAdd || activePaths.staffListImport), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.staffList || activePaths.staffListAdd || activePaths.staffListImport || activePaths.userManagement), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/staff-list")}
                   tooltip={showLabels ? undefined : "รายชื่อพนักงาน"}
                 >
                   <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
-                    <Users className={iconClass(activePaths.staffList || activePaths.staffListAdd || activePaths.staffListImport)} />
+                    <Users className={iconClass(activePaths.staffList || activePaths.staffListAdd || activePaths.staffListImport || activePaths.userManagement)} />
                     {showLabels && <span>รายชื่อพนักงาน</span>}
                   </div>
                   {showLabels && (
@@ -237,17 +243,25 @@ export function SidebarMenu() {
                         <span>นำเข้ารายชื่อพนักงาน</span>
                       </div>
                     </SidebarMenuButton>
+                    {canAccessPage("manage_users", roles) && (
+                      <SidebarMenuButton className={cn(btnClass(activePaths.userManagement), "!py-2")} onClick={() => handleNav("/dashboard/hr/user-management")}>
+                        <div className="flex items-center gap-3">
+                          <UserCog className={cn("size-[18px] shrink-0", iconClass(activePaths.userManagement))} />
+                          <span>จัดการผู้ใช้</span>
+                        </div>
+                      </SidebarMenuButton>
+                    )}
                   </div>
                 )}
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  className={cn(btnClass(activePaths.departments || activePaths.departmentsAdd), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                  className={cn(btnClass(activePaths.departments || activePaths.departmentsAdd || activePaths.sections), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
                   onClick={() => handleNav("/dashboard/hr/departments")}
                   tooltip={showLabels ? undefined : "จัดการแผนก"}
                 >
                   <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
-                    <Building2 className={iconClass(activePaths.departments || activePaths.departmentsAdd)} />
+                    <Building2 className={iconClass(activePaths.departments || activePaths.departmentsAdd || activePaths.sections)} />
                     {showLabels && <span>จัดการแผนก</span>}
                   </div>
                   {showLabels && (
@@ -265,6 +279,12 @@ export function SidebarMenu() {
                       <div className="flex items-center gap-3">
                         <Plus className={cn("size-[18px] shrink-0", iconClass(activePaths.departmentsAdd))} />
                         <span>เพิ่มแผนก</span>
+                      </div>
+                    </SidebarMenuButton>
+                    <SidebarMenuButton className={cn(btnClass(activePaths.sections), "!py-2")} onClick={() => handleNav("/dashboard/hr/sections")}>
+                      <div className="flex items-center gap-3">
+                        <Building2 className={cn("size-[18px] shrink-0", iconClass(activePaths.sections))} />
+                        <span>จัดการแผนกย่อย</span>
                       </div>
                     </SidebarMenuButton>
                   </div>
@@ -360,74 +380,67 @@ export function SidebarMenu() {
                   </div>
                 )}
               </SidebarMenuItem>
-              {canAccessPage("manage_roles", roles) && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className={cn(btnClass(activePaths.adminRoles), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                    onClick={() => handleNav("/dashboard/admin/roles")}
-                    tooltip={showLabels ? undefined : "จัดการบทบาทพนักงาน"}
-                  >
-                    <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
-                      <Shield className={iconClass(activePaths.adminRoles)} />
-                      {showLabels && <span>จัดการบทบาทพนักงาน</span>}
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              {canAccessPage("manage_page_permissions", roles) && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className={cn(btnClass(activePaths.adminPagePermissions), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                    onClick={() => handleNav("/dashboard/admin/page-permissions")}
-                    tooltip={showLabels ? undefined : "จัดการสิทธิ์การเข้าถึงหน้า"}
-                  >
-                    <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
-                      <Shield className={iconClass(activePaths.adminPagePermissions)} />
-                      {showLabels && <span>จัดการสิทธิ์การเข้าถึงหน้า</span>}
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              {canAccessPage("manage_staff_roles", roles) && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className={cn(btnClass(activePaths.staffRoles), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                    onClick={() => handleNav("/dashboard/hr/staff-roles")}
-                    tooltip={showLabels ? undefined : "จัดการสิทธิ์ของพนักงาน"}
-                  >
-                    <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
-                      <UserCog className={iconClass(activePaths.staffRoles)} />
-                      {showLabels && <span>จัดการสิทธิ์ของพนักงาน</span>}
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              {canAccessPage("manage_sections", roles) && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className={cn(btnClass(activePaths.sections), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                    onClick={() => handleNav("/dashboard/hr/sections")}
-                    tooltip={showLabels ? undefined : "จัดการแผนกย่อย"}
-                  >
-                    <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
-                      <Building2 className={iconClass(activePaths.sections)} />
-                      {showLabels && <span>จัดการแผนกย่อย</span>}
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className={cn(btnClass(activePaths.userManagement), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
-                  onClick={() => handleNav("/dashboard/hr/user-management")}
-                  tooltip={showLabels ? undefined : "จัดการผู้ใช้"}
-                >
-                  <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
-                    <UserCog className={iconClass(activePaths.userManagement)} />
-                    {showLabels && <span>จัดการผู้ใช้</span>}
-                  </div>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {(canAccessPage("manage_roles", roles) ||
+                canAccessPage("manage_roles_crud", roles) ||
+                canAccessPage("manage_staff_roles", roles) ||
+                canAccessPage("manage_page_permissions", roles)) && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      className={cn(btnClass(activePaths.adminRights), showLabels ? "justify-between" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                      onClick={() => handleNav("/dashboard/admin/roles")}
+                      tooltip={showLabels ? undefined : "สิทธิ์และบทบาท"}
+                    >
+                      <div className={cn("flex items-center", showLabels ? "gap-3" : "justify-center")}>
+                        <Shield className={iconClass(activePaths.adminRights)} />
+                        {showLabels && <span>สิทธิ์และบทบาท</span>}
+                      </div>
+                      {showLabels && (
+                        <span
+                          onClick={(e) => { e.stopPropagation(); setPermRolesExpanded(!permRolesExpanded); }}
+                          className="flex items-center justify-center p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer"
+                        >
+                          {permRolesExpanded ? <ChevronDown className="w-[18px] h-[18px] text-slate-300" /> : <ChevronRight className="w-[18px] h-[18px] text-slate-300" />}
+                        </span>
+                      )}
+                    </SidebarMenuButton>
+                    {showLabels && permRolesExpanded && (
+                      <div className="ml-3 mt-0.5 space-y-0.5">
+                        {canAccessPage("manage_roles", roles) && (
+                          <SidebarMenuButton className={cn(btnClass(activePaths.adminRoles), "!py-2")} onClick={() => handleNav("/dashboard/admin/roles")}>
+                            <div className="flex items-center gap-3">
+                              <Shield className={cn("size-[18px] shrink-0", iconClass(activePaths.adminRoles))} />
+                              <span>จัดการบทบาทพนักงาน</span>
+                            </div>
+                          </SidebarMenuButton>
+                        )}
+                        {canAccessPage("manage_roles_crud", roles) && (
+                          <SidebarMenuButton className={cn(btnClass(activePaths.adminRolesCrud), "!py-2")} onClick={() => handleNav("/dashboard/admin/roles/manage")}>
+                            <div className="flex items-center gap-3">
+                              <UserCog className={cn("size-[18px] shrink-0", iconClass(activePaths.adminRolesCrud))} />
+                              <span>จัดการบทบาท</span>
+                            </div>
+                          </SidebarMenuButton>
+                        )}
+                        {canAccessPage("manage_staff_roles", roles) && (
+                          <SidebarMenuButton className={cn(btnClass(activePaths.staffRoles), "!py-2")} onClick={() => handleNav("/dashboard/hr/staff-roles")}>
+                            <div className="flex items-center gap-3">
+                              <UserCog className={cn("size-[18px] shrink-0", iconClass(activePaths.staffRoles))} />
+                              <span>จัดการสิทธิ์ของพนักงาน</span>
+                            </div>
+                          </SidebarMenuButton>
+                        )}
+                        {canAccessPage("manage_page_permissions", roles) && (
+                          <SidebarMenuButton className={cn(btnClass(activePaths.adminPagePermissions), "!py-2")} onClick={() => handleNav("/dashboard/admin/page-permissions")}>
+                            <div className="flex items-center gap-3">
+                              <Shield className={cn("size-[18px] shrink-0", iconClass(activePaths.adminPagePermissions))} />
+                              <span>จัดการสิทธิ์การเข้าถึงหน้า</span>
+                            </div>
+                          </SidebarMenuButton>
+                        )}
+                      </div>
+                    )}
+                  </SidebarMenuItem>
+                )}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={cn(btnClass(activePaths.holidays), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}

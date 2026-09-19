@@ -58,14 +58,14 @@ export async function PUT(
       select: { staff_id: true },
     });
     if (!exists) {
-      return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+      return NextResponse.json({ error: "ไม่พบข้อมูลพนักงาน (อาจถูกลบไปแล้ว)" }, { status: 404 });
     }
 
     const body = await request.json();
     const { quotas } = body;
 
     if (!Array.isArray(quotas) || quotas.length === 0) {
-      return NextResponse.json({ error: "quotas array is required" }, { status: 400 });
+      return NextResponse.json({ error: "ข้อมูลไม่ถูกต้อง: ไม่พบรายการสิทธิ์ลาที่จะบันทึก" }, { status: 400 });
     }
 
     const year = new Date().getFullYear();
@@ -73,12 +73,18 @@ export async function PUT(
     for (const q of quotas) {
       if (!q.leaveTypeId || typeof q.maxDays !== "number" || typeof q.usedDays !== "number") {
         return NextResponse.json(
-          { error: "Each quota must have leaveTypeId, maxDays (number), usedDays (number)" },
+          { error: "ข้อมูลไม่ถูกต้อง: แต่ละรายการต้องระบุ leaveTypeId, maxDays (ตัวเลข), usedDays (ตัวเลข)" },
           { status: 400 },
         );
       }
       if (q.usedDays < 0 || q.maxDays < 0) {
-        return NextResponse.json({ error: "Values must not be negative" }, { status: 400 });
+        return NextResponse.json({ error: "ข้อมูลไม่ถูกต้อง: ค่าจำนวนวันต้องไม่ติดลบ" }, { status: 400 });
+      }
+      if (q.usedDays > q.maxDays) {
+        return NextResponse.json(
+          { error: `ข้อมูลไม่ถูกต้อง: จำนวนวันลาที่ใช้แล้ว (${q.usedDays}) ต้องไม่เกินสิทธิ์วันลา (${q.maxDays})` },
+          { status: 400 },
+        );
       }
     }
 
@@ -111,6 +117,9 @@ export async function PUT(
     return NextResponse.json({ data: updated });
   } catch (error) {
     console.error("Error in PUT /api/hr/staff/[id]/leave-quota:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่อีกครั้ง" },
+      { status: 500 },
+    );
   }
 }

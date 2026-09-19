@@ -36,6 +36,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
   - Leave reason: `.trim().slice(0, 500)`.
   - Fixed `LeaveDetailResponse.staffId` field — `detail.staffId` replaces `detail.staff.staff_id`.
 - **File Upload Marked**: All file upload code commented as `⚠️ not yet implemented`; UI blocks hidden with `{false && (...)}`.
+- **Import Date Fix**: Added `parseDateOnly`/`buildUtcDate` to `lib/utils.ts` (accepts YYYY-MM-DD, YYYY/MM/DD, DD/MM/YYYY day-first, DD-MM-YYYY, Excel serial, YYYYMMDD). `importStaff` validates per-row with Thai error messages.
+- **1 User 1 Role**: `StaffRoleDialog` → radio single-select; `updateStaffRoles` throws if 0 or >1 role (case-insensitive role match throughout).
+- **Role CRUD (SUPER_ADMIN)**: New `manage_roles_crud` menu + `/dashboard/admin/roles/manage` page (table: name, staff count, status, system/custom type, edit/toggle). `getRoleManageList`/`createRole`/`updateRoleName`/`toggleRoleActive` in `leaveService.ts`; `POST /api/admin/roles` + `PATCH /api/admin/roles/[id]`. Guards: system roles (SUPER_ADMIN/HR/APPROVER/EMPLOYEE) unrenamable, cannot deactivate in-use roles or system roles (reactivation allowed), case-insensitive uniqueness. Permission entries auto-derived from `MENU_ITEMS`; `GET /api/admin/roles` conditionally seeds page permissions (checks `manage_roles_crud` pageResource exists first — avoids slow per-load seeding).
+- **Menu Merge — จัดการผู้ใช้**: Moved "จัดการผู้ใช้" under "รายชื่อพนักงาน" as submenu item (with เพิ่ม/นำเข้า), gated by `canAccessPage("manage_users", roles)`; removed the unguarded standalone item; parent now highlights on user-management page too.
+- **Menu Merge — สิทธิ์และบทบาท (A)**: Collapsed 4 SUPER_ADMIN items (จัดการบทบาทพนักงาน/จัดการบทบาท/จัดการสิทธิ์ของพนักงาน/จัดการสิทธิ์การเข้าถึงหน้า) under expandable parent "สิทธิ์และบทบาท" in SidebarMenu; parent shown if any of the 4 pages accessible; per-item guards kept; `activePaths.adminRights` highlights parent on any of the 4 routes.
+- **Dropdown Always Below**: `SelectContent` in `components/ui/select.tsx` now defaults to `position="popper" side="bottom" sideOffset={4}` — every Radix Select in the project opens below its trigger (previously `item-aligned` could open above). DropdownMenu already opens below by default.
+- **Staff Edit Error Classification**: `updateStaff` throws typed `StaffUpdateConflictError` (email duplicate); `PUT /api/hr/staff/[id]` returns Thai categorized errors — `ข้อมูลไม่ถูกต้อง: ...` (400), `ไม่พบข้อมูลพนักงาน...` (404), `ไม่สามารถบันทึกได้ มีข้อมูลซ้ำ: ...` (409), generic server error (500). `PUT leave-quota` same style + new `usedDays <= maxDays` guard. Edit page surfaces `json.error` detail in form box + quota toast.
 
 ### In Progress
 - *(none)*
@@ -81,3 +88,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `app/dashboard/hr/workflows/page.tsx`: Card layout.
 - `proxy.ts`: Page permission enforcement.
 - `components/AppBreadcrumb.tsx`: href validation.
+- `lib/services/leaveService.ts`: `getRoleManageList`/`createRole`/`updateRoleName`/`toggleRoleActive` (Role CRUD, system-role + in-use guards).
+- `app/api/admin/roles/route.ts` + `app/api/admin/roles/[id]/route.ts`: SUPER_ADMIN guard, POST/PATCH.
+- `app/dashboard/admin/roles/manage/page.tsx`: Role CRUD UI.
+- `lib/menu-config.ts`: `MENU_ITEMS` drives `PAGE_KEY_BY_PREFIX` + `DEFAULT_PAGE_PERMISSIONS` (auto-derived).
