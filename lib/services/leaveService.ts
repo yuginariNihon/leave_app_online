@@ -1214,6 +1214,19 @@ export async function updateStaff(
   };
 }
 
+async function resolveDefaultRole(
+  positionId: string,
+): Promise<{ role_id: string; role_name: string } | null> {
+  const pos = await prisma.position.findUnique({
+    where: { position_id: positionId },
+    include: {
+      defaultRole: { select: { role_id: true, role_name: true, is_active: true } },
+    },
+  });
+  if (!pos?.defaultRole || !pos.defaultRole.is_active) return null;
+  return { role_id: pos.defaultRole.role_id, role_name: pos.defaultRole.role_name };
+}
+
 export async function createStaff(
   data: {
     staffCode: string;
@@ -1259,27 +1272,30 @@ export async function createStaff(
     },
   });
 
-  // Default role based on position
-  const posName = staff.position?.position_name?.toLowerCase() || "";
-  const isApproverPos = ["general manager", "manager", "senior supervisor", "supervisor", "director"].includes(posName);
-  const isEmployeePos = posName === "operator" || posName === "staff";
-  const defaultRoleName = isApproverPos ? "APPROVER" : isEmployeePos ? "Employee" : "STAFF";
-  let staffRole = await prisma.role.findFirst({
-    where: { role_name: { equals: defaultRoleName, mode: "insensitive" } },
-    select: { role_id: true },
-  });
+  const defaultRole = await resolveDefaultRole(data.positionId);
+  let staffRole: { role_id: string } | null = defaultRole ? { role_id: defaultRole.role_id } : null;
   if (!staffRole) {
-    const fallbacks: Record<string, string[]> = {
-      APPROVER: ["STAFF", "Employee"],
-      Employee: ["STAFF"],
-      STAFF: ["Employee"],
-    };
-    for (const fallback of fallbacks[defaultRoleName] ?? []) {
-      staffRole = await prisma.role.findFirst({
-        where: { role_name: { equals: fallback, mode: "insensitive" } },
-        select: { role_id: true },
-      });
-      if (staffRole) break;
+    const posName = staff.position?.position_name?.toLowerCase() || "";
+    const isApproverPos = ["general manager", "manager", "senior supervisor", "supervisor", "director"].includes(posName);
+    const isEmployeePos = posName === "operator" || posName === "staff";
+    const defaultRoleName = isApproverPos ? "APPROVER" : isEmployeePos ? "Employee" : "STAFF";
+    staffRole = await prisma.role.findFirst({
+      where: { role_name: { equals: defaultRoleName, mode: "insensitive" } },
+      select: { role_id: true },
+    });
+    if (!staffRole) {
+      const fallbacks: Record<string, string[]> = {
+        APPROVER: ["STAFF", "Employee"],
+        Employee: ["STAFF"],
+        STAFF: ["Employee"],
+      };
+      for (const fallback of fallbacks[defaultRoleName] ?? []) {
+        staffRole = await prisma.role.findFirst({
+          where: { role_name: { equals: fallback, mode: "insensitive" } },
+          select: { role_id: true },
+        });
+        if (staffRole) break;
+      }
     }
   }
   if (staffRole) {
@@ -1372,7 +1388,14 @@ export async function importStaff(
   // Pre-load lookup maps for O(1) case-insensitive matching (avoids N+1 + mode:insensitive)
   const [allDepartments, allPositions, allSections, allEmploymentTypes, allRoles] = await Promise.all([
     prisma.department.findMany({ where: { is_active: true }, select: { department_id: true, department_name: true } }),
-    prisma.position.findMany({ where: { is_active: true }, select: { position_id: true, position_name: true } }),
+    prisma.position.findMany({
+      where: { is_active: true },
+      select: {
+        position_id: true,
+        position_name: true,
+        defaultRole: { select: { role_id: true, is_active: true } },
+      },
+    }),
     prisma.section.findMany({ where: { is_active: true }, select: { section_id: true, section_name: true, department_id: true } }),
     prisma.employmentType.findMany({ where: { is_active: true }, select: { employment_type_id: true, name: true } }),
     prisma.role.findMany({ select: { role_id: true, role_name: true } }),
@@ -1383,6 +1406,12 @@ export async function importStaff(
   const sectionMap = new Map(allSections.map((s) => [`${s.department_id}:${s.section_name.toLowerCase()}`, s.section_id]));
   const etMap = new Map(allEmploymentTypes.map((e) => [e.name.toLowerCase(), e.employment_type_id]));
   const roleMap = new Map(allRoles.map((r) => [r.role_name.toUpperCase(), r.role_id]));
+  const posDefaultRoleMap = new Map<string, string>();
+  for (const p of allPositions) {
+    if (p.defaultRole?.is_active) {
+      posDefaultRoleMap.set(p.position_name.toLowerCase(), p.defaultRole.role_id);
+    }
+  }
 
   await prisma.$transaction(async (tx) => {
     const activeLeaveTypes = await tx.leaveType.findMany({
@@ -1465,21 +1494,23 @@ export async function importStaff(
           },
         });
 
-        // Default role based on position (O(1) lookup via preloaded roleMap)
-        const posName = row.positionName?.toLowerCase() || "";
-        const isApproverPos = ["general manager", "manager", "senior supervisor", "supervisor", "director"].includes(posName);
-        const isEmployeePos = posName === "operator" || posName === "staff";
-        const defaultRoleName = isApproverPos ? "APPROVER" : isEmployeePos ? "Employee" : "STAFF";
-        const fallbacks: Record<string, string[]> = {
-          APPROVER: ["STAFF", "Employee"],
-          Employee: ["STAFF"],
-          STAFF: ["Employee"],
-        };
-        let roleId = roleMap.get(defaultRoleName.toUpperCase());
+        let roleId = posDefaultRoleMap.get(row.positionName?.toLowerCase() ?? "");
         if (!roleId) {
-          for (const fallback of fallbacks[defaultRoleName] ?? []) {
-            roleId = roleMap.get(fallback.toUpperCase());
-            if (roleId) break;
+          const posName = row.positionName?.toLowerCase() || "";
+          const isApproverPos = ["general manager", "manager", "senior supervisor", "supervisor", "director"].includes(posName);
+          const isEmployeePos = posName === "operator" || posName === "staff";
+          const defaultRoleName = isApproverPos ? "APPROVER" : isEmployeePos ? "Employee" : "STAFF";
+          const fallbacks: Record<string, string[]> = {
+            APPROVER: ["STAFF", "Employee"],
+            Employee: ["STAFF"],
+            STAFF: ["Employee"],
+          };
+          roleId = roleMap.get(defaultRoleName.toUpperCase());
+          if (!roleId) {
+            for (const fallback of fallbacks[defaultRoleName] ?? []) {
+              roleId = roleMap.get(fallback.toUpperCase());
+              if (roleId) break;
+            }
           }
         }
         if (roleId) {
@@ -1678,6 +1709,8 @@ export type PositionListItem = {
   positionLevel: number | null;
   isActive: boolean;
   staffCount: number;
+  defaultRoleId: string | null;
+  defaultRoleName: string | null;
 };
 
 export async function getPositions(): Promise<PositionListItem[]> {
@@ -1685,6 +1718,7 @@ export async function getPositions(): Promise<PositionListItem[]> {
     orderBy: { position_name: "asc" },
     include: {
       _count: { select: { staffs: true } },
+      defaultRole: { select: { role_id: true, role_name: true } },
     },
   });
 
@@ -1694,6 +1728,8 @@ export async function getPositions(): Promise<PositionListItem[]> {
     positionLevel: p.position_level,
     isActive: p.is_active,
     staffCount: p._count.staffs,
+    defaultRoleId: p.defaultRole?.role_id ?? null,
+    defaultRoleName: p.defaultRole?.role_name ?? null,
   }));
 }
 

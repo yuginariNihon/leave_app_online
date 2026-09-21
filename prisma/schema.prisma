@@ -99,10 +99,14 @@ model Position {
   position_name  String @unique @db.VarChar(100)
   position_level Int?
 
+  default_role_id String? @db.Uuid
+
   is_active Boolean @default(true)
 
   created_at DateTime @default(now()) @db.Timestamp(6)
   updated_at DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  defaultRole Role? @relation(fields: [default_role_id], references: [role_id], onDelete: SetNull, onUpdate: Cascade)
 
   staffs StaffInfo[]
   workflow LeaveWorkflow?
@@ -119,6 +123,7 @@ model Role {
 
   staffRoles StaffRole[]
   pageRolePermissions PageRolePermission[]
+  positions Position[]
 }
 
 model LeaveType {

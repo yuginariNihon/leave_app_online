@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { getPositions, createPosition } from "@/lib/services/leaveService";
 import { createPositionSchema } from "@/lib/TypeSchema";
@@ -22,8 +23,19 @@ export async function GET() {
     const hrError = await checkHR(session);
     if (hrError) return hrError;
 
-    const positions = await getPositions();
-    return NextResponse.json({ data: positions });
+    const [positions, activeRoles] = await Promise.all([
+      getPositions(),
+      prisma.role.findMany({
+        where: { is_active: true },
+        select: { role_id: true, role_name: true },
+        orderBy: { role_name: "asc" },
+      }),
+    ]);
+    const canManageDefaultRole = session?.roles.includes("SUPER_ADMIN") ?? false;
+    return NextResponse.json({
+      data: positions,
+      meta: { canManageDefaultRole, activeRoles },
+    });
   } catch (error) {
     console.error("Error in GET /api/hr/positions:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

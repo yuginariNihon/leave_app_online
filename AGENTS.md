@@ -89,6 +89,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `proxy.ts`: Page permission enforcement.
 - `components/AppBreadcrumb.tsx`: href validation.
 - `lib/services/leaveService.ts`: `getRoleManageList`/`createRole`/`updateRoleName`/`toggleRoleActive` (Role CRUD, system-role + in-use guards).
+- **Position→Role Default Mapping**: `Position.default_role_id` FK → `Role` (nullable, `onDelete: SetNull`). `resolveDefaultRole(positionId)` helper + `posDefaultRoleMap` (importStaff, O(1)) — `createStaff`/`importStaff` use DB default role first, fallback to old position-name logic. SUPER_ADMIN-only `PUT /api/admin/positions/[id]/default-role` (null = reset). `GET /api/hr/positions` returns `meta.{canManageDefaultRole, activeRoles}`; positions page shows "บทบาทเริ่มต้น" column (Select for SUPER_ADMIN, badge for HR).
 - `app/api/admin/roles/route.ts` + `app/api/admin/roles/[id]/route.ts`: SUPER_ADMIN guard, POST/PATCH.
 - `app/dashboard/admin/roles/manage/page.tsx`: Role CRUD UI.
 - `lib/menu-config.ts`: `MENU_ITEMS` drives `PAGE_KEY_BY_PREFIX` + `DEFAULT_PAGE_PERMISSIONS` (auto-derived).
