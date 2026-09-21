@@ -437,7 +437,7 @@ export default function UserManagementPage() {
               </div>
               <Button
                 onClick={() => copyToClipboard(resetPasswordResult)}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-[#767586] text-[#111c2d] text-[14px] font-semibold leading-[20px] hover:bg-[#d8e3fb] transition-colors cursor-pointer active:scale-95 duration-100 mb-2"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-[#767586] text-white text-[14px] font-semibold leading-[20px] hover:bg-[#d8e3fb] hover:text-black transition-colors cursor-pointer active:scale-95 duration-100 mb-2"
               >
                 {passwordCopied ? (
                   <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
