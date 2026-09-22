@@ -8,6 +8,7 @@ import { ArrowLeft, Briefcase, Loader2 } from "lucide-react";
 import { PositionForm } from "@/components/hr/positions/PositionForm";
 import type { CreatePositionValues, UpdatePositionValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function AddPositionPage() {
   const router = useRouter();
@@ -20,13 +21,10 @@ export default function AddPositionPage() {
     setSubmitError("");
 
     try {
-      const res = await fetch("/api/hr/positions", {
+await apiFetch("/api/hr/positions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("เพิ่มตำแหน่งเรียบร้อยแล้ว");

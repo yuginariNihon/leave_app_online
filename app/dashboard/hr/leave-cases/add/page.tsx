@@ -8,6 +8,7 @@ import { ArrowLeft, CaseSensitive, Loader2 } from "lucide-react";
 import { LeaveCaseForm } from "@/components/hr/leave-cases/LeaveCaseForm";
 import type { CreateLeaveCaseValues, UpdateLeaveCaseValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function AddLeaveCasePage() {
   const router = useRouter();
@@ -19,10 +20,8 @@ export default function AddLeaveCasePage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/hr/leave-types");
-        if (!res.ok) throw new Error("Failed to load leave types");
-        const json = await res.json();
-        setLeaveTypeOptions(json.data.map((lt: { leaveTypeId: string; leaveTypeName: string }) => ({
+        const json = await apiFetch<{ data: { leaveTypeId: string; leaveTypeName: string }[] }>("/api/hr/leave-types");
+        setLeaveTypeOptions(json.data.map((lt) => ({
           id: lt.leaveTypeId,
           label: lt.leaveTypeName,
         })));
@@ -38,13 +37,10 @@ export default function AddLeaveCasePage() {
     setSubmitError("");
 
     try {
-      const res = await fetch("/api/hr/leave-cases", {
+      await apiFetch("/api/hr/leave-cases", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("เพิ่มกรณีการลาเรียบร้อยแล้ว");

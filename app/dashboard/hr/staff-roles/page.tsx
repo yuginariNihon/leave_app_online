@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { StaffRoleDialog } from "@/app/dashboard/admin/roles/StaffRoleDialog";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/lib/user-context";
+import { apiFetch } from "@/lib/api";
 
 type StaffWithRoles = {
   staffId: string;
@@ -58,13 +59,10 @@ export default function StaffRolesPage() {
     setLoading(true);
     setError("");
     try {
-      const [staffRes, rolesRes] = await Promise.all([
-        fetch("/api/hr/roles/staff-list"),
-        fetch("/api/hr/roles"),
+      const [staffJson, rolesJson] = await Promise.all([
+        apiFetch<{ data: StaffWithRoles[] }>("/api/hr/roles/staff-list"),
+        apiFetch<{ data: RoleOption[] }>("/api/hr/roles"),
       ]);
-      if (!staffRes.ok || !rolesRes.ok) throw new Error("Failed to load data");
-      const staffJson = await staffRes.json();
-      const rolesJson = await rolesRes.json();
       setData(staffJson.data);
       setRoleOptions(rolesJson.data);
     } catch {
@@ -91,15 +89,10 @@ export default function StaffRolesPage() {
 
   const handleSave = async (staffId: string, roleNames: string[]) => {
     try {
-      const res = await fetch(`/api/hr/roles/staff/${staffId}`, {
+      await apiFetch(`/api/hr/roles/staff/${staffId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roles: roleNames }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to update roles");
-      }
       setData((prev) =>
         prev.map((s) => (s.staffId === staffId ? { ...s, roles: roleNames } : s)),
       );

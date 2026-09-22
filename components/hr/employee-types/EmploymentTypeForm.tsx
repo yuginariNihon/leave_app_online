@@ -30,8 +30,7 @@ export function EmploymentTypeForm({
     register,
     handleSubmit,
     formState: { errors: errs },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = useForm<any>({
+  } = useForm<CreateEmploymentTypeValues>({
     resolver: zodResolver(createEmploymentTypeSchema),
     defaultValues: defaultValues ?? { name: "", thainame: "", description: "" },
   });

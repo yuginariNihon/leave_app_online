@@ -8,6 +8,7 @@ import { WarningBanner } from "@/components/ui/warning-banner";
 import type { StaffMasterData } from "@/lib/services/leaveService";
 import type { CreateStaffValues, UpdateStaffValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 
 export default function AddStaffPage() {
@@ -25,9 +26,7 @@ export default function AddStaffPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/hr/master-data");
-        if (!res.ok) throw new Error("Failed to load master data");
-        const json = await res.json();
+const json = await apiFetch<{ data: StaffMasterData }>("/api/hr/master-data");
         setMasterData(json.data);
       } catch {
         setMasterDataError("ไม่สามารถโหลดข้อมูลมาสเตอร์ได้");
@@ -43,14 +42,10 @@ export default function AddStaffPage() {
     setSubmitError("");
 
     try {
-      const res = await fetch("/api/hr/staff", {
+await apiFetch("/api/hr/staff", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Failed to create staff");
 
       toast.success("เพิ่มรายชื่อพนักงานเรียบร้อยแล้ว");
       setSuccess(true);

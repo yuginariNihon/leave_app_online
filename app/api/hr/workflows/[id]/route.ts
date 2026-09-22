@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { requireHR } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { getWorkflowById, updateWorkflowSteps } from "@/lib/services/leaveService";
 import { updateWorkflowStepsSchema } from "@/lib/TypeSchema";
 
@@ -10,15 +11,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireHR();
+    if (auth.error) return auth.error;
 
     const { id } = await params;
     const workflow = await getWorkflowById(id);
@@ -28,8 +22,7 @@ export async function GET(
 
     return NextResponse.json({ data: workflow });
   } catch (error) {
-    console.error("Error in GET /api/hr/workflows/[id]:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }
 
@@ -38,15 +31,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireHR();
+    if (auth.error) return auth.error;
 
     const { id } = await params;
     const body = await request.json();
@@ -67,7 +53,6 @@ export async function PUT(
     await updateWorkflowSteps(id, parsed.data.steps);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error in PUT /api/hr/workflows/[id]:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

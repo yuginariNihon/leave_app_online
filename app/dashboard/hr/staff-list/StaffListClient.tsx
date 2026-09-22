@@ -19,6 +19,7 @@ import type { StaffListItem } from "@/lib/services/leaveService";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { Button } from "@/components/ui/button";
+import { apiFetch } from "@/lib/api";
 
 type Props = {
   initialData: StaffListItem[];
@@ -60,12 +61,10 @@ export default function StaffListClient({
   const handleToggleActive = async (staffId: string, currentActive: boolean) => {
     setTogglingIds((prev) => [...prev, staffId]);
     try {
-      const res = await fetch(`/api/hr/staff/${staffId}`, {
+      await apiFetch(`/api/hr/staff/${staffId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentActive }),
       });
-      if (!res.ok) throw new Error("Failed to toggle status");
       setData((prev) =>
         prev.map((s) =>
           s.staffId === staffId ? { ...s, isActive: !currentActive } : s,
@@ -95,9 +94,7 @@ export default function StaffListClient({
         if (appliedFilters.departmentFilter !== "all") params.set("departmentId", appliedFilters.departmentFilter);
         params.set("page", String(currentPage));
 
-        const res = await fetch(`/api/hr/staff-list?${params}`);
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "Failed to fetch");
+        const json = await apiFetch<{ data: StaffListItem[]; total: number; totalPages: number }>(`/api/hr/staff-list?${params}`);
         if (!cancelled) {
           setData(json.data ?? []);
           setTotal(json.total ?? 0);

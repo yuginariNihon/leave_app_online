@@ -8,6 +8,7 @@ import { ArrowLeft, CaseSensitive, Loader2 } from "lucide-react";
 import { LeaveCaseForm } from "@/components/hr/leave-cases/LeaveCaseForm";
 import type { CreateLeaveCaseValues, UpdateLeaveCaseValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function EditLeaveCasePage() {
   const router = useRouter();
@@ -24,21 +25,17 @@ export default function EditLeaveCasePage() {
   useEffect(() => {
     async function load() {
       try {
-        const [typesRes, caseRes] = await Promise.all([
-          fetch("/api/hr/leave-types"),
-          leaveCaseId ? fetch(`/api/hr/leave-cases/${leaveCaseId}`) : Promise.resolve(null),
+        const [typesJson, caseJson] = await Promise.all([
+          apiFetch<{ data: { leaveTypeId: string; leaveTypeName: string }[] }>("/api/hr/leave-types"),
+          leaveCaseId ? apiFetch<{ data: { leaveTypeId: string; caseName: string } }>(`/api/hr/leave-cases/${leaveCaseId}`) : Promise.resolve(null),
         ]);
 
-        if (!typesRes.ok) throw new Error("Failed to load leave types");
-        const typesJson = await typesRes.json();
-        setLeaveTypeOptions(typesJson.data.map((lt: { leaveTypeId: string; leaveTypeName: string }) => ({
+        setLeaveTypeOptions(typesJson.data.map((lt) => ({
           id: lt.leaveTypeId,
           label: lt.leaveTypeName,
         })));
 
-        if (caseRes) {
-          if (!caseRes.ok) throw new Error("Failed to load leave case");
-          const caseJson = await caseRes.json();
+        if (caseJson) {
           setDefaultValues({
             leaveTypeId: caseJson.data.leaveTypeId,
             caseName: caseJson.data.caseName,
@@ -60,13 +57,10 @@ export default function EditLeaveCasePage() {
     setSubmitError("");
 
     try {
-      const res = await fetch(`/api/hr/leave-cases/${leaveCaseId}`, {
+      await apiFetch(`/api/hr/leave-cases/${leaveCaseId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("แก้ไขกรณีการลาเรียบร้อยแล้ว");

@@ -26,6 +26,8 @@ import { useLeaveOptions } from "@/hooks/useLeaveOptions";
 import { WarningBanner } from "@/components/ui/warning-banner";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
+import { apiFetch } from "@/lib/api";
+import type { LeaveDetailResponse } from "@/lib/services/leaveService";
 
 export default function EditLeavePage() {
   const router = useRouter();
@@ -79,12 +81,7 @@ export default function EditLeavePage() {
       setDetailError("");
 
       try {
-        const res = await fetch(`/api/leaves/detail?leaveId=${encodeURIComponent(id)}`);
-        const json = await res.json();
-
-        if (!res.ok) {
-          throw new Error(json.error ?? "Failed to fetch leave detail");
-        }
+        const json = await apiFetch<{ data: LeaveDetailResponse }>(`/api/leaves/detail?leaveId=${encodeURIComponent(id)}`);
 
         const detail = json.data;
 
@@ -96,7 +93,7 @@ export default function EditLeavePage() {
             startDate: dateOnly(detail.startDate),
             endDate: dateOnly(detail.endDate),
             reason: detail.reason ?? "",
-            leavePeriod: detail.leavePeriod ?? "full_day",
+            leavePeriod: (detail.leavePeriod ?? "full_day") as "full_day" | "morning" | "afternoon",
           });
         }
       } catch (err) {
@@ -121,9 +118,8 @@ export default function EditLeavePage() {
 
   // Fetch holidays
   useEffect(() => {
-    fetch("/api/holidays")
-      .then((r) => r.json())
-      .then((json) => setHolidays((json.data ?? []).map((h: { holidayDate: string }) => h.holidayDate)))
+    apiFetch<{ data?: Array<{ holidayDate: string }> }>("/api/holidays")
+      .then((json) => setHolidays((json.data ?? []).map((h) => h.holidayDate)))
       .catch(() => setHolidayError("ไม่สามารถโหลดข้อมูลวันหยุดได้ — วันหยุดอาจไม่ถูกบล็อก"));
   }, []);
 
@@ -160,25 +156,18 @@ export default function EditLeavePage() {
     setSubmitTime(currentSubmitTime());
 
     try {
-      const res = await fetch(`/api/leaves/${leaveId}`, {
+      await apiFetch(`/api/leaves/${leaveId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        leaveTypeId: values.leaveTypeId,
-        leaveCaseId: values.leaveCaseId,
-        startDate: values.startDate,
-        endDate: values.endDate,
-        reason: values.reason,
-        totalDays: dayCount,
-        leavePeriod: values.leavePeriod,
-      }),
+        body: JSON.stringify({
+          leaveTypeId: values.leaveTypeId,
+          leaveCaseId: values.leaveCaseId,
+          startDate: values.startDate,
+          endDate: values.endDate,
+          reason: values.reason,
+          totalDays: dayCount,
+          leavePeriod: values.leavePeriod,
+        }),
       });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json.error ?? "Failed to update leave request");
-      }
 
       setIsSuccess(true);
       router.replace(

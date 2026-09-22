@@ -10,6 +10,7 @@ import { StaffForm } from "@/components/hr/StaffForm";
 import type { StaffMasterData, StaffDetailData, LeaveRightItem } from "@/lib/services/leaveService";
 import type { UpdateStaffValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function EditStaffPage() {
   const router = useRouter();
@@ -33,23 +34,16 @@ export default function EditStaffPage() {
     async function load() {
       setLoading(true);
       try {
-        const [masterRes, detailRes, quotaRes] = await Promise.all([
-          fetch("/api/hr/master-data"),
-          fetch(`/api/hr/staff/${staffId}`),
-          fetch(`/api/hr/staff/${staffId}/leave-quota`),
+const [masterJson, detailJson, quotaJson] = await Promise.all([
+          apiFetch<{ data: StaffMasterData }>("/api/hr/master-data"),
+          apiFetch<{ data: StaffDetailData }>(`/api/hr/staff/${staffId}`),
+          apiFetch<{ data: LeaveRightItem[] }>(`/api/hr/staff/${staffId}/leave-quota`).catch(() => null),
         ]);
-
-        if (!masterRes.ok) throw new Error("Failed to load master data");
-        if (!detailRes.ok) throw new Error("Failed to load staff detail");
-
-        const masterJson = await masterRes.json();
-        const detailJson = await detailRes.json();
 
         setMasterData(masterJson.data);
         setDetail(detailJson.data);
 
-        if (quotaRes.ok) {
-          const quotaJson = await quotaRes.json();
+        if (quotaJson) {
           const qdata = quotaJson.data ?? [];
           setQuota(qdata);
           const map: Record<string, { usedDays: number; maxDays: number }> = {};
@@ -77,18 +71,14 @@ export default function EditStaffPage() {
         maxDays: vals.maxDays,
         usedDays: vals.usedDays,
       }));
-const res = await fetch(`/api/hr/staff/${staffId}/leave-quota`, {
+await apiFetch(`/api/hr/staff/${staffId}/leave-quota`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quotas }),
       });
-      const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error ?? "เกิดข้อผิดพลาดภายในระบบ");
       toast.success("อัปเดตสิทธิ์ลาคงเหลือเรียบร้อยแล้ว");
-      const refetch = await fetch(`/api/hr/staff/${staffId}/leave-quota`);
-      if (refetch.ok) {
-        const json = await refetch.json();
-        setQuota(json.data ?? []);
+      const refetchJson = await apiFetch<{ data: LeaveRightItem[] }>(`/api/hr/staff/${staffId}/leave-quota`).catch(() => null);
+      if (refetchJson) {
+        setQuota(refetchJson.data ?? []);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "ไม่สามารถบันทึกสิทธิ์วันลาได้");
@@ -103,14 +93,10 @@ const res = await fetch(`/api/hr/staff/${staffId}/leave-quota`, {
     setSubmitError("");
 
     try {
-      const res = await fetch(`/api/hr/staff/${staffId}`, {
+await apiFetch(`/api/hr/staff/${staffId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-
-const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error ?? "เกิดข้อผิดพลาดในการบันทึก");
 
       toast.success("แก้ไขข้อมูลพนักงานเรียบร้อยแล้ว");
       setSuccess(true);

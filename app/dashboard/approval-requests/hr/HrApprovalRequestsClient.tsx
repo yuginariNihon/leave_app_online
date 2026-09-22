@@ -26,6 +26,7 @@ import { ApprovalTable } from "@/components/approval-requests/ApprovalTable";
 
 import { Pagination } from "@/components/leave-history/Pagination";
 import type { ApprovalRequestItem } from "@/lib/services/approvalService";
+import { apiFetch } from "@/lib/api";
 
 import { cn } from "@/lib/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
@@ -104,12 +105,9 @@ export default function HrApprovalRequestsClient({
 
       try {
         const qs = buildQuery(currentPage);
-        const res = await fetch(`/api/leaves/approvals/hr-pending?${qs}`);
-        const json = await res.json();
-
-        if (!res.ok) {
-          throw new Error(json.error ?? "Failed to fetch approvals");
-        }
+        const json = await apiFetch<{ data: ApprovalRequestItem[]; total: number; totalPages: number }>(
+          `/api/leaves/approvals/hr-pending?${qs}`,
+        );
 
         if (!cancelled) {
           setData(json.data ?? []);
@@ -167,15 +165,10 @@ export default function HrApprovalRequestsClient({
   ) => {
     setProcessingIds((prev) => [...prev, approvalId]);
     try {
-      const res = await fetch(`/api/leaves/approvals/hr/${approvalId}`, {
+      await apiFetch(`/api/leaves/approvals/hr/${approvalId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error ?? "Failed to process");
-      }
       toast.success(
         status === "approved"
           ? "อนุมัติคำขอเรียบร้อยแล้ว"
@@ -203,19 +196,14 @@ export default function HrApprovalRequestsClient({
 
     setProcessingIds((prev) => [...prev, ...selectedIds]);
     try {
-      const res = await fetch(`/api/leaves/approvals/hr/bulk`, {
+      await apiFetch(`/api/leaves/approvals/hr/bulk`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           approvalIds: selectedIds,
           status,
           comment: status === "rejected" ? rejectReason : undefined,
         }),
       });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error ?? "Failed to bulk process");
-      }
       toast.success(`${label} ${selectedIds.length} รายการเรียบร้อยแล้ว`)
       setFetchKey((k) => k + 1);
       setSelectedIds([]);

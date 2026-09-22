@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 import type { EmploymentTypeListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
 
@@ -42,9 +43,7 @@ export default function EmployeeTypesPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("/api/hr/employee-types");
-        if (!res.ok) throw new Error("Failed to load employee types");
-        const json = await res.json();
+        const json = await apiFetch<{ data: EmploymentTypeListItem[] }>("/api/hr/employee-types");
         if (!cancelled) setData(json.data);
       } catch {
         if (!cancelled) setError("ไม่สามารถโหลดข้อมูลประเภทพนักงานได้");
@@ -66,15 +65,10 @@ export default function EmployeeTypesPage() {
   const handleToggleActive = async (id: string, currentActive: boolean) => {
     setTogglingIds((prev) => [...prev, id]);
     try {
-      const res = await fetch(`/api/hr/employee-types/${id}`, {
+      await apiFetch(`/api/hr/employee-types/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentActive }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to toggle");
-      }
       setData((prev) =>
         prev.map((et) => (et.employmentTypeId === id ? { ...et, isActive: !currentActive } : et)),
       );

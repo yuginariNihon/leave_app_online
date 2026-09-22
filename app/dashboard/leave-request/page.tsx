@@ -25,6 +25,7 @@ import { useLeaveOptions } from "@/hooks/useLeaveOptions";
 import { WarningBanner, WarningBannerGroup } from "@/components/ui/warning-banner";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
+import { apiFetch } from "@/lib/api";
 
 export type LeaveQuotaMap = Record<string, { usedDays: number; maxDays: number; remaining: number }>;
 
@@ -61,13 +62,8 @@ export default function LeaveRequestPage() {
 
     async function loadQuota() {
       try {
-        const response = await fetch("/api/leave-quota");
-        if (response.ok) {
-          const result = await response.json();
-          if (!cancelled) setLeaveQuota(result.data ?? {});
-        } else {
-          if (!cancelled) setQuotaError("ไม่สามารถโหลดข้อมูลสิทธิ์วันลาได้");
-        }
+        const result = await apiFetch<{ data?: LeaveQuotaMap }>("/api/leave-quota");
+        if (!cancelled) setLeaveQuota(result.data ?? {});
       } catch {
         if (!cancelled) setQuotaError("ไม่สามารถโหลดข้อมูลสิทธิ์วันลาได้");
       }
@@ -82,9 +78,8 @@ export default function LeaveRequestPage() {
 
   // Fetch holidays
   useEffect(() => {
-    fetch("/api/holidays")
-      .then((r) => r.json())
-      .then((json) => setHolidays((json.data ?? []).map((h: { holidayDate: string }) => h.holidayDate)))
+    apiFetch<{ data?: Array<{ holidayDate: string }> }>("/api/holidays")
+      .then((json) => setHolidays((json.data ?? []).map((h) => h.holidayDate)))
       .catch(() => setHolidayError("ไม่สามารถโหลดข้อมูลวันหยุดได้ — วันหยุดอาจไม่ถูกบล็อก"));
   }, []);
 
@@ -153,27 +148,24 @@ export default function LeaveRequestPage() {
       return;
     }
 
-    const response = await fetch("/api/leaves", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        leaveTypeId: values.leaveTypeId,
-        leaveCaseId: values.leaveCaseId,
-        startDate: values.startDate,
-        endDate: values.endDate,
-        reason: values.reason,
-        totalDays: dayCount,
-        leavePeriod: values.leavePeriod,
-      }),
-    });
-
-    if (!response.ok) {
-      const result = await response.json().catch(() => null);
-
+    try {
+      await apiFetch("/api/leaves", {
+        method: "POST",
+        body: JSON.stringify({
+          leaveTypeId: values.leaveTypeId,
+          leaveCaseId: values.leaveCaseId,
+          startDate: values.startDate,
+          endDate: values.endDate,
+          reason: values.reason,
+          totalDays: dayCount,
+          leavePeriod: values.leavePeriod,
+        }),
+      });
+    } catch (err) {
       setSubmitError(
-        result?.error ?? "Unable to submit leave request. Please try again.",
+        err instanceof Error
+          ? err.message
+          : "Unable to submit leave request. Please try again.",
       );
       setShowErrorOverlay(true);
       return;

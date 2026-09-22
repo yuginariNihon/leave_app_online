@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -115,7 +116,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ days, month: monthParam || `${year}-${String(month + 1).padStart(2, "0")}` });
   } catch (error) {
-    console.error("Error in GET /api/leaves/calendar:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

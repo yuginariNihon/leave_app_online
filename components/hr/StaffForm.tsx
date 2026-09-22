@@ -49,8 +49,7 @@ export function StaffForm({
 }: SharedProps & { onBack?: () => void }) {
   const schema = mode === "create" ? createStaffSchema : updateStaffSchema;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const form = useForm<any>({
+  const form = useForm<CreateStaffValues | UpdateStaffValues>({
     resolver: zodResolver(schema),
     defaultValues,
   });

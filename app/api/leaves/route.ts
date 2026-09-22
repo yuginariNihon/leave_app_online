@@ -10,6 +10,7 @@ import {
   type CreateLeaveRequestValues,
 } from "@/lib/TypeSchema";
 import { getSessionUser } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { toDateOnly } from "@/lib/utils";
 
@@ -146,13 +147,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 422 });
     }
 
-    console.error("Failed to create leave request", error);
-
-    return NextResponse.json(
-      {
-        error: "Failed to create leave request.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error);
   }
 }

@@ -8,6 +8,7 @@ import { ArrowLeft, UserCog, Loader2 } from "lucide-react";
 import { EmploymentTypeForm } from "@/components/hr/employee-types/EmploymentTypeForm";
 import type { CreateEmploymentTypeValues, UpdateEmploymentTypeValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function EditEmployeeTypePage() {
   const router = useRouter();
@@ -24,9 +25,7 @@ export default function EditEmployeeTypePage() {
     if (!employeeTypeId) return;
     async function load() {
       try {
-        const res = await fetch(`/api/hr/employee-types/${employeeTypeId}`);
-        if (!res.ok) throw new Error("Failed to load employee type");
-        const json = await res.json();
+const json = await apiFetch<{ data: { code: string; name: string; thainame?: string | null; description?: string | null } }>(`/api/hr/employee-types/${employeeTypeId}`);
         setDefaultValues({
           code: json.data.code,
           name: json.data.name,
@@ -49,13 +48,10 @@ export default function EditEmployeeTypePage() {
     setSubmitError("");
 
     try {
-      const res = await fetch(`/api/hr/employee-types/${employeeTypeId}`, {
+await apiFetch(`/api/hr/employee-types/${employeeTypeId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("แก้ไขประเภทพนักงานเรียบร้อยแล้ว");

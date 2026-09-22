@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateLeaveRequest, validateLeaveRequestDetails, LeaveRequestValidationError } from "@/lib/services/leaveService";
 import { getLeaveDetailById } from "@/lib/services/leaveService";
-import { getSessionUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
 import { createLeaveRequestSchema } from "@/lib/TypeSchema";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
@@ -12,10 +12,8 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getSessionUser();
-  if (!session?.staffId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, error } = await requireAuth();
+  if (error) return error;
 
   const { id } = await params;
 
@@ -49,10 +47,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getSessionUser();
-  if (!session?.staffId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, error } = await requireAuth();
+  if (error) return error;
 
   const { id } = await params;
 

@@ -15,6 +15,7 @@ import { getLeaveDetailId } from "@/lib/navigation-state";
 import { formatDateTime, currentSubmitTime, buildLeaveReferenceId } from "@/lib/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
+import { apiFetch } from "@/lib/api";
 
 function buildActivities(detail: LeaveDetailResponse) {
   const activities: Array<{ title: string; date: string; isCurrent: boolean; subtitle?: string }> =
@@ -94,12 +95,9 @@ export default function LeaveDetailsPage() {
     setError("");
 
     try {
-      const res = await fetch(`/api/leaves/detail?leaveId=${encodeURIComponent(id)}`);
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json.error ?? "Failed to fetch leave detail");
-      }
+      const json = await apiFetch<{ data: LeaveDetailResponse }>(
+        `/api/leaves/detail?leaveId=${encodeURIComponent(id)}`,
+      );
 
       setDetail(json.data ?? null);
     } catch (err) {
@@ -123,16 +121,10 @@ export default function LeaveDetailsPage() {
     setCancelling(true);
 
     try {
-      const res = await fetch(`/api/leaves/${leaveId}/cancel`, {
+      await apiFetch(`/api/leaves/${leaveId}/cancel`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cancelReason }),
       });
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json.error ?? "Failed to cancel leave");
-      }
 
       flushSync(() => {
         setIsSuccess(true);

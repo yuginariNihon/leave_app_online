@@ -8,6 +8,7 @@ import { WarningBanner } from "@/components/ui/warning-banner";
 import { Save, Loader2 } from "lucide-react";
 import { createSectionSchema, updateSectionSchema } from "@/lib/TypeSchema";
 import type { CreateSectionValues, UpdateSectionValues } from "@/lib/TypeSchema";
+import { apiFetch, ApiError } from "@/lib/api";
 
 interface SectionFormProps {
   mode: "create" | "edit";
@@ -40,13 +41,10 @@ export function SectionForm({
   useEffect(() => {
     async function fetchDepts() {
       try {
-        const res = await fetch("/api/hr/departments");
-        if (res.ok) {
-          const json = await res.json();
-          setDepartments(json.data);
-        }
-      } catch {
-        setDeptError("ไม่สามารถโหลดรายการแผนกได้");
+        const json = await apiFetch<{ data: DepartmentOption[] }>("/api/hr/departments");
+        setDepartments(json.data);
+      } catch (err) {
+        if (!(err instanceof ApiError)) setDeptError("ไม่สามารถโหลดรายการแผนกได้");
       } finally {
         setLoadingDepts(false);
       }

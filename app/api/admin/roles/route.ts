@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { requireSuperAdmin } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { getRoleManageList, createRole } from "@/lib/services/leaveService";
 import { seedDefaultPagePermissions } from "@/lib/services/rolePermissionService";
 import { prisma } from "@/lib/prisma";
@@ -8,13 +9,8 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (!session.roles.includes("SUPER_ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireSuperAdmin();
+    if (auth.error) return auth.error;
 
     const pageResource = await prisma.pageResource.findUnique({
       where: { page_key: "manage_roles_crud" },
@@ -26,20 +22,14 @@ export async function GET() {
     const data = await getRoleManageList();
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("Error in GET /api/admin/roles:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (!session.roles.includes("SUPER_ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireSuperAdmin();
+    if (auth.error) return auth.error;
 
     const body = await request.json();
     const { roleName } = body;
@@ -50,8 +40,6 @@ export async function POST(request: NextRequest) {
     const data = await createRole(roleName);
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal Server Error";
-    console.error("Error in POST /api/admin/roles:", error);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return apiErrorResponse(error);
   }
 }

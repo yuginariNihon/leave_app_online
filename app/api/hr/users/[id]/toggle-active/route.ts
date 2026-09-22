@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSessionUser } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/errors";
 import { toggleUserActive, getUserRoleNames } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -30,7 +31,6 @@ export async function PATCH(
 
     return NextResponse.json({ data: result });
   } catch (error) {
-    console.error("Error in PATCH /api/hr/users/[id]/toggle-active:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

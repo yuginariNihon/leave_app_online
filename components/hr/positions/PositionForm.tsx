@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Save, Loader2 } from "lucide-react";
 import { createPositionSchema } from "@/lib/TypeSchema";
 import type { CreatePositionValues, UpdatePositionValues } from "@/lib/TypeSchema";
+import z from "zod";
 
 interface PositionFormProps {
   mode: "create" | "edit";
@@ -29,8 +30,7 @@ export function PositionForm({
     register,
     handleSubmit,
     formState: { errors: errs },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = useForm<any>({
+  } = useForm<z.input<typeof createPositionSchema>, unknown, z.output<typeof createPositionSchema>>({
     resolver: zodResolver(createPositionSchema),
     defaultValues: defaultValues ?? { positionName: "", positionLevel: null },
   });

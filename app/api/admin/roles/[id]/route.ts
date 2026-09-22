@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { requireSuperAdmin } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { updateRoleName, toggleRoleActive } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -9,13 +10,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (!session.roles.includes("SUPER_ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireSuperAdmin();
+    if (auth.error) return auth.error;
 
     const { id } = await params;
     const body = await request.json();
@@ -35,8 +31,6 @@ export async function PATCH(
       { status: 400 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal Server Error";
-    console.error("Error in PATCH /api/admin/roles/[id]:", error);
-    return NextResponse.json({ error: message }, { status: 400 });
+    return apiErrorResponse(error);
   }
 }

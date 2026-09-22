@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { toast } from "sonner";
 import { useUser } from "@/lib/user-context";
+import { apiFetch } from "@/lib/api";
 
 type PagePermission = {
   pageResourceId: string;
@@ -46,13 +47,10 @@ export default function PagePermissionsPage() {
     setLoading(true);
     setError("");
     try {
-      const [permRes, rolesRes] = await Promise.all([
-        fetch("/api/admin/page-permissions"),
-        fetch("/api/hr/roles"),
+      const [permJson, rolesJson] = await Promise.all([
+        apiFetch<{ data: PagePermission[] }>("/api/admin/page-permissions"),
+        apiFetch<{ data: RoleOption[] }>("/api/hr/roles"),
       ]);
-      if (!permRes.ok || !rolesRes.ok) throw new Error("Failed to load data");
-      const permJson = await permRes.json();
-      const rolesJson = await rolesRes.json();
 
       const sorted = permJson.data.sort(
         (a: PagePermission, b: PagePermission) =>
@@ -96,15 +94,10 @@ export default function PagePermissionsPage() {
         roleIds: p.allowedRoleIds,
       }));
 
-      const res = await fetch("/api/admin/page-permissions", {
+      await apiFetch("/api/admin/page-permissions", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ permissions }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to save");
-      }
       toast.success(`บันทึกกลุ่ม "${groupName}" เรียบร้อย`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");

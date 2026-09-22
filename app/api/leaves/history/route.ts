@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLeaveHistoryByStaffId } from "@/lib/services/leaveService";
-import { getSessionUser } from "@/lib/auth";
-import { formatDateOnly, formatDays } from "@/lib/utils";
+import { requireAuth } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
+import { formatDateOnly } from "@/lib/utils";
 import { statusTextMap } from "@/components/leave-history/types";
 
 export const runtime = "nodejs";
@@ -40,10 +41,8 @@ function buildLeaveHistoryCsvRow(r: {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     const { searchParams } = request.nextUrl;
     const stream = searchParams.get("stream") === "true";
@@ -125,7 +124,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error in GET /api/leaves/history:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSessionUser } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/errors";
 import { getUserList, createUserRecord, getStaffRoleNames, getUserByStaffId } from "@/lib/services/leaveService";
 import { randomBytes } from "crypto";
 
@@ -24,8 +25,7 @@ export async function GET(request: NextRequest) {
     const result = await getUserList({ search, isActive, page, limit, excludeSuperAdmin: !isSuperAdmin });
     return NextResponse.json({ data: result });
   } catch (error) {
-    console.error("Error in GET /api/hr/users:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }
 
@@ -61,7 +61,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: { email, password } }, { status: 201 });
   } catch (error) {
-    console.error("Error in POST /api/hr/users:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

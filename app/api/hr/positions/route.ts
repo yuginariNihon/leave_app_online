@@ -1,27 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/auth";
+import { requireHR } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { getPositions, createPosition } from "@/lib/services/leaveService";
 import { createPositionSchema } from "@/lib/TypeSchema";
 
 export const runtime = "nodejs";
 
-async function checkHR(session: { staffId: string; roles: string[] } | null) {
-  if (!session?.staffId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-  if (!isHR) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-  return null;
-}
-
 export async function GET() {
   try {
-    const session = await getSessionUser();
-    const hrError = await checkHR(session);
-    if (hrError) return hrError;
+    const { session, error } = await requireHR();
+    if (error) return error;
 
     const [positions, activeRoles] = await Promise.all([
       getPositions(),
@@ -37,16 +26,14 @@ export async function GET() {
       meta: { canManageDefaultRole, activeRoles },
     });
   } catch (error) {
-    console.error("Error in GET /api/hr/positions:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSessionUser();
-    const hrError = await checkHR(session);
-    if (hrError) return hrError;
+    const auth = await requireHR();
+    if (auth.error) return auth.error;
 
     const body = await request.json();
     const parsed = createPositionSchema.safeParse(body);
@@ -60,8 +47,6 @@ export async function POST(request: NextRequest) {
     const pos = await createPosition(parsed.data);
     return NextResponse.json({ data: pos }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal Server Error";
-    console.error("Error in POST /api/hr/positions:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

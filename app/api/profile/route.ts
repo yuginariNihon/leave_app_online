@@ -6,6 +6,7 @@ import {
 } from "@/lib/services/leaveService";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
+import { apiErrorResponse } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -37,11 +38,7 @@ export async function GET() {
 
     return NextResponse.json({ data: profile });
   } catch (error) {
-    console.error("Failed to fetch profile", error);
-    return NextResponse.json(
-      { error: "Failed to fetch profile." },
-      { status: 500 },
-    );
+    return apiErrorResponse(error);
   }
 }
 
@@ -80,11 +77,7 @@ export async function PUT(request: Request) {
     }
     return NextResponse.json({ data: profile });
   } catch (error) {
-    console.error("Failed to update profile", error);
-    return NextResponse.json(
-      { error: "Failed to update profile." },
-      { status: 500 },
-    );
+    return apiErrorResponse(error);
   }
 }
 

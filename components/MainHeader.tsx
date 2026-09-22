@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ClipboardList, Menu } from "lucide-react";
 import { IoSettings } from "react-icons/io5";
 import { useSidebar } from "@/components/ui/sidebar";
+import { apiFetch } from "@/lib/api";
 
 type MainHeaderUser = {
   name: string;
@@ -40,11 +41,8 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
 
     const refresh = async () => {
       try {
-        const res = await fetch("/api/notifications/unread-count", { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          if (!cancelled) setNotificationCount(typeof data.count === "number" ? data.count : 0);
-        }
+        const data = await apiFetch<{ count?: unknown }>("/api/notifications/unread-count", { cache: "no-store" });
+        if (!cancelled) setNotificationCount(typeof data.count === "number" ? data.count : 0);
       } catch {
         // keep last known value
       }

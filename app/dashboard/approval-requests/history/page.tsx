@@ -11,6 +11,7 @@ import { Pagination } from "@/components/leave-history/Pagination";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
+import { apiFetch, ApiError } from "@/lib/api";
 
 type HistoryItem = {
   approvalId: string;
@@ -70,13 +71,10 @@ function ApprovalHistoryPageInner() {
   useEffect(() => {
     async function loadTypeOptions() {
       try {
-        const res = await fetch("/api/leave-options");
-        const json = await res.json();
-        if (res.ok) {
-          setLeaveTypeOptions(json.data?.leaveTypes ?? []);
-        }
-      } catch {
-        setLeaveTypeError("ไม่สามารถโหลดตัวกรองประเภทการลาได้");
+const json = await apiFetch<{ data?: { leaveTypes?: Array<{ id: string; label: string }> } }>("/api/leave-options");
+        setLeaveTypeOptions(json.data?.leaveTypes ?? []);
+      } catch (err) {
+        if (!(err instanceof ApiError)) setLeaveTypeError("ไม่สามารถโหลดตัวกรองประเภทการลาได้");
       }
     }
     loadTypeOptions();
@@ -97,9 +95,9 @@ function ApprovalHistoryPageInner() {
         if (roleType !== "all") params.set("roleType", roleType);
         params.set("page", String(currentPage));
 
-        const res = await fetch(`/api/leaves/approvals/history?${params}`);
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "Failed to fetch");
+        const json = await apiFetch<{ data: HistoryItem[]; total: number; totalPages: number }>(
+          `/api/leaves/approvals/history?${params}`,
+        );
         if (!cancelled) {
           setData(json.data ?? []);
           setTotal(json.total ?? 0);

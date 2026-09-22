@@ -6,6 +6,7 @@ import { ArrowRight, FileText, User, Pencil, Plus } from "lucide-react";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { Button } from "@/components/ui/button";
+import { apiFetch } from "@/lib/api";
 
 
 type StepDisplay = {
@@ -37,12 +38,7 @@ export default function WorkflowsPage() {
       setError("");
 
       try {
-        const res = await fetch("/api/hr/workflows");
-        const json = await res.json();
-
-        if (!res.ok) {
-          throw new Error(json.error ?? "Failed to fetch workflows");
-        }
+        const json = await apiFetch<{ data: WorkflowItem[] }>("/api/hr/workflows");
 
         if (!cancelled) {
           setData(json.data ?? []);

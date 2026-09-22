@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/auth";
+import { requireHR } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { getLeaveRightsByStaffId } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -10,14 +11,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireHR();
+    if (auth.error) return auth.error;
 
     const { id } = await params;
 
@@ -32,8 +27,7 @@ export async function GET(
     const quota = await getLeaveRightsByStaffId(id);
     return NextResponse.json({ data: quota });
   } catch (error) {
-    console.error("Error in GET /api/hr/staff/[id]/leave-quota:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }
 
@@ -42,14 +36,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireHR();
+    if (auth.error) return auth.error;
 
     const { id } = await params;
 
@@ -116,10 +104,6 @@ export async function PUT(
     const updated = await getLeaveRightsByStaffId(id, year);
     return NextResponse.json({ data: updated });
   } catch (error) {
-    console.error("Error in PUT /api/hr/staff/[id]/leave-quota:", error);
-    return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่อีกครั้ง" },
-      { status: 500 },
-    );
+    return apiErrorResponse(error);
   }
 }

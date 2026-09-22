@@ -8,6 +8,7 @@ import { ArrowLeft, GitBranch, Plus, Trash2, GripVertical, Save, Loader2 } from 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { ApproverType } from "@/lib/generated/prisma/enums";
 import { HelpSection } from "@/components/hr/HelpSection";
+import { apiFetch } from "@/lib/api";
 
 type StepFormItem = {
   key: string;
@@ -44,9 +45,7 @@ export default function AddWorkflowPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/hr/workflows/available-positions");
-        if (!res.ok) throw new Error("Failed to load positions");
-        const json = await res.json();
+const json = await apiFetch<{ data: PositionOption[] }>("/api/hr/workflows/available-positions");
         setPositions(json.data ?? []);
       } catch {
         toast.error("ไม่สามารถโหลดรายการตำแหน่งได้");
@@ -100,13 +99,10 @@ export default function AddWorkflowPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/hr/workflows", {
+await apiFetch("/api/hr/workflows", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       toast.success("เพิ่มลำดับการอนุมัติเรียบร้อยแล้ว");
       setTimeout(() => router.push("/dashboard/hr/workflows"), 1500);

@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bulkUpdateApprovalStatus } from "@/lib/services/approvalService";
-import { getSessionUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { ApprovalStatus } from "@/lib/generated/prisma/enums";
 
 export const runtime = "nodejs";
 
 export async function PATCH(request: NextRequest) {
-  const session = await getSessionUser();
-  if (!session?.staffId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, error } = await requireAuth();
+  if (error) return error;
 
   const body = await request.json();
   const { approvalIds, status, comment } = body;
@@ -29,8 +28,6 @@ export async function PATCH(request: NextRequest) {
     await bulkUpdateApprovalStatus(approvalIds, session.staffId, status, comment);
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to bulk update.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return apiErrorResponse(error);
   }
 }

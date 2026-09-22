@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { Loader2 } from "lucide-react";
+import { apiFetch, ApiError } from "@/lib/api";
 
 type ResetPasswordFormProps = {
   name: string;
@@ -46,26 +47,20 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/change-password", {
+      await apiFetch("/api/auth/change-password", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "เกิดข้อผิดพลาด");
-        setLoading(false);
-        return;
-      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "เกิดข้อผิดพลาด กรุณาลองใหม่");
       setLoading(false);
-      setSuccess(true);
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1500);
-    } catch {
-      setError("เกิดข้อผิดพลาด กรุณาลองใหม่");
-      setLoading(false);
+      return;
     }
+    setLoading(false);
+    setSuccess(true);
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 1500);
   }
 
   return (

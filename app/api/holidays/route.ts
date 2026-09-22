@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireAuth();
+    if (auth.error) return auth.error;
 
     const holidays = await prisma.holiday.findMany({
       select: { holiday_name: true, holiday_date: true },
@@ -23,7 +22,6 @@ export async function GET() {
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("Error in GET /api/holidays:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

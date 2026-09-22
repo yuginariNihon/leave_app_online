@@ -8,6 +8,7 @@ import { ArrowLeft, Tags, Loader2 } from "lucide-react";
 import { LeaveTypeForm } from "@/components/hr/leave-types/LeaveTypeForm";
 import type { CreateLeaveTypeValues, UpdateLeaveTypeValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function EditLeaveTypePage() {
   const router = useRouter();
@@ -24,9 +25,7 @@ export default function EditLeaveTypePage() {
     if (!leaveTypeId) return;
     async function load() {
       try {
-        const res = await fetch(`/api/hr/leave-types/${leaveTypeId}`);
-        if (!res.ok) throw new Error("Failed to load leave type");
-        const json = await res.json();
+const json = await apiFetch<{ data: { leaveTypeName: string; maxDaysPerYear?: number | null; isPaid?: boolean; requiresAttachment?: boolean } }>(`/api/hr/leave-types/${leaveTypeId}`);
         setDefaultValues({
           leaveTypeName: json.data.leaveTypeName,
           maxDaysPerYear: json.data.maxDaysPerYear,
@@ -49,13 +48,10 @@ export default function EditLeaveTypePage() {
     setSubmitError("");
 
     try {
-      const res = await fetch(`/api/hr/leave-types/${leaveTypeId}`, {
+await apiFetch(`/api/hr/leave-types/${leaveTypeId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("แก้ไขประเภทการลาเรียบร้อยแล้ว");

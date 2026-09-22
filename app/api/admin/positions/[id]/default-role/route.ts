@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/auth";
+import { requireSuperAdmin } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -9,13 +10,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (!session.roles.includes("SUPER_ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireSuperAdmin();
+    if (auth.error) return auth.error;
 
     const { id } = await params;
 
@@ -50,10 +46,6 @@ export async function PUT(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error in PUT /api/admin/positions/[id]/default-role:", error);
-    return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่อีกครั้ง" },
-      { status: 500 },
-    );
+    return apiErrorResponse(error);
   }
 }

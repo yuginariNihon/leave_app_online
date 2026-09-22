@@ -1,29 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { requireHR } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { getLeaveTypeById, updateLeaveType, toggleLeaveTypeActive } from "@/lib/services/leaveService";
 import { updateLeaveTypeSchema } from "@/lib/TypeSchema";
 
 export const runtime = "nodejs";
-
-async function checkHR(session: { staffId: string; roles: string[] } | null) {
-  if (!session?.staffId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-  if (!isHR) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-  return null;
-}
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getSessionUser();
-    const hrError = await checkHR(session);
-    if (hrError) return hrError;
+    const auth = await requireHR();
+    if (auth.error) return auth.error;
 
     const { id } = await params;
     const lt = await getLeaveTypeById(id);
@@ -33,8 +22,7 @@ export async function GET(
 
     return NextResponse.json({ data: lt });
   } catch (error) {
-    console.error("Error in GET /api/hr/leave-types/[id]:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }
 
@@ -43,9 +31,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getSessionUser();
-    const hrError = await checkHR(session);
-    if (hrError) return hrError;
+    const auth = await requireHR();
+    if (auth.error) return auth.error;
 
     const { id } = await params;
 
@@ -61,9 +48,7 @@ export async function PUT(
     const lt = await updateLeaveType(id, parsed.data);
     return NextResponse.json({ data: lt });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal Server Error";
-    console.error("Error in PUT /api/hr/leave-types/[id]:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }
 
@@ -72,9 +57,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await getSessionUser();
-    const hrError = await checkHR(session);
-    if (hrError) return hrError;
+    const auth = await requireHR();
+    if (auth.error) return auth.error;
 
     const { id } = await params;
     const body = await request.json();
@@ -87,8 +71,6 @@ export async function PATCH(
     await toggleLeaveTypeActive(id, isActive);
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal Server Error";
-    console.error("Error in PATCH /api/hr/leave-types/[id]:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

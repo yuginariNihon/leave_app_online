@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/auth";
+import type { Prisma } from "@/lib/generated/prisma/client";
+import { requireSuperAdmin } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -15,14 +17,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (!session.roles.includes("SUPER_ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const { session, error } = await requireSuperAdmin();
+    if (error) return error;
 
     // 1. Get logged-in user's roles
     const userRoles = await prisma.staffRole.findMany({
@@ -64,8 +60,7 @@ export async function GET(request: NextRequest) {
       (sr) => sr.role.role_name === "SUPER_ADMIN",
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {
+    const where: Prisma.LeaveApprovalWhereInput = {
       approval_status: "pending",
       leave: { leave_status: "pending" },
     };
@@ -100,8 +95,7 @@ export async function GET(request: NextRequest) {
       sampleApprovals,
       testPendingApprovals,
     });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch {
-    return NextResponse.json({ error: "Internal server error" });
+  } catch (error) {
+    return apiErrorResponse(error);
   }
 }

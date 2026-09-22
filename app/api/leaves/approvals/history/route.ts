@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApprovalHistory } from "@/lib/services/approvalService";
-import { getSessionUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
 
@@ -8,10 +9,8 @@ export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     const { searchParams } = request.nextUrl;
 
@@ -33,7 +32,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error in GET /api/leaves/approvals/history:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

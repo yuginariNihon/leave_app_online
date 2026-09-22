@@ -16,6 +16,7 @@ import {
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { downloadCsv, csvCell } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
 import type { SectionListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
 
@@ -43,9 +44,7 @@ export default function SectionsPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("/api/hr/sections");
-        if (!res.ok) throw new Error("Failed to load sections");
-        const json = await res.json();
+        const json = await apiFetch<{ data: SectionListItem[] }>("/api/hr/sections");
         if (!cancelled) setData(json.data);
       } catch {
         if (!cancelled) setError("ไม่สามารถโหลดข้อมูลส่วนงานได้");
@@ -66,15 +65,10 @@ export default function SectionsPage() {
   const handleToggleActive = async (id: string, currentActive: boolean) => {
     setTogglingIds((prev) => [...prev, id]);
     try {
-      const res = await fetch(`/api/hr/sections/${id}`, {
+      await apiFetch(`/api/hr/sections/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentActive }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to toggle");
-      }
       setData((prev) =>
         prev.map((s) => (s.sectionId === id ? { ...s, isActive: !currentActive } : s)),
       );

@@ -23,6 +23,7 @@ import {
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import type { RoleManageItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/api";
 
 const SYSTEM_ROLE_NAMES = ["SUPER_ADMIN", "HR", "APPROVER", "EMPLOYEE"];
 
@@ -55,9 +56,7 @@ export default function ManageRolesPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("/api/admin/roles");
-        if (!res.ok) throw new Error("Failed to load roles");
-        const json = await res.json();
+        const json = await apiFetch<{ data: RoleManageItem[] }>("/api/admin/roles");
         if (!cancelled) setData(json.data);
       } catch {
         if (!cancelled) setError("ไม่สามารถโหลดข้อมูลบทบาทได้");
@@ -96,19 +95,17 @@ export default function ManageRolesPage() {
     setSaving(true);
     setSavingError("");
     try {
-      const res = editing
-        ? await fetch(`/api/admin/roles/${editing.roleId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ roleName: trimmed }),
-          })
-        : await fetch("/api/admin/roles", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ roleName: trimmed }),
-          });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
+      if (editing) {
+        await apiFetch(`/api/admin/roles/${editing.roleId}`, {
+          method: "PATCH",
+          body: JSON.stringify({ roleName: trimmed }),
+        });
+      } else {
+        await apiFetch("/api/admin/roles", {
+          method: "POST",
+          body: JSON.stringify({ roleName: trimmed }),
+        });
+      }
 
       setFormOpen(false);
       setFetchKey((k) => k + 1);
@@ -123,13 +120,10 @@ export default function ManageRolesPage() {
   const handleToggleActive = async (role: RoleManageItem) => {
     setTogglingIds((prev) => [...prev, role.roleId]);
     try {
-      const res = await fetch(`/api/admin/roles/${role.roleId}`, {
+      await apiFetch(`/api/admin/roles/${role.roleId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !role.isActive }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to toggle");
       setData((prev) =>
         prev.map((r) => (r.roleId === role.roleId ? { ...r, isActive: !role.isActive } : r)),
       );

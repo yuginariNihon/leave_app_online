@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 import type { LeaveCaseListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
 
@@ -42,9 +43,7 @@ export default function LeaveCasesPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("/api/hr/leave-cases");
-        if (!res.ok) throw new Error("Failed to load leave cases");
-        const json = await res.json();
+        const json = await apiFetch<{ data: LeaveCaseListItem[] }>("/api/hr/leave-cases");
         if (!cancelled) setData(json.data);
       } catch {
         if (!cancelled) setError("ไม่สามารถโหลดข้อมูลกรณีการลาได้");
@@ -65,15 +64,10 @@ export default function LeaveCasesPage() {
   const handleToggleActive = async (id: string, currentActive: boolean) => {
     setTogglingIds((prev) => [...prev, id]);
     try {
-      const res = await fetch(`/api/hr/leave-cases/${id}`, {
+      await apiFetch(`/api/hr/leave-cases/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentActive }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to toggle");
-      }
       setData((prev) =>
         prev.map((c) => (c.leaveCaseId === id ? { ...c, isActive: !currentActive } : c)),
       );

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hrBulkUpdateApprovalStatus } from "@/lib/services/approvalService";
-import { getSessionUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
 
 const bulkApprovalSchema = z.object({
   approvalIds: z.array(z.string()).min(1),
@@ -12,10 +12,8 @@ const bulkApprovalSchema = z.object({
 export const runtime = "nodejs";
 
 export async function PATCH(request: NextRequest) {
-  const session = await getSessionUser();
-  if (!session?.staffId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, error } = await requireAuth();
+  if (error) return error;
 
   const body = await request.json();
   const parsed = bulkApprovalSchema.safeParse(body);

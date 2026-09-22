@@ -8,6 +8,7 @@ import { ArrowLeft, GitBranch, Plus, Trash2, GripVertical, Save, Loader2 } from 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { ApproverType } from "@/lib/generated/prisma/enums";
 import { HelpSection } from "@/components/hr/HelpSection";
+import { apiFetch } from "@/lib/api";
 
 type StepFormItem = {
   key: string;
@@ -40,13 +41,11 @@ export default function EditWorkflowPage() {
     async function load() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/hr/workflows/${workflowId}`);
-        if (!res.ok) throw new Error("Failed to load workflow");
-        const json = await res.json();
+const json = await apiFetch<{ data: { positionName: string; steps: { approverType: string; isRequired: boolean }[] } }>(`/api/hr/workflows/${workflowId}`);
         const wf = json.data;
         setPositionName(wf.positionName);
         setSteps(
-          wf.steps.map((s: { approverType: string; isRequired: boolean }) => ({
+          wf.steps.map((s) => ({
             key: generateKey(),
             approverType: s.approverType,
             isRequired: s.isRequired,
@@ -101,13 +100,10 @@ export default function EditWorkflowPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/hr/workflows/${workflowId}`, {
+await apiFetch(`/api/hr/workflows/${workflowId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       toast.success("แก้ไขลำดับการอนุมัติเรียบร้อยแล้ว");
       setTimeout(() => router.push("/dashboard/hr/workflows"), 1500);

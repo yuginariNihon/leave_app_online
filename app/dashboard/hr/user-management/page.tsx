@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
 
 type UserListItem = {
@@ -82,9 +83,7 @@ export default function UserManagementPage() {
       params.set("page", String(page));
       params.set("limit", "20");
 
-      const res = await fetch(`/api/hr/users?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to load users");
-      const json = await res.json();
+      const json = await apiFetch<{ data: { users: UserListItem[]; total: number } }>(`/api/hr/users?${params.toString()}`);
       const d = json.data;
       setUsers(d.users ?? []);
       setTotal(d.total ?? 0);
@@ -105,14 +104,9 @@ export default function UserManagementPage() {
     if (!resetTarget) return;
     setResetting(true);
     try {
-      const res = await fetch(`/api/hr/users/${resetTarget.userId}/reset-password`, {
+      const json = await apiFetch<{ data: { password: string } }>(`/api/hr/users/${resetTarget.userId}/reset-password`, {
         method: "PATCH",
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to reset password");
-      }
-      const json = await res.json();
       setResetPasswordResult(json.data.password);
       toast.success("รีเซ็ตรหัสผ่านสำเร็จ");
     } catch (err) {
@@ -125,13 +119,9 @@ export default function UserManagementPage() {
   const handleToggleActive = async (user: UserListItem) => {
     setTogglingIds((prev) => [...prev, user.userId]);
     try {
-      const res = await fetch(`/api/hr/users/${user.userId}/toggle-active`, {
+      await apiFetch(`/api/hr/users/${user.userId}/toggle-active`, {
         method: "PATCH",
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to toggle active");
-      }
       setUsers((prev) =>
         prev.map((u) => (u.userId === user.userId ? { ...u, isActive: !u.isActive } : u)),
       );
@@ -148,9 +138,7 @@ export default function UserManagementPage() {
     setHistoryLoading(true);
     setHistoryData([]);
     try {
-      const res = await fetch(`/api/hr/users/${user.userId}/login-history`);
-      if (!res.ok) throw new Error("Failed to load history");
-      const json = await res.json();
+      const json = await apiFetch<{ data: LoginHistoryItem[] }>(`/api/hr/users/${user.userId}/login-history`);
       setHistoryData(json.data ?? []);
     } catch {
       toast.error("ไม่สามารถโหลดประวัติการเข้าใช้ได้");

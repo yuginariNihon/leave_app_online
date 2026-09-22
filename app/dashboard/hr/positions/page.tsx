@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 import type { PositionListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
 
@@ -54,9 +55,10 @@ export default function PositionsPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("/api/hr/positions");
-        if (!res.ok) throw new Error("Failed to load positions");
-        const json = await res.json();
+        const json = await apiFetch<{
+          data: PositionListItem[];
+          meta: { canManageDefaultRole?: boolean; activeRoles?: { role_id: string; role_name: string }[] };
+        }>("/api/hr/positions");
         if (!cancelled) {
           setData(json.data);
           setCanManageDefaultRole(json.meta?.canManageDefaultRole ?? false);
@@ -87,15 +89,10 @@ export default function PositionsPage() {
   const handleToggleActive = async (id: string, currentActive: boolean) => {
     setTogglingIds((prev) => [...prev, id]);
     try {
-      const res = await fetch(`/api/hr/positions/${id}`, {
+      await apiFetch(`/api/hr/positions/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentActive }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to toggle");
-      }
       setData((prev) =>
         prev.map((p) => (p.positionId === id ? { ...p, isActive: !currentActive } : p)),
       );
@@ -115,16 +112,14 @@ export default function PositionsPage() {
     const errors: string[] = [];
     await Promise.all(
       entries.map(async (p) => {
-        const res = await fetch(`/api/admin/positions/${p.positionId}/default-role`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ defaultRoleId: draft[p.positionId] ?? null }),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => null);
-          errors.push(err?.error ?? "เกิดข้อผิดพลาด");
-        } else {
+        try {
+          await apiFetch(`/api/admin/positions/${p.positionId}/default-role`, {
+            method: "PUT",
+            body: JSON.stringify({ defaultRoleId: draft[p.positionId] ?? null }),
+          });
           ok++;
+        } catch (err) {
+          errors.push(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
         }
       }),
     );

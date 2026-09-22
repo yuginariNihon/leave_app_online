@@ -33,6 +33,7 @@ import { MdCancel } from "react-icons/md";
 import { formatThaiDate, formatDateTime, buildLeaveReferenceId } from "@/lib/utils";
 import type { LeaveDetailResponse } from "@/lib/services/leaveService";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function HrApprovalDetailPage() {
   const router = useRouter();
@@ -57,9 +58,7 @@ export default function HrApprovalDetailPage() {
 
     async function fetchDetail() {
       try {
-        const res = await fetch(`/api/leaves/detail?leaveId=${leaveId}`);
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "Failed to fetch detail");
+        const json = await apiFetch<{ data: LeaveDetailResponse }>(`/api/leaves/detail?leaveId=${leaveId}`);
         setDetail(json.data ?? null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch detail");
@@ -82,13 +81,10 @@ export default function HrApprovalDetailPage() {
     processingRef.current = true;
     setProcessing(true);
     try {
-      const res = await fetch(`/api/leaves/approvals/hr/${pendingApproval.approvalId}`, {
+      await apiFetch(`/api/leaves/approvals/hr/${pendingApproval.approvalId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status, comment }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "ไม่สามารถดำเนินการได้");
 
       router.replace(`/dashboard/approval-requests/hr?approvalResult=${status}`);
     } catch (err) {

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
 
 type HolidayItem = {
@@ -57,9 +58,7 @@ export default function HolidaysPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch("/api/hr/holidays");
-        if (!res.ok) throw new Error("Failed to load holidays");
-        const json = await res.json();
+        const json = await apiFetch<{ data: HolidayItem[] }>("/api/hr/holidays");
         if (!cancelled) setData(json.data);
       } catch {
         if (!cancelled) setError("ไม่สามารถโหลดข้อมูลวันหยุดได้");
@@ -107,26 +106,16 @@ export default function HolidaysPage() {
       };
 
       if (editingId) {
-        const res = await fetch(`/api/hr/holidays/${editingId}`, {
+        await apiFetch(`/api/hr/holidays/${editingId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || "Failed to update");
-        }
         toast.success("แก้ไขวันหยุดเรียบร้อย");
       } else {
-        const res = await fetch("/api/hr/holidays", {
+        await apiFetch("/api/hr/holidays", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || "Failed to create");
-        }
         toast.success("เพิ่มวันหยุดเรียบร้อย");
       }
       resetForm();
@@ -141,13 +130,9 @@ export default function HolidaysPage() {
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`คุณต้องการลบวันหยุด "${name}" ใช่หรือไม่?`)) return;
     try {
-      const res = await fetch(`/api/hr/holidays/${id}`, {
+      await apiFetch(`/api/hr/holidays/${id}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to delete");
-      }
       toast.success("ลบวันหยุดเรียบร้อย");
       setFetchKey((k) => k + 1);
     } catch (err) {
@@ -364,19 +349,13 @@ export default function HolidaysPage() {
                       for (let i = 0; i < importRows.length; i++) {
                         const r = importRows[i];
                         try {
-                          const res = await fetch("/api/hr/holidays", {
+                          await apiFetch("/api/hr/holidays", {
                             method: "POST",
-                            headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ holidayName: r.holidayName, holidayDate: r.holidayDate, isRecurring: r.isRecurring }),
                           });
-                          if (res.ok) {
-                            results.push({ row: i + 1, status: "ok", message: `"${r.holidayName}" เพิ่มสำเร็จ` });
-                          } else {
-                            const err = await res.json();
-                            results.push({ row: i + 1, status: "error", message: err.error || `"${r.holidayName}" ล้มเหลว` });
-                          }
-                        } catch {
-                          results.push({ row: i + 1, status: "error", message: `"${r.holidayName}" เกิดข้อผิดพลาด` });
+                          results.push({ row: i + 1, status: "ok", message: `"${r.holidayName}" เพิ่มสำเร็จ` });
+                        } catch (err) {
+                          results.push({ row: i + 1, status: "error", message: err instanceof Error ? err.message : `"${r.holidayName}" ล้มเหลว` });
                         }
                         setImportResults([...results]);
                       }

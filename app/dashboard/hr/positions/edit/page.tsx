@@ -8,6 +8,7 @@ import { ArrowLeft, Briefcase, Loader2 } from "lucide-react";
 import { PositionForm } from "@/components/hr/positions/PositionForm";
 import type { CreatePositionValues, UpdatePositionValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function EditPositionPage() {
   const router = useRouter();
@@ -24,9 +25,7 @@ export default function EditPositionPage() {
     if (!positionId) return;
     async function load() {
       try {
-        const res = await fetch(`/api/hr/positions/${positionId}`);
-        if (!res.ok) throw new Error("Failed to load position");
-        const json = await res.json();
+const json = await apiFetch<{ data: { positionName: string; positionLevel?: number | null } }>(`/api/hr/positions/${positionId}`);
         setDefaultValues({
           positionName: json.data.positionName,
           positionLevel: json.data.positionLevel,
@@ -47,13 +46,10 @@ export default function EditPositionPage() {
     setSubmitError("");
 
     try {
-      const res = await fetch(`/api/hr/positions/${positionId}`, {
+await apiFetch(`/api/hr/positions/${positionId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("แก้ไขตำแหน่งเรียบร้อยแล้ว");

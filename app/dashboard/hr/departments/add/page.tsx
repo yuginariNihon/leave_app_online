@@ -8,6 +8,7 @@ import { ArrowLeft, Building2, Loader2 } from "lucide-react";
 import { DepartmentForm } from "@/components/hr/departments/DepartmentForm";
 import type { CreateDepartmentValues, UpdateDepartmentValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function AddDepartmentPage() {
   const router = useRouter();
@@ -20,13 +21,10 @@ export default function AddDepartmentPage() {
     setSubmitError("");
 
     try {
-      const res = await fetch("/api/hr/departments", {
+await apiFetch("/api/hr/departments", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("เพิ่มแผนกเรียบร้อยแล้ว");

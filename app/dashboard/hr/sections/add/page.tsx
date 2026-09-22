@@ -8,6 +8,7 @@ import { ArrowLeft, Layers, Loader2 } from "lucide-react";
 import { SectionForm } from "@/components/hr/sections/SectionForm";
 import type { CreateSectionValues, UpdateSectionValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function AddSectionPage() {
   const router = useRouter();
@@ -20,13 +21,10 @@ export default function AddSectionPage() {
     setSubmitError("");
 
     try {
-      const res = await fetch("/api/hr/sections", {
+      await apiFetch("/api/hr/sections", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("เพิ่มส่วนงานเรียบร้อยแล้ว");

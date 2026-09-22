@@ -15,6 +15,7 @@ import type { LeaveRecord } from "@/components/leave-history/types";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import type { LeaveHistoryResult } from "@/lib/services/leaveService";
+import { apiFetch } from "@/lib/api";
 
 type Props = {
   initialData: LeaveHistoryResult;
@@ -96,12 +97,15 @@ export default function LeaveHistoryClient({
 
       try {
         const qs = buildQuery(currentPage);
-        const res = await fetch(`/api/leaves/history?${qs}`);
-        const json = await res.json();
-
-        if (!res.ok) {
-          throw new Error(json.error ?? "Failed to fetch leave history");
-        }
+        const json = await apiFetch<{
+          data: LeaveRecord[];
+          total: number;
+          totalPages: number;
+          approved: number;
+          pending: number;
+          rejected: number;
+          cancelled: number;
+        }>(`/api/leaves/history?${qs}`);
 
         if (!cancelled) {
           setData(json.data ?? []);

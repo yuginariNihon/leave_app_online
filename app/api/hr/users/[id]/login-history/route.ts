@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSessionUser } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/errors";
 import { getUserLoginHistory } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -22,7 +23,6 @@ export async function GET(
     const history = await getUserLoginHistory(id, limit);
     return NextResponse.json({ data: history });
   } catch (error) {
-    console.error("Error in GET /api/hr/users/[id]/login-history:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

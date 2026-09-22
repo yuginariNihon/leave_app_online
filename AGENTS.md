@@ -61,15 +61,25 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Critical Context
 - TypeScript check (`npx tsc --noEmit`) passes clean.
-- All API endpoints have auth + authorization guards.
+- All API endpoints have auth + authorization guards (routes use `requireAuth`/`requireHR`/`requireSuperAdmin` from `@/lib/api-guards`).
+- Route catches return `apiErrorResponse(error)` (`@/lib/errors`) — AppError→400/401/403/404/409, unknown→500 generic (stack logged server-side).
+- `api-guards`/`errors` are shared — new routes should use them, never inline `checkHR`-style guards or hardcoded `"Internal Server Error"`.
 - Initial password: `phoneNumber || randomBytes(5).toString("hex")`.
 - `/api/debug-db` development-only; no stack traces in production.
 - CSV export sanitizes formula injection.
 - SUPER_ADMIN role self-removal blocked.
 - Login rate limit: 5 failures / 5 min → 30s delay.
+- Known pre-existing eslint issues (NOT from refactor): `react-hooks/set-state-in-effect` errors in `app/dashboard/hr/staff-roles/page.tsx:78` + `app/dashboard/leave-calendar/page.tsx:81`; `prefer-const` error (`timer`) in `components/MainHeader.tsx:54`; unused vars in `app/dashboard/admin/{page-permissions,roles}/page.tsx`, `app/dashboard/hr/staff-roles/page.tsx` (`router`/`userRoles`), `components/ResetPasswordForm.tsx` (`setShowAll`), `components/leave-details/LeaveDetailsHeader.tsx`, `components/leave-request/DatePicker.tsx` (`isSunday`).
 
 ## Relevant Files
 - `lib/TypeSchema.ts`: `createLeaveRequestSchema` without `status`.
+- `lib/api-guards.ts`: `requireAuth`/`requireHR`/`requireSuperAdmin` (shared route guards).
+- `lib/errors.ts`: `AppError` subclasses + `apiErrorResponse` (shared error mapping).
+- `lib/api.ts`: `apiFetch<T>` + `ApiError` (all client HTTP).
+- **Hubs (all callers import from these, do not import modules back into hubs)**: `lib/services/leaveService.ts` (leave-core + `export *` of staff/masterData/role/workflow/profile/userService), `lib/services/approvalService.ts` (actions + `export *` of approvalQueries).
+- `lib/services/staffService.ts`: staff CRUD/import/profile + `StaffUpdateConflictError`.
+- `lib/services/masterDataService.ts`: departments/positions/sections/leave-types/leave-cases/employment-types/holidays CRUD.
+- `lib/services/roleService.ts` + `workflowService.ts` + `profileService.ts` + `userService.ts` + `approvalQueries.ts`: per-domain.
 - `lib/services/leaveService.ts`: `CreateLeaveRequestInput`, `updateStaffRoles` (SUPER_ADMIN guard), `createStaff`/`importStaff` (password fallback + UserLeaveLimit).
 - `lib/services/approvalService.ts`: `getApprovalHistory` HR guard.
 - `lib/services/rolePermissionService.ts`: Default pages + per-page upsert.
@@ -93,3 +103,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `app/api/admin/roles/route.ts` + `app/api/admin/roles/[id]/route.ts`: SUPER_ADMIN guard, POST/PATCH.
 - `app/dashboard/admin/roles/manage/page.tsx`: Role CRUD UI.
 - `lib/menu-config.ts`: `MENU_ITEMS` drives `PAGE_KEY_BY_PREFIX` + `DEFAULT_PAGE_PERMISSIONS` (auto-derived).
+- **Refactor Phase 1/2 — API Guards + Error Taxonomy**: New `lib/api-guards.ts` (`requireAuth`/`requireHR`/`requireSuperAdmin`, each returns `{session, error}` GuardResult) + `lib/errors.ts` (`AppError` + `ValidationError`400/`UnauthorizedError`401/`ForbiddenError`403/`NotFoundError`404/`ConflictError`409 + `apiErrorResponse`). All `app/api/*` (except `auth/login|logout|session`) now use shared guards + catch via `apiErrorResponse`. `leaveService`/`approvalService` business throws converted to typed errors (duplicate→409, not-found→404, validation→400, HR/authority→401/403) — `LeaveRequestValidationError extends ValidationError`, `StaffUpdateConflictError extends ConflictError`. Removed all `useForm<any>` (5 forms → typed via `CreateXValues`/`z.input`/`z.output` for coerce forms), `as any[]` in user export, debug-db `where: any`, and unused vars (`isSelf`, `_`, `formatDays`).
+- **Refactor Phase 3 — Monolith Split**: `leaveService.ts` (3107→979 lines) now = leave-core (requests, history, detail, report, limits) + re-export hub `export *` from 6 new modules: `staffService.ts` (staff CRUD/import/profile), `masterDataService.ts` (departments/positions/sections/leave-types/leave-cases/employment-types/holidays), `roleService.ts`, `workflowService.ts`, `profileService.ts`, `userService.ts` (merged). `approvalService.ts` (1194→546 lines) = actions + hub re-export of new `approvalQueries.ts`. Private helpers duplicated where shared; **modules never import the hubs (no cycles)**; all callers unchanged (still import from `@/lib/services/leaveService`/`approvalService`).
+- **Refactor Phase 4 — `apiFetch` Client Layer**: New `lib/api.ts` — `apiFetch<T>(url, options?)` (default JSON Content-Type, FormData-aware, throws `ApiError` with server `json.error` message + `status` + raw `payload`) + `ApiError`. All client `fetch()` in `app/dashboard` + `components` (100 calls / 45 files) replaced with typed `apiFetch<T>` using real service types; `hr/staff-list/import` reads `schemaErrors` from `ApiError.payload`. No `fetch(` remains in client code.

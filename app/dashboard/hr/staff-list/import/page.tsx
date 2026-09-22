@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, FileText, CheckCircle2, XCircle, AlertCircle, Loader2, Download } from "lucide-react";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch, ApiError } from "@/lib/api";
 
 type PreviewRow = Record<string, string>;
 
@@ -69,20 +70,13 @@ export default function ImportStaffPage() {
 
       setImporting(true);
       try {
-        const res = await fetch("/api/hr/staff/import", {
+        const json = await apiFetch<{
+          success: number;
+          errors: Array<{ row: number; message: string }>;
+        }>("/api/hr/staff/import", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ rows }),
         });
-        const json = await res.json();
-        if (!res.ok) {
-          if (json.schemaErrors) {
-            setResult({ success: 0, errors: json.schemaErrors.map((e: { row: number; message: string }) => ({ row: e.row, message: e.message })) });
-            toast.error(`ข้อมูลไม่ถูกต้อง ${json.schemaErrors.length} รายการ`);
-            return;
-          }
-          throw new Error(json.error ?? "Import failed");
-        }
         setResult(json);
         if (json.errors?.length === 0) {
           toast.success(`นำเข้ารายชื่อพนักงาน ${json.success} รายการเรียบร้อยแล้ว`);
@@ -90,7 +84,20 @@ export default function ImportStaffPage() {
           toast.success(`นำเข้า ${json.success} รายการ สำเร็จ มีข้อผิดพลาด ${json.errors.length} รายการ`);
         }
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+        const schemaErrors =
+          err instanceof ApiError &&
+          err.payload &&
+          typeof err.payload === "object" &&
+          "schemaErrors" in err.payload &&
+          Array.isArray((err.payload as { schemaErrors?: unknown }).schemaErrors)
+            ? ((err.payload as { schemaErrors: Array<{ row: number; message: string }> }).schemaErrors ?? [])
+            : null;
+        if (schemaErrors) {
+          setResult({ success: 0, errors: schemaErrors.map((e) => ({ row: e.row, message: e.message })) });
+          toast.error(`ข้อมูลไม่ถูกต้อง ${schemaErrors.length} รายการ`);
+        } else {
+          toast.error(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+        }
       } finally {
         setImporting(false);
       }

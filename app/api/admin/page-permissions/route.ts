@@ -1,37 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth";
+import { requireSuperAdmin } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { getPagePermissions, updatePagePermission, seedDefaultPagePermissions } from "@/lib/services/rolePermissionService";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (!session.roles.includes("SUPER_ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireSuperAdmin();
+    if (auth.error) return auth.error;
 
     await seedDefaultPagePermissions();
     const data = await getPagePermissions();
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("Error in GET /api/admin/page-permissions:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    if (!session.roles.includes("SUPER_ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireSuperAdmin();
+    if (auth.error) return auth.error;
 
     const body = await request.json();
     const { permissions } = body;
@@ -49,8 +39,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal Server Error";
-    console.error("Error in PUT /api/admin/page-permissions:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

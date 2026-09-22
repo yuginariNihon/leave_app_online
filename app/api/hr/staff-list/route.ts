@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireHR } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { getStaffList } from "@/lib/services/leaveService";
-import { getSessionUser } from "@/lib/auth";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
 
@@ -8,15 +9,8 @@ export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const { session, error } = await requireHR();
+    if (error) return error;
 
     const { searchParams } = request.nextUrl;
 
@@ -33,7 +27,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error in GET /api/hr/staff-list:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { requireSessionUser, SESSION_COOKIE_NAME } from "@/lib/auth";
+import { apiErrorResponse } from "@/lib/errors";
 import { hashPassword } from "@/lib/utils";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -91,7 +92,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error in PATCH /api/auth/change-password:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

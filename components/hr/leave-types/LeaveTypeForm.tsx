@@ -7,6 +7,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { Save, Loader2, Check } from "lucide-react";
 import { createLeaveTypeSchema } from "@/lib/TypeSchema";
 import type { CreateLeaveTypeValues, UpdateLeaveTypeValues } from "@/lib/TypeSchema";
+import z from "zod";
 
 interface LeaveTypeFormProps {
   mode: "create" | "edit";
@@ -32,8 +33,7 @@ export function LeaveTypeForm({
     watch,
     setValue,
     formState: { errors: errs },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } = useForm<any>({
+  } = useForm<z.input<typeof createLeaveTypeSchema>, unknown, z.output<typeof createLeaveTypeSchema>>({
     resolver: zodResolver(createLeaveTypeSchema),
     defaultValues: defaultValues ?? { leaveTypeName: "", maxDaysPerYear: null, isPaid: true, requiresAttachment: false },
   });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireHR } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
 import { getLeaveReport } from "@/lib/services/leaveService";
-import { getSessionUser } from "@/lib/auth";
 import { formatLeaveDateRange, formatDays } from "@/lib/utils";
 import { statusTextMap } from "@/components/leave-history/types";
 
@@ -16,15 +17,8 @@ function csvCell(value: unknown): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSessionUser();
-    if (!session?.staffId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const auth = await requireHR();
+    if (auth.error) return auth.error;
 
     const { searchParams } = request.nextUrl;
     const stream = searchParams.get("stream") === "true";
@@ -109,7 +103,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error in GET /api/hr/leave-report:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return apiErrorResponse(error);
   }
 }

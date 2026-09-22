@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLeaveDetailById } from "@/lib/services/leaveService";
-import { getSessionUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const session = await getSessionUser();
-  if (!session?.staffId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, error } = await requireAuth();
+  if (error) return error;
 
   try {
     const { searchParams } = new URL(request.url);

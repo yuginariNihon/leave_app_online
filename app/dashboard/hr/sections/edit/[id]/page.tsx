@@ -8,6 +8,7 @@ import { ArrowLeft, Layers, Loader2 } from "lucide-react";
 import { SectionForm } from "@/components/hr/sections/SectionForm";
 import type { CreateSectionValues, UpdateSectionValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function EditSectionPage() {
   const router = useRouter();
@@ -24,9 +25,7 @@ export default function EditSectionPage() {
     if (!sectionId) return;
     async function load() {
       try {
-        const res = await fetch(`/api/hr/sections/${sectionId}`);
-        if (!res.ok) throw new Error("Failed to load section");
-        const json = await res.json();
+        const json = await apiFetch<{ data: { sectionCode: string; sectionName: string; departmentId: string } }>(`/api/hr/sections/${sectionId}`);
         setDefaultValues({
           sectionCode: json.data.sectionCode,
           sectionName: json.data.sectionName,
@@ -48,13 +47,10 @@ export default function EditSectionPage() {
     setSubmitError("");
 
     try {
-      const res = await fetch(`/api/hr/sections/${sectionId}`, {
+      await apiFetch(`/api/hr/sections/${sectionId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("แก้ไขส่วนงานเรียบร้อยแล้ว");

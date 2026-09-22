@@ -8,6 +8,7 @@ import { ArrowLeft, UserCog, Loader2 } from "lucide-react";
 import { EmploymentTypeForm } from "@/components/hr/employee-types/EmploymentTypeForm";
 import type { CreateEmploymentTypeValues, UpdateEmploymentTypeValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function AddEmployeeTypePage() {
   const router = useRouter();
@@ -20,13 +21,10 @@ export default function AddEmployeeTypePage() {
     setSubmitError("");
 
     try {
-      const res = await fetch("/api/hr/employee-types", {
+await apiFetch("/api/hr/employee-types", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("เพิ่มประเภทพนักงานเรียบร้อยแล้ว");

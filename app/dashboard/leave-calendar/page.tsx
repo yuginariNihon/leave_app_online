@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, User, Bell, Info, X, Sun, ArrowRight } from 
 
 import { WarningBanner } from "@/components/ui/warning-banner";
 import { useUser } from "@/lib/user-context";
+import { apiFetch, ApiError } from "@/lib/api";
 
 type DayData = {
   date: string;
@@ -54,15 +55,21 @@ export default function LeaveCalendarPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [calRes, pendRes] = await Promise.all([
-        fetch(`/api/leaves/calendar?month=${monthParam}`),
-        fetch(`/api/leaves/approvals/${isHR ? "hr-pending" : "pending"}?limit=2`),
+      const [calJson, pendJson] = await Promise.all([
+        apiFetch<{ days?: DayData[] }>(`/api/leaves/calendar?month=${monthParam}`).catch((err) => {
+          if (err instanceof ApiError) return null;
+          throw err;
+        }),
+        apiFetch<{ data?: Array<{ leaveId?: string; staffName?: string; leaveTypeName?: string; startDate?: string | null; endDate?: string | null }> }>(
+          `/api/leaves/approvals/${isHR ? "hr-pending" : "pending"}?limit=2`,
+        ).catch((err) => {
+          if (err instanceof ApiError) return null;
+          throw err;
+        }),
       ]);
-      const calJson = await calRes.json();
-      if (calRes.ok) setDays(calJson.days ?? []);
-      const pendJson = await pendRes.json();
-      if (pendRes.ok) {
-        const items: { leaveId?: string; staffName?: string; leaveTypeName?: string; startDate?: string | null; endDate?: string | null }[] = pendJson.data ?? [];
+      if (calJson) setDays(calJson.days ?? []);
+      if (pendJson) {
+        const items = pendJson.data ?? [];
         setPendingReqs(items.map((r) => ({
           leaveId: r.leaveId ?? "",
           staffName: r.staffName ?? "",

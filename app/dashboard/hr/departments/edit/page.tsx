@@ -8,6 +8,7 @@ import { ArrowLeft, Building2, Loader2 } from "lucide-react";
 import { DepartmentForm } from "@/components/hr/departments/DepartmentForm";
 import type { CreateDepartmentValues, UpdateDepartmentValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 export default function EditDepartmentPage() {
   const router = useRouter();
@@ -24,9 +25,7 @@ export default function EditDepartmentPage() {
     if (!departmentId) return;
     async function load() {
       try {
-        const res = await fetch(`/api/hr/departments/${departmentId}`);
-        if (!res.ok) throw new Error("Failed to load department");
-        const json = await res.json();
+const json = await apiFetch<{ data: { departmentCode: string; departmentName: string } }>(`/api/hr/departments/${departmentId}`);
         setDefaultValues({
           departmentCode: json.data.departmentCode,
           departmentName: json.data.departmentName,
@@ -47,13 +46,10 @@ export default function EditDepartmentPage() {
     setSubmitError("");
 
     try {
-      const res = await fetch(`/api/hr/departments/${departmentId}`, {
+await apiFetch(`/api/hr/departments/${departmentId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "เกิดข้อผิดพลาด");
 
       setSuccess(true);
       toast.success("แก้ไขแผนกเรียบร้อยแล้ว");

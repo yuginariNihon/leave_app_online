@@ -23,6 +23,7 @@ import { StatusBadge } from "@/components/leave-history/StatusBadge";
 import { Pagination } from "@/components/leave-history/Pagination";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/api";
 
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
 import { statusTextMap } from "@/components/leave-history/types";
@@ -68,17 +69,15 @@ export default function LeaveReportPage() {
 
   useEffect(() => {
     async function loadOptions() {
-      const [deptRes, typeRes] = await Promise.all([
-        fetch("/api/hr/departments"),
-        fetch("/api/leave-options"),
+      const [deptJson, typeJson] = await Promise.all([
+        apiFetch<{ data: { departmentId: string; departmentName: string }[] }>("/api/hr/departments").catch(() => null),
+        apiFetch<{ data?: { leaveTypes?: { id: string; label: string }[] } }>("/api/leave-options").catch(() => null),
       ]);
-      if (deptRes.ok) {
-        const json = await deptRes.json();
-        setDepartmentOptions((json.data ?? []).map((d: { departmentId: string; departmentName: string }) => ({ id: d.departmentId, name: d.departmentName })));
+      if (deptJson) {
+        setDepartmentOptions((deptJson.data ?? []).map((d) => ({ id: d.departmentId, name: d.departmentName })));
       }
-      if (typeRes.ok) {
-        const json = await typeRes.json();
-        setLeaveTypeOptions(json.data?.leaveTypes ?? []);
+      if (typeJson) {
+        setLeaveTypeOptions(typeJson.data?.leaveTypes ?? []);
       }
     }
     loadOptions();
@@ -114,12 +113,7 @@ export default function LeaveReportPage() {
 
       try {
         const qs = buildQuery(currentPage);
-        const res = await fetch(`/api/hr/leave-report?${qs}`);
-        const json = await res.json();
-
-        if (!res.ok) {
-          throw new Error(json.error ?? "Failed to fetch report");
-        }
+        const json = await apiFetch<{ data: ReportRecord[]; total: number; totalPages: number; approved: number; rejected: number; cancelled: number }>(`/api/hr/leave-report?${qs}`);
 
         if (!cancelled) {
           setData(json.data ?? []);
