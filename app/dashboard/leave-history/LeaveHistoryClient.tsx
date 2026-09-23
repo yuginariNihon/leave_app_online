@@ -14,7 +14,7 @@ import { Pagination } from "@/components/leave-history/Pagination";
 import type { LeaveRecord } from "@/components/leave-history/types";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
-import type { LeaveHistoryResult } from "@/lib/services/leaveService";
+import type { LeaveHistoryResult, LeaveHistoryDateField } from "@/lib/services/leaveService";
 import { apiFetch } from "@/lib/api";
 
 type Props = {
@@ -37,19 +37,27 @@ export default function LeaveHistoryClient({
   const monthStart = initialStartDate;
   const monthEnd = initialEndDate;
   const {
-    live: { searchTerm, statusFilter, typeFilter, startDate, endDate },
+    live: { searchTerm, statusFilter, typeFilter, startDate, endDate, dateField },
     setFilter,
     applied: appliedFilters,
     page: currentPage,
     setPage: setCurrentPage,
     submit,
     reset,
-  } = useFilterWithApply({
+  } = useFilterWithApply<{
+    searchTerm: string;
+    statusFilter: string;
+    typeFilter: string;
+    startDate: string;
+    endDate: string;
+    dateField: LeaveHistoryDateField;
+  }>({
     searchTerm: "",
     statusFilter: "all",
     typeFilter: "all",
     startDate: monthStart,
     endDate: monthEnd,
+    dateField: "created_at",
   });
 
   const [data, setData] = useState<LeaveRecord[]>(initialData.data as LeaveRecord[]);
@@ -74,6 +82,7 @@ export default function LeaveHistoryClient({
       if (appliedFilters.typeFilter && appliedFilters.typeFilter !== "all") params.set("leaveTypeId", appliedFilters.typeFilter);
       if (appliedFilters.startDate) params.set("startDate", appliedFilters.startDate);
       if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
+      if (appliedFilters.dateField && appliedFilters.dateField !== "leave_period") params.set("dateField", appliedFilters.dateField);
       if (exportAll) {
         params.set("exportAll", "true");
       } else {
@@ -200,12 +209,14 @@ export default function LeaveHistoryClient({
               onStartDateChange={(v) => setFilter("startDate", v)}
               endDate={endDate}
               onEndDateChange={(v) => setFilter("endDate", v)}
+              dateField={dateField}
+              onDateFieldChange={(v) => setFilter("dateField", v)}
               totalItems={total}
               approvedItems={approvedCount}
               pendingItems={pendingCount}
               rejectedItems={rejectedCount}
               cancelledItems={cancelledCount}
-              onReset={() => reset({ searchTerm: "", statusFilter: "all", typeFilter: "all", startDate: monthStart, endDate: monthEnd })}
+              onReset={() => reset({ searchTerm: "", statusFilter: "all", typeFilter: "all", startDate: monthStart, endDate: monthEnd, dateField: "created_at" })}
               onExportCSV={handleExportCSV}
               onSearchSubmit={submit}
             />

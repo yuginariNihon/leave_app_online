@@ -1,6 +1,7 @@
 import { Search, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import type { LeaveHistoryDateField } from "@/lib/services/leaveService";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,8 @@ interface LeaveFiltersProps {
   onStartDateChange: (value: string) => void;
   endDate: string;
   onEndDateChange: (value: string) => void;
+  dateField?: LeaveHistoryDateField;
+  onDateFieldChange?: (value: LeaveHistoryDateField) => void;
   totalItems: number;
   approvedItems?: number;
   pendingItems?: number;
@@ -45,6 +48,8 @@ export function LeaveFilters({
   onStartDateChange,
   endDate,
   onEndDateChange,
+  dateField = "leave_period",
+  onDateFieldChange,
   totalItems,
   approvedItems,
   pendingItems,
@@ -55,46 +60,94 @@ export function LeaveFilters({
   onSearchSubmit,
 }: LeaveFiltersProps) {
   const showChips = approvedItems !== undefined;
+  const isCreatedFilter = dateField === "created_at";
   return (
     <div className="space-y-6 mb-8">
       {/* Top Row: Filters */}
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 items-end">
         {!hideSearch && (
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <Input
-              className="pl-10 h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl"
-              placeholder="ค้นหารหัสพนักงาน..."
-              value={searchTerm ?? ""}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
+          <div className="w-full md:col-span-2 xl:col-span-3">
+            <span className="block mb-1.5 text-xs font-semibold text-slate-500">ค้นหา</span>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Input
+                className="pl-10 h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl"
+                placeholder="ค้นหารหัสพนักงาน..."
+                value={searchTerm ?? ""}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+            </div>
           </div>
         )}
 
         {/* Date Filter */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Input
-            type="date"
-            className="h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl w-full md:w-[160px]"
-            value={startDate ?? ""}
-            onChange={(e) => onStartDateChange(e.target.value)}
-          />
-          <span className="text-slate-400 font-medium">ถึง</span>
-          <Input
-            type="date"
-            className="h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl w-full md:w-[160px]"
-            value={endDate ?? ""}
-            onChange={(e) => onEndDateChange(e.target.value)}
-          />
+        <div
+          className={`w-full md:col-span-2 ${
+            hideSearch ? "xl:col-span-5" : "xl:col-span-4"
+          }`}
+        >
+          <div className="flex items-center justify-items-start gap-2 mb-1.5">
+            <span className="text-xs font-semibold text-slate-500">
+              {isCreatedFilter ? "วันที่เขียนใบลา" : "ช่วงวันที่"}
+            </span>
+            {onDateFieldChange && (
+              <div className="flex items-center gap-0.5 bg-slate-100 rounded-md p-0.5">
+                <button
+                  type="button"
+                  onClick={() => onDateFieldChange("leave_period")}
+                  aria-pressed={dateField === "leave_period"}
+                  className={`px-2.5 h-7 rounded-md text-xs font-medium transition-colors ${
+                    dateField === "leave_period"
+                      ? "bg-white text-[#1a1a40] shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  ช่วงวันลา
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDateFieldChange("created_at")}
+                  aria-pressed={dateField === "created_at"}
+                  className={`px-2.5 h-7 rounded-md text-xs font-medium transition-colors ${
+                    dateField === "created_at"
+                      ? "bg-white text-[#1a1a40] shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  วันที่เขียนใบลา
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              className="h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl w-full min-w-0"
+              value={startDate ?? ""}
+              onChange={(e) => onStartDateChange(e.target.value)}
+            />
+            <span className="text-slate-400 font-medium shrink-0">ถึง</span>
+            <Input
+              type="date"
+              className="h-11 border-slate-200 focus-visible:ring-[#1a1a40] rounded-xl w-full min-w-0"
+              value={endDate ?? ""}
+              onChange={(e) => onEndDateChange(e.target.value)}
+            />
+          </div>
         </div>
 
-        <div className="w-full md:w-auto">
+        <div
+          className={`w-full md:col-span-1 ${
+            hideSearch ? "xl:col-span-3" : "xl:col-span-2"
+          }`}
+        >
+          <span className="block mb-1.5 text-xs font-semibold text-slate-500">ประเภทการลา</span>
           <Select value={typeFilter ?? "all"} onValueChange={onTypeChange}>
-            <SelectTrigger className="w-full md:w-[180px] !h-11 border-slate-200 rounded-xl">
+            <SelectTrigger className="w-full !h-11 border-slate-200 rounded-xl">
               <SelectValue placeholder="ประเภทการลา" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">ประเภทการลา: ทั้งหมด</SelectItem>
+              <SelectItem value="all">ทั้งหมด</SelectItem>
               {typeOptions.map((opt) => (
                 <SelectItem key={opt.id} value={opt.id}>
                   {opt.label}
@@ -103,14 +156,20 @@ export function LeaveFilters({
             </SelectContent>
           </Select>
         </div>
+
         {onStatusChange && (
-          <div className="w-full md:w-auto">
+          <div
+            className={`w-full md:col-span-1 ${
+              hideSearch ? "xl:col-span-3" : "xl:col-span-2"
+            }`}
+          >
+            <span className="block mb-1.5 text-xs font-semibold text-slate-500">สถานะ</span>
             <Select value={statusFilter ?? "all"} onValueChange={onStatusChange}>
-              <SelectTrigger className="w-full md:w-[180px] !h-11 border-slate-200 rounded-xl">
+              <SelectTrigger className="w-full !h-11 border-slate-200 rounded-xl">
                 <SelectValue placeholder="สถานะ" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">สถานะ: ทั้งหมด</SelectItem>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
                 <SelectItem value="pending">รอการอนุมัติ</SelectItem>
                 <SelectItem value="approved">ได้รับการอนุมัติ</SelectItem>
                 <SelectItem value="rejected">ไม่ได้รับการอนุมัติ</SelectItem>
@@ -119,10 +178,13 @@ export function LeaveFilters({
             </Select>
           </div>
         )}
+
         {onSearchSubmit && (
-          <Button onClick={onSearchSubmit} className="h-11 px-6 rounded-xl">
-            {hideSearch ? "กรองข้อมูล" : "ค้นหา"}
-          </Button>
+          <div className="w-full md:col-span-2 xl:col-span-1">
+            <Button onClick={onSearchSubmit} className="w-full h-11 px-6 rounded-xl">
+              {hideSearch ? "กรองข้อมูล" : "ค้นหา"}
+            </Button>
+          </div>
         )}
       </div>
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getLeaveHistoryByStaffId } from "@/lib/services/leaveService";
+import { getLeaveHistoryByStaffId, type LeaveHistoryDateField } from "@/lib/services/leaveService";
 import { requireAuth } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
 import { formatDateOnly } from "@/lib/utils";
@@ -51,12 +51,16 @@ export async function GET(request: NextRequest) {
     const leaveTypeId =
       rawLeaveTypeId && rawLeaveTypeId !== "all" && rawLeaveTypeId !== "undefined" ? rawLeaveTypeId : undefined;
 
+    const rawDateField = searchParams.get("dateField");
+    const dateField: LeaveHistoryDateField = rawDateField === "created_at" ? "created_at" : "leave_period";
+
     const baseFilters = {
       search: searchParams.get("search") || undefined,
       status: searchParams.get("status") || undefined,
       leaveTypeId,
       startDate: searchParams.get("startDate") || undefined,
       endDate: searchParams.get("endDate") || undefined,
+      dateField,
     };
 
     if (!stream) {

@@ -353,12 +353,15 @@ export async function cancelLeaveRequest(leaveId: string, staffId: string, cance
 // Leave History
 // ──────────────────────────────────────────────
 
+export type LeaveHistoryDateField = "leave_period" | "created_at";
+
 export type LeaveHistoryFilters = {
   search?: string;
   status?: string;
   leaveTypeId?: string;
   startDate?: string;
   endDate?: string;
+  dateField?: LeaveHistoryDateField;
   page?: number;
   limit?: number;
 };
@@ -398,6 +401,7 @@ export async function getLeaveHistoryByStaffId(
     leaveTypeId,
     startDate,
     endDate,
+    dateField,
     page = 1,
     limit,
   } = filters;
@@ -425,16 +429,37 @@ export async function getLeaveHistoryByStaffId(
     ];
   }
 
+  const isCreatedDateFilter = dateField === "created_at";
+  const createdRange: Prisma.DateTimeFilter<"DataLeave"> = {};
+  const startRange: Prisma.DateTimeFilter<"DataLeave"> = {};
+  const endRange: Prisma.DateTimeFilter<"DataLeave"> = {};
+
   if (startDate) {
-    where.start_date = {
-      gte: new Date(`${startDate}T00:00:00.000Z`),
-    };
+    const gte = new Date(`${startDate}T00:00:00.000Z`);
+    if (isCreatedDateFilter) {
+      createdRange.gte = gte;
+    } else {
+      startRange.gte = gte;
+    }
   }
 
   if (endDate) {
-    where.end_date = {
-      lte: new Date(`${endDate}T00:00:00.000Z`),
-    };
+    const lte = new Date(isCreatedDateFilter ? `${endDate}T23:59:59.999Z` : `${endDate}T00:00:00.000Z`);
+    if (isCreatedDateFilter) {
+      createdRange.lte = lte;
+    } else {
+      endRange.lte = lte;
+    }
+  }
+
+  if (createdRange.gte || createdRange.lte) {
+    where.created_at = createdRange;
+  }
+  if (startRange.gte || startRange.lte) {
+    where.start_date = startRange;
+  }
+  if (endRange.gte || endRange.lte) {
+    where.end_date = endRange;
   }
 
   const [data, countGroup] = await Promise.all([

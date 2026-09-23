@@ -31,6 +31,7 @@ export default async function LeaveHistoryPage() {
     getLeaveHistoryByStaffId(user.staffId, {
       startDate,
       endDate,
+      dateField: "created_at",
       page: 1,
       limit: 5,
     }),
