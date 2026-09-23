@@ -72,11 +72,14 @@ export async function getPendingApprovals(
   }
 
   if (filters?.startDate) {
-    leaveConditions.start_date = { gte: new Date(filters.startDate) };
+    leaveConditions.created_at = { gte: new Date(`${filters.startDate}T00:00:00.000Z`) };
   }
 
   if (filters?.endDate) {
-    leaveConditions.end_date = { lte: new Date(filters.endDate) };
+    leaveConditions.created_at = {
+      ...(leaveConditions.created_at as Prisma.DateTimeFilter<"DataLeave"> | undefined),
+      lte: new Date(`${filters.endDate}T23:59:59.999Z`),
+    };
   }
 
   if (filters?.search) {
