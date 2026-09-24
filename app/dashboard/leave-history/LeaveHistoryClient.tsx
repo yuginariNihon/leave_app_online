@@ -5,7 +5,7 @@ import { useProgressRouter } from "@/components/ProgressBar";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { WarningBanner } from "@/components/ui/warning-banner";
 
 import { LeaveFilters } from "@/components/leave-history/LeaveFilters";
@@ -70,6 +70,7 @@ export default function LeaveHistoryClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [leaveTypeError] = useState("");
+  const [filtersVisible, setFiltersVisible] = useState(true);
 
   // Initial page data is rendered by the server, so skip the very first refetch.
   const skipFirstFetch = useRef(true);
@@ -195,6 +196,18 @@ export default function LeaveHistoryClient({
         <WarningBanner message={leaveTypeError} className="mb-4" />
 
         <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
+          <div className="px-4 py-3 md:hidden flex items-center justify-between border-b border-[#c8c5d0] bg-slate-50/50">
+            <span className="text-sm font-semibold text-slate-700">ตัวกรอง</span>
+            <Button
+              variant="ghost"
+              className="h-9 px-3 flex items-center gap-1 text-[#070235] font-semibold"
+              onClick={() => setFiltersVisible((v) => !v)}
+            >
+              {filtersVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <span className="text-xs">{filtersVisible ? "ซ่อน" : "แสดง"}</span>
+            </Button>
+          </div>
+          <div className={`${filtersVisible ? "" : "hidden"} md:block`}>
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
             <LeaveFilters
               searchTerm={searchTerm}
@@ -220,6 +233,7 @@ export default function LeaveHistoryClient({
               onExportCSV={handleExportCSV}
               onSearchSubmit={submit}
             />
+          </div>
           </div>
 
           {loading ? (

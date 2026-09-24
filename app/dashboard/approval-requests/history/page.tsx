@@ -5,9 +5,11 @@ import { useSearchParams } from "next/navigation";
 
 
 import { WarningBanner } from "@/components/ui/warning-banner";
+import { Button } from "@/components/ui/button";
 import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters";
 import { ApprovalHistoryTable } from "@/components/approval-requests/ApprovalHistoryTable";
 import { Pagination } from "@/components/leave-history/Pagination";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
@@ -31,8 +33,9 @@ type HistoryItem = {
 };
 
 function ApprovalHistoryPageInner() {
-  const searchParams = useSearchParams();
+const searchParams = useSearchParams();
   const [fetchKey, setFetchKey] = useState(0);
+  const [filtersVisible, setFiltersVisible] = useState(true);
 
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
@@ -135,7 +138,19 @@ const json = await apiFetch<{ data?: { leaveTypes?: Array<{ id: string; label: s
 
         <WarningBanner message={leaveTypeError} className="mb-4" />
 
-        <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
+<div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
+          <div className="px-4 py-3 md:hidden flex items-center justify-between border-b border-[#c8c5d0] bg-slate-50/50">
+            <span className="text-sm font-semibold text-slate-700">ตัวกรอง</span>
+            <Button
+              variant="ghost"
+              className="h-9 px-3 flex items-center gap-1 text-[#070235] font-semibold"
+              onClick={() => setFiltersVisible((v) => !v)}
+            >
+              {filtersVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <span className="text-xs">{filtersVisible ? "ซ่อน" : "แสดง"}</span>
+            </Button>
+          </div>
+          <div className={`${filtersVisible ? "" : "hidden"} md:block`}>
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
             <ApprovalFilters
               searchTerm={searchTerm}
@@ -151,6 +166,7 @@ const json = await apiFetch<{ data?: { leaveTypes?: Array<{ id: string; label: s
               onReset={handleResetFilters}
               onSearchSubmit={handleSearchSubmit}
             />
+          </div>
           </div>
 
           {loading ? (

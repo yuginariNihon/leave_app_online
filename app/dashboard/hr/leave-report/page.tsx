@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Download, FileText, Loader2 } from "lucide-react";
+import { Search, Download, FileText, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +63,7 @@ export default function LeaveReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [filtersVisible, setFiltersVisible] = useState(true);
 
   const [departmentOptions, setDepartmentOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<Array<{ id: string; label: string }>>([]);
@@ -184,6 +185,18 @@ export default function LeaveReportPage() {
         </div>
 
         <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
+          <div className="px-4 py-3 md:hidden flex items-center justify-between border-b border-[#c8c5d0] bg-slate-50/50">
+            <span className="text-sm font-semibold text-slate-700">ตัวกรอง</span>
+            <Button
+              variant="ghost"
+              className="h-9 px-3 flex items-center gap-1 text-[#070235] font-semibold"
+              onClick={() => setFiltersVisible((v) => !v)}
+            >
+              {filtersVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <span className="text-xs">{filtersVisible ? "ซ่อน" : "แสดง"}</span>
+            </Button>
+          </div>
+          <div className={`${filtersVisible ? "" : "hidden"} md:block`}>
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
             <div className="space-y-6 mb-2">
               <div className="flex flex-col md:flex-row items-start gap-4">
@@ -292,6 +305,7 @@ export default function LeaveReportPage() {
                 </div>
               </div>
             </div>
+          </div>
           </div>
 
           {loading ? (

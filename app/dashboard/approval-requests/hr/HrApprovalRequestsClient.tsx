@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useProgressRouter } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Loader2, FileText } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select,
@@ -48,6 +48,7 @@ export default function HrApprovalRequestsClient({
   const router = useProgressRouter();
   const searchParams = useSearchParams();
   const [fetchKey, setFetchKey] = useState(0);
+  const [filtersVisible, setFiltersVisible] = useState(true);
 
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
@@ -236,6 +237,18 @@ export default function HrApprovalRequestsClient({
         </div>
 
         <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
+          <div className="px-4 py-3 md:hidden flex items-center justify-between border-b border-[#c8c5d0] bg-slate-50/50">
+            <span className="text-sm font-semibold text-slate-700">ตัวกรอง</span>
+            <Button
+              variant="ghost"
+              className="h-9 px-3 flex items-center gap-1 text-[#070235] font-semibold"
+              onClick={() => setFiltersVisible((v) => !v)}
+            >
+              {filtersVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <span className="text-xs">{filtersVisible ? "ซ่อน" : "แสดง"}</span>
+            </Button>
+          </div>
+          <div className={`${filtersVisible ? "" : "hidden"} md:block`}>
           <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
             <ApprovalFilters
               searchTerm={searchTerm}
@@ -251,6 +264,7 @@ export default function HrApprovalRequestsClient({
               onReset={handleResetFilters}
               onSearchSubmit={handleSearchSubmit}
             />
+          </div>
           </div>
 
           {selectedIds.length > 0 && (
