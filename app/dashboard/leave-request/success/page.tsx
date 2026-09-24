@@ -60,7 +60,7 @@ export default async function LeaveRequestSuccessPage({
   const config = MODE_CONFIG[mode];
 
   let detail: EditDetail | null = null;
-  if ((mode === "edit" || mode === "cancel") && params.leaveId) {
+  if (params.leaveId) {
     try {
       const found = await getLeaveDetailById(params.leaveId, user.staffId, user.roles);
       if (found) {
@@ -96,7 +96,7 @@ export default async function LeaveRequestSuccessPage({
             <div className="mt-6 w-full max-w-sm mx-auto overflow-hidden rounded-xl border border-[#e4e2ef]">
               <table className="w-full text-left text-base">
                 <tbody>
-                  {(mode === "edit" || mode === "cancel") && params.leaveId && (
+                  {params.leaveId && (
                     <tr>
                       <th scope="row" className="w-1/3 bg-[#f7f7fd] px-4 py-3 text-sm font-bold text-slate-900 border-b border-[#e4e2ef]">
                         รหัสคำขอ

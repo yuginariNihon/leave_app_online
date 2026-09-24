@@ -350,8 +350,14 @@ export async function getHrPendingApprovals(
       leave_status: LeaveStatus.pending,
       current_approval_level: s.approval_level,
       ...(filters?.leaveTypeId ? { leave_type_id: filters.leaveTypeId } : {}),
-      ...(filters?.startDate ? { start_date: { gte: new Date(filters.startDate) } } : {}),
-      ...(filters?.endDate ? { end_date: { lte: new Date(filters.endDate) } } : {}),
+      ...(filters?.startDate || filters?.endDate
+        ? {
+            created_at: {
+              ...(filters?.startDate ? { gte: new Date(`${filters.startDate}T00:00:00.000Z`) } : {}),
+              ...(filters?.endDate ? { lte: new Date(`${filters.endDate}T23:59:59.999Z`) } : {}),
+            },
+          }
+        : {}),
     },
   }));
 
@@ -540,17 +546,13 @@ export async function getApprovalHistory(
     ];
   }
 
-  if (startDate) {
+  if (startDate || endDate) {
+    const createdFilter: Prisma.DateTimeFilter<"DataLeave"> = {};
+    if (startDate) createdFilter.gte = new Date(`${startDate}T00:00:00.000Z`);
+    if (endDate) createdFilter.lte = new Date(`${endDate}T23:59:59.999Z`);
     where.leave = {
       ...(where.leave as Prisma.DataLeaveWhereInput | undefined),
-      start_date: { gte: new Date(`${startDate}T00:00:00.000Z`) },
-    };
-  }
-
-  if (endDate) {
-    where.leave = {
-      ...(where.leave as Prisma.DataLeaveWhereInput | undefined),
-      end_date: { lte: new Date(`${endDate}T23:59:59.999Z`) },
+      created_at: createdFilter,
     };
   }
 

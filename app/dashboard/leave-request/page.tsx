@@ -148,8 +148,9 @@ export default function LeaveRequestPage() {
       return;
     }
 
+    let leaveId: string;
     try {
-      await apiFetch("/api/leaves", {
+      const json = await apiFetch<{ data: { leave_id: string } }>("/api/leaves", {
         method: "POST",
         body: JSON.stringify({
           leaveTypeId: values.leaveTypeId,
@@ -161,6 +162,7 @@ export default function LeaveRequestPage() {
           leavePeriod: values.leavePeriod,
         }),
       });
+      leaveId = json.data.leave_id;
     } catch (err) {
       setSubmitError(
         err instanceof Error
@@ -174,7 +176,7 @@ export default function LeaveRequestPage() {
     const submittedAt = currentSubmitTime();
     setIsSuccess(true);
     router.replace(
-      `/dashboard/leave-request/success?submittedAt=${encodeURIComponent(submittedAt)}`,
+      `/dashboard/leave-request/success?leaveId=${encodeURIComponent(leaveId)}&submittedAt=${encodeURIComponent(submittedAt)}`,
     );
   };
 
