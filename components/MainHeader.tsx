@@ -87,11 +87,11 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
               aria-label="Go to dashboard"
             >
               <Image
-                src="/logo.png"
+                src="/logo2_rv2.png"
                 alt="Logo"
-                width={35}
-                height={35}
-                className="w-7 h-7 sm:w-[35px] sm:h-[35px] object-contain"
+                width={48}
+                height={48}
+                className="w-9 h-9 sm:w-12 sm:h-12 object-contain"
                 priority
               />
               <div className="text-xl text-white font-bold hidden sm:inline">

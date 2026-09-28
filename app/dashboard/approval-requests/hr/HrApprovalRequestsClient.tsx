@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
-import { useProgressRouter } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
@@ -45,8 +43,6 @@ export default function HrApprovalRequestsClient({
   initialTotalPages,
   initialTypeOptions,
 }: Props) {
-  const router = useProgressRouter();
-  const searchParams = useSearchParams();
   const [fetchKey, setFetchKey] = useState(0);
   const [filtersVisible, setFiltersVisible] = useState(true);
 
@@ -134,29 +130,6 @@ export default function HrApprovalRequestsClient({
       cancelled = true;
     };
   }, [buildQuery, currentPage, fetchKey]);
-
-  const approvalResult = searchParams.get("approvalResult");
-  const handledApprovalResultRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (approvalResult !== "approved" && approvalResult !== "rejected") {
-      handledApprovalResultRef.current = null;
-      return;
-    }
-    if (handledApprovalResultRef.current === approvalResult) return;
-    handledApprovalResultRef.current = approvalResult;
-
-    if (approvalResult === "approved") {
-      toast.success("อนุมัติเรียบร้อยแล้ว", {
-        className: "!bg-white !text-green-500 !border-green-500 !border-2",
-      });
-    } else {
-      toast.error("ไม่อนุมัติเรียบร้อยแล้ว", {
-        className: "!bg-white !text-red-500 !border-red-500 !border-2",
-      });
-    }
-    router.replace("/dashboard/approval-requests/hr");
-  }, [approvalResult, router]);
 
 
 

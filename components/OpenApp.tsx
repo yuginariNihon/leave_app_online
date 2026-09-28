@@ -45,17 +45,17 @@ export default function SplashScreen() {
       <div className="flex items-center gap-8">
         {/* Logo */}
         <div
-          className={`w-60 h-60 rounded-full bg-black flex items-center justify-center
+          className={`w-64 h-64 rounded-full bg-black flex items-center justify-center
           transition-all duration-1000
           ${showText ? "scale-100" : "scale-0"}`}
         >
           <Image
-            src="/logo.png"
+            src="/logo2_rv2.png"
             alt="Leave Online"
-            width={128}
-            height={128}
+            width={160}
+            height={160}
             priority
-            className={`w-32 h-32 object-contain transition-all duration-500 ${
+            className={`w-40 h-40 object-contain transition-all duration-500 ${
               showLogo ? "opacity-100 scale-100" : "opacity-0 scale-0"
             }`}
           />

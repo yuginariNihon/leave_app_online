@@ -104,24 +104,31 @@ export async function getPendingApprovals(
         select: { approval_level: true, workflow: { select: { position_id: true } } },
       });
 
-      const levels = [...new Set(steps.map((s) => s.approval_level))];
-      const positions = [...new Set(steps.map((s) => s.workflow.position_id))];
+      // Correlate each approval level with the positions whose workflow step at
+      // that level is approvable by this user. Querying by level alone would
+      // leak approvals whose same-level step belongs to a different approver
+      // type (e.g. an HR step appearing in a manager's list) — which then fails
+      // authority checks on approve.
+      const levelPositions = new Map<number, Set<string>>();
+      for (const s of steps) {
+        const set = levelPositions.get(s.approval_level) ?? new Set<string>();
+        set.add(s.workflow.position_id);
+        levelPositions.set(s.approval_level, set);
+      }
 
-      if (levels.length > 0) {
-        const staffFilter: Prisma.StaffInfoWhereInput = {
+      if (levelPositions.size > 0) {
+        const staffFilter = (positionIds: string[]): Prisma.StaffInfoWhereInput => ({
           department_id: userStaff.department_id,
-          position_id: { in: positions },
-        };
-        if (filters?.search) {
-          staffFilter.staff_code = { contains: filters.search, mode: "insensitive" };
-        }
+          position_id: { in: positionIds },
+          ...(filters?.search ? { staff_code: { contains: filters.search, mode: "insensitive" } } : {}),
+        });
 
-        const orConditions = levels.map((level) => ({
+        const orConditions = Array.from(levelPositions.entries()).map(([level, positionIds]) => ({
           approval_level: level,
           leave: {
             ...leaveConditions,
             leave_status: LeaveStatus.pending,
-            staff: staffFilter,
+            staff: staffFilter([...positionIds]),
             current_approval_level: level,
           },
         }));
@@ -506,19 +513,36 @@ export async function getApprovalHistory(
     where.approver_id = staffId;
   }
 
-  // Pre-fetch HR step levels for roleType filtering
-  let hrLevels: number[] = [];
+  // Pre-fetch HR steps (level + position pairs) for roleType filtering.
+  // Correlate position per level so only leaves whose step really is an HR step
+  // are included/excluded, regardless of other workflows sharing the same level.
   if (roleType !== "all") {
     const hrSteps = await prisma.leaveWorkflowStep.findMany({
       where: { approver_type: "HR" as ApproverType },
       include: { workflow: { select: { position_id: true } } },
     });
-    hrLevels = [...new Set(hrSteps.map((s) => s.approval_level))];
-    if (hrLevels.length > 0) {
-      where.approval_level = roleType === "hr" ? { in: hrLevels } : { notIn: hrLevels };
-    } else if (roleType === "hr") {
-      // No HR steps exist, return empty
-      return { data: [], total: 0, page: 1, totalPages: 0, limit };
+    const hrPairs = new Map<number, string[]>();
+    for (const s of hrSteps) {
+      const posId = s.workflow.position_id;
+      const arr = hrPairs.get(s.approval_level) ?? [];
+      if (!arr.includes(posId)) arr.push(posId);
+      hrPairs.set(s.approval_level, arr);
+    }
+    if (hrPairs.size === 0) {
+      if (roleType === "hr") {
+        // No HR steps exist, return empty
+        return { data: [], total: 0, page: 1, totalPages: 0, limit };
+      }
+    } else {
+      const hrOrConditions = [...hrPairs.entries()].map(([level, positionIds]) => ({
+        approval_level: level,
+        leave: { staff: { position_id: { in: positionIds } } },
+      }));
+      if (roleType === "hr") {
+        where.AND = { OR: hrOrConditions };
+      } else {
+        where.NOT = hrOrConditions;
+      }
     }
   }
 

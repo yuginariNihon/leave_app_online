@@ -86,7 +86,16 @@ export default function HrApprovalDetailPage() {
         body: JSON.stringify({ status, comment }),
       });
 
-      router.replace(`/dashboard/approval-requests/hr?approvalResult=${status}`);
+      if (status === "approved") {
+        toast.success("อนุมัติเรียบร้อยแล้ว", {
+          className: "!bg-white !text-green-500 !border-green-500 !border-2",
+        });
+      } else {
+        toast.error("ไม่อนุมัติเรียบร้อยแล้ว", {
+          className: "!bg-white !text-red-500 !border-red-500 !border-2",
+        });
+      }
+      router.replace("/dashboard/approval-requests/hr");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "ไม่สามารถดำเนินการได้");
       processingRef.current = false;
