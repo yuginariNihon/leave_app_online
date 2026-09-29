@@ -7,7 +7,7 @@ import { toDateOnly, countInclusiveDays, buildLeaveReferenceId } from "@/lib/uti
 import { checkApproversExist, APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
-import { NotFoundError, ValidationError, ForbiddenError } from "@/lib/errors";
+import { NotFoundError, ValidationError, ForbiddenError, ConflictError } from "@/lib/errors";
 
 const SUPERVISOR_POSITION_NAMES = new Set([
   ...APPROVER_POSITION_NAMES.Supervisor,
@@ -15,6 +15,56 @@ const SUPERVISOR_POSITION_NAMES = new Set([
 ]);
 
 export class LeaveRequestValidationError extends ValidationError {}
+
+/**
+ * Calculates leave total days server-side (never trust the client):
+ * full_day = inclusive day count, morning/afternoon = half per day.
+ */
+export function computeLeaveTotalDays(
+  startDate: string | Date,
+  endDate: string | Date,
+  leavePeriod?: string,
+): number {
+  const days = countInclusiveDays(startDate, endDate);
+  if (leavePeriod === "morning" || leavePeriod === "afternoon") return days / 2;
+  return days;
+}
+
+/**
+ * Central weekday/holiday + ordering validation for BOTH create and update
+ * (POST /api/leaves and PATCH /api/leaves/[id]) so pending leaves edited to
+ * fall on a Sunday/company holiday are rejected consistently.
+ */
+export async function assertValidLeaveDateRange(
+  startDate: string | Date,
+  endDate: string | Date,
+): Promise<void> {
+  const start = toDateOnly(startDate);
+  const end = toDateOnly(endDate);
+
+  if (end < start) {
+    throw new LeaveRequestValidationError("วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มต้น");
+  }
+
+  // Sundays — compare via UTC dates (server must be TZ-agnostic)
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+    if (d.getUTCDay() === 0) {
+      const dayStr = `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+      throw new LeaveRequestValidationError(`ไม่สามารถยื่นคำขอลาในวันอาทิตย์ (${dayStr})`);
+    }
+  }
+
+  const holidays = await prisma.holiday.findMany({
+    where: { holiday_date: { gte: start, lte: end } },
+    select: { holiday_name: true },
+  });
+  if (holidays.length > 0) {
+    const names = holidays.map((h) => h.holiday_name).join(", ");
+    throw new LeaveRequestValidationError(`ไม่สามารถยื่นคำขอลาในวันหยุดบริษัท: ${names}`);
+  }
+}
+
 export type CreateLeaveRequestInput = {
   staffId: string;
   leaveTypeId: string;
@@ -22,7 +72,6 @@ export type CreateLeaveRequestInput = {
   startDate: string | Date;
   endDate: string | Date;
   reason?: string;
-  totalDays?: number;
   leavePeriod?: string;
 };
 
@@ -115,7 +164,8 @@ function periodsOverlap(a: LeavePeriod | undefined, b: LeavePeriod | undefined):
 export async function createLeaveRequest(input: CreateLeaveRequestInput) {
   const startDate = toDateOnly(input.startDate);
   const endDate = toDateOnly(input.endDate);
-  const totalDays = input.totalDays ?? countInclusiveDays(startDate, endDate);
+  await assertValidLeaveDateRange(input.startDate, input.endDate);
+  const totalDays = computeLeaveTotalDays(startDate, endDate, input.leavePeriod);
 
   // 1. Get staff info for position & department
   const staff = await prisma.staffInfo.findUnique({
@@ -239,7 +289,6 @@ export type UpdateLeaveRequestInput = {
   startDate: string | Date;
   endDate: string | Date;
   reason?: string;
-  totalDays?: number;
   leavePeriod?: string;
 };
 
@@ -266,9 +315,26 @@ export async function updateLeaveRequest(
     );
   }
 
+  // ล็อกการแก้ไขเมื่อผ่านขั้นตอนการอนุมัติแรกแล้ว: leave_status ยังเป็น pending
+  // จนกว่าจะครบทุกขั้น จึงต้องเช็ก approver_id แยก (auto-approve ไม่เซ็ตค่านี้)
+  const actedApproval = await prisma.leaveApproval.findFirst({
+    where: {
+      leave_id: leaveId,
+      approver_id: { not: null },
+    },
+    select: { approval_id: true },
+  });
+
+  if (actedApproval) {
+    throw new ConflictError(
+      "คำขอนี้อยู่ระหว่างการอนุมัติแล้ว ไม่สามารถแก้ไขได้",
+    );
+  }
+
   const startDate = toDateOnly(input.startDate);
   const endDate = toDateOnly(input.endDate);
-  const totalDays = input.totalDays ?? countInclusiveDays(startDate, endDate);
+  await assertValidLeaveDateRange(input.startDate, input.endDate);
+  const totalDays = computeLeaveTotalDays(startDate, endDate, input.leavePeriod);
 
   // ตรวจสอบการทับซ้อนของช่วงเวลาลากับใบลาอื่น (ไม่รวมใบปัจจุบัน)
   // (morning + afternoon ในวันเดียวกันไม่ถือว่าทับซ้อนกัน)
@@ -533,6 +599,8 @@ export type LeaveDetailResponse = {
   leaveId: string;
   referenceId: string;
   status: string;
+  /** false เมื่อ leave_status != pending หรือผ่านขั้นตอนการอนุมัติแรกแล้ว (มี approver_id) */
+  canEdit: boolean;
   reason: string | null;
   totalDays: number;
   createdAt: string;
@@ -710,10 +778,14 @@ export async function getLeaveDetailById(
     }),
   ]);
 
+  // auto-approve ไม่เซ็ต approver_id จึงไม่ถือว่าผ่านขั้นแรก
+  const hasActedApproval = leave.approvals.some((a) => a.approver_id !== null);
+
   return {
     leaveId: leave.leave_id,
     referenceId: `#LV-${leave.leave_id.slice(0, 8).toUpperCase()}`,
     status: leave.leave_status,
+    canEdit: leave.leave_status === LeaveStatus.pending && !hasActedApproval,
     reason: leave.reason,
     totalDays: Number(leave.total_days ?? 0),
     createdAt: leave.created_at.toISOString(),

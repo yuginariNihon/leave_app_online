@@ -258,6 +258,7 @@ export default function LeaveDetailsPage() {
         <LeaveDetailsActions
           leaveId={detail.leaveId}
           status={detail.status}
+          canEdit={detail.canEdit}
           leaveTypeName={detail.leaveTypeName}
           startDate={detail.startDate}
           endDate={detail.endDate}

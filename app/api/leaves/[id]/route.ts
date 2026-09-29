@@ -4,6 +4,7 @@ import { getLeaveDetailById } from "@/lib/services/leaveService";
 import { requireAuth } from "@/lib/api-guards";
 import { createLeaveRequestSchema } from "@/lib/TypeSchema";
 import { logReadAccess } from "@/lib/services/auditService";
+import { apiErrorResponse } from "@/lib/errors";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
@@ -32,14 +33,7 @@ export async function GET(
 
     return NextResponse.json({ data: detail });
   } catch (error) {
-    console.error("Failed to fetch leave detail", error);
-    if (error instanceof Error && error.message === "Forbidden") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-    return NextResponse.json(
-      { error: "Failed to fetch leave detail." },
-      { status: 500 },
-    );
+    return apiErrorResponse(error);
   }
 }
 
@@ -90,7 +84,6 @@ export async function PATCH(
       startDate: parsed.data.startDate,
       endDate: parsed.data.endDate,
       reason: parsed.data.reason,
-      totalDays: parsed.data.totalDays,
       leavePeriod: parsed.data.leavePeriod,
     });
 
@@ -99,6 +92,6 @@ export async function PATCH(
     if (error instanceof LeaveRequestValidationError) {
       return NextResponse.json({ error: error.message }, { status: 422 });
     }
-    return NextResponse.json({ error: "Failed to update leave request." }, { status: 400 });
+    return apiErrorResponse(error);
   }
 }

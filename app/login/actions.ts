@@ -15,6 +15,12 @@ export type LoginState = {
   message?: string;
 };
 
+const RATE_LIMIT_DELAY_MS = 30_000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function loginAction(
   _state: LoginState,
   formData: FormData
@@ -46,6 +52,7 @@ export async function loginAction(
   ]);
 
   if (ipFailures >= 10) {
+    await sleep(RATE_LIMIT_DELAY_MS);
     return { message: "Invalid login credentials." };
   }
 
@@ -63,6 +70,7 @@ export async function loginAction(
   });
 
   if (recentFailures >= 5) {
+    await sleep(RATE_LIMIT_DELAY_MS);
     return { message: "Invalid login credentials." };
   }
 

@@ -11,8 +11,6 @@ import {
 } from "@/lib/TypeSchema";
 import { getSessionUser } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/errors";
-import { prisma } from "@/lib/prisma";
-import { toDateOnly } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -39,27 +37,8 @@ async function buildCreateLeaveRequestInput(
     };
   }
 
-  // Validate no Sunday or company holiday in range
-  const start = toDateOnly(input.startDate);
-  const end = toDateOnly(input.endDate);
-  const pad2 = (n: number) => String(n).padStart(2, "0");
-
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    if (d.getDay() === 0) {
-      const dayStr = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-      return { error: `ไม่สามารถยื่นคำขอลาในวันอาทิตย์ (${dayStr})` };
-    }
-  }
-
-  const holidays = await prisma.holiday.findMany({
-    where: { holiday_date: { gte: start, lte: end } },
-    select: { holiday_name: true, holiday_date: true },
-  });
-
-  if (holidays.length > 0) {
-    const names = holidays.map((h) => h.holiday_name).join(", ");
-    return { error: `ไม่สามารถยื่นคำขอลาในวันหยุดบริษัท: ${names}` };
-  }
+  // Validate no Sunday or company holiday in range + date ordering
+  // (shared with PATCH — handled inside createLeaveRequest -> assertValidLeaveDateRange)
 
   return {
     staffId,
@@ -68,7 +47,6 @@ async function buildCreateLeaveRequestInput(
     startDate: input.startDate,
     endDate: input.endDate,
     reason: input.reason,
-    totalDays: input.totalDays,
     leavePeriod: input.leavePeriod,
   };
 }

@@ -11,21 +11,21 @@ import { NotFoundError, ConflictError, ValidationError, ForbiddenError, Unauthor
 
 // Splits an inclusive [start, end] date range into per-calendar-year day counts,
 // so multi-year leaves are charged to the correct annual quota.
+// Uses UTC end-of-day math so results are identical on any server timezone.
 function splitDaysByYear(start: Date, end: Date): Map<number, number> {
   const dayCounts = new Map<number, number>();
-  const s = new Date(start);
-  s.setHours(0, 0, 0, 0);
-  const e = new Date(end);
-  e.setHours(0, 0, 0, 0);
 
-  if (e < s) throw new ValidationError("End date before start date.");
+  if (end < start) throw new ValidationError("End date before start date.");
 
-  const sTime = s.getTime();
-  const eTime = e.getTime();
-  for (let y = s.getFullYear(); y <= e.getFullYear(); y++) {
-    const yearStart = Math.max(sTime, new Date(y, 0, 1).getTime());
-    const yearEnd = Math.min(eTime, new Date(y + 1, 0, 1).getTime() - 1);
-    dayCounts.set(y, Math.round((yearEnd - yearStart) / 86_400_000) + 1);
+  // Convert to UTC day boundaries (00:00 UTC) to keep year-splitting timezone-agnostic.
+  const s = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+  const e = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
+
+  const msPerDay = 86_400_000;
+  for (let y = start.getUTCFullYear(); y <= end.getUTCFullYear(); y++) {
+    const yearStart = Math.max(s, Date.UTC(y, 0, 1));
+    const yearEnd = Math.min(e, Date.UTC(y + 1, 0, 1) - 1);
+    dayCounts.set(y, Math.round((yearEnd - yearStart) / msPerDay) + 1);
   }
   return dayCounts;
 }
@@ -173,7 +173,6 @@ export async function updateApprovalStatus(
   status: ApprovalStatus,
   comment?: string,
 ) {
-  invalidateDashboardKpi();
   const supervisor = await prisma.staffInfo.findUnique({
     where: { staff_id: staffId, is_active: true },
     select: { department_id: true },
@@ -242,6 +241,8 @@ export async function updateApprovalStatus(
     throw new ConflictError("This request has already been processed.");
   }
 
+  invalidateDashboardKpi();
+
   if (status === ApprovalStatus.rejected) {
     await prisma.leaveApproval.updateMany({
       where: {
@@ -278,7 +279,6 @@ export async function bulkUpdateApprovalStatus(
   status: ApprovalStatus,
   comment?: string,
 ) {
-  invalidateDashboardKpi();
   const supervisor = await prisma.staffInfo.findUnique({
     where: { staff_id: staffId, is_active: true },
     select: { department_id: true },
@@ -395,6 +395,7 @@ export async function bulkUpdateApprovalStatus(
       where: { leave_id: { in: leaveIds } },
       data: { leave_status: LeaveStatus.rejected, updated_at: new Date() },
     });
+    invalidateDashboardKpi();
     return;
   }
 
@@ -418,6 +419,8 @@ export async function bulkUpdateApprovalStatus(
       advanceLeaveApproval(leaveId, info.staffId, info.departmentId),
     ),
   );
+
+  invalidateDashboardKpi();
 }
 
 // ──────────────────────────────────────────────
@@ -438,7 +441,6 @@ export async function hrUpdateApprovalStatus(
   status: ApprovalStatus,
   comment?: string,
 ) {
-  invalidateDashboardKpi();
   const isHR = await checkHRRole(staffId);
   if (!isHR) throw new UnauthorizedError("Unauthorized: HR role required.");
 
@@ -482,6 +484,8 @@ export async function hrUpdateApprovalStatus(
     throw new ConflictError("This request has already been processed.");
   }
 
+  invalidateDashboardKpi();
+
   if (status === ApprovalStatus.rejected) {
     await prisma.leaveApproval.updateMany({
       where: {
@@ -514,7 +518,6 @@ export async function hrBulkUpdateApprovalStatus(
   status: ApprovalStatus,
   comment?: string,
 ) {
-  invalidateDashboardKpi();
   const isHR = await checkHRRole(staffId);
   if (!isHR) throw new UnauthorizedError("Unauthorized: HR role required.");
 
@@ -592,6 +595,7 @@ export async function hrBulkUpdateApprovalStatus(
       where: { leave_id: { in: leaveIds } },
       data: { leave_status: LeaveStatus.rejected, updated_at: new Date() },
     });
+    invalidateDashboardKpi();
     return;
   }
 
@@ -612,6 +616,8 @@ export async function hrBulkUpdateApprovalStatus(
       advanceLeaveApproval(leaveId, info.staffId, info.departmentId),
     ),
   );
+
+  invalidateDashboardKpi();
 }
 
 export * from "@/lib/services/approvalQueries";

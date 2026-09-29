@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/utils";
+import { hashPassword } from "@/lib/auth";
 
 // ──────────────────────────────────────────────
 // Self-Service Profile (Employee)

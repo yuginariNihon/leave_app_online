@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { randomBytes } from "crypto";
-import { hashPassword } from "@/lib/utils";
+import { hashPassword } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 
 /**

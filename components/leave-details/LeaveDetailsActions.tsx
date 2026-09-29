@@ -20,6 +20,7 @@ import {
 type LeaveDetailsActionsProps = {
   leaveId: string;
   status: string;
+  canEdit: boolean;
   leaveTypeName: string;
   startDate: string | null;
   endDate: string | null;
@@ -33,6 +34,7 @@ type LeaveDetailsActionsProps = {
 export function LeaveDetailsActions({
   leaveId,
   status,
+  canEdit,
   leaveTypeName,
   startDate,
   endDate,
@@ -148,7 +150,7 @@ export function LeaveDetailsActions({
           </AlertDialogContent>
         </AlertDialog>
       )}
-      {isPending && (
+      {canEdit && (
         <Button
           variant="secondary"
           className="bg-white border border-gray-200 text-[#1a1a40] px-8 h-14 rounded-xl font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"

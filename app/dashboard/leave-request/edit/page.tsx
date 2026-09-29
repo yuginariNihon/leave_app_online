@@ -86,6 +86,11 @@ export default function EditLeavePage() {
         const detail = json.data;
 
         if (!cancelled && detail) {
+          if (!detail.canEdit) {
+            setDetailError("คำขอนี้อยู่ระหว่างการอนุมัติแล้ว ไม่สามารถแก้ไขได้");
+            setDetailLoading(false);
+            return;
+          }
           setCreatedAt(detail.createdAt ?? "");
           form.reset({
             leaveTypeId: detail.leaveTypeId ?? "",

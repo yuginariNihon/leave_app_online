@@ -1,4 +1,5 @@
 import { randomBytes, createHash } from "crypto";
+import bcrypt from "bcryptjs";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +8,11 @@ import { cache } from "react";
 export const SESSION_COOKIE_NAME = "leave_app_db_session";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60;
+
+/** Server-only password hashing (bcrypt) — keep out of client-bundled modules. */
+export function hashPassword(plain: string): Promise<string> {
+  return bcrypt.hash(plain, 10);
+}
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -70,7 +76,7 @@ async function getSessionUserImpl(): Promise<SessionUser | null> {
 
   try {
     const hashedToken = hashToken(token);
-    let session = await prisma.session.findUnique({
+    const session = await prisma.session.findUnique({
       where: { token: hashedToken },
       include: {
         user: {

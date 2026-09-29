@@ -21,14 +21,14 @@ export function LoginForm() {
           htmlFor="identifier"
           className="text-xs font-bold text-[#b9cacb] uppercase tracking-[0.2em] px-1"
         >
-          Email or Employee ID
+          Employee ID
         </Label>
         <div className="relative group">
           <Input
             id="identifier"
             name="identifier"
             className="w-full bg-[#0c0e16]/50 border-0 border-b-2 border-[#3a494b] focus-visible:border-[#00dbe7] focus-visible:ring-0 text-[#e1fdff] placeholder:text-[#46464c] py-6 px-1 transition-all duration-300 rounded-none h-auto"
-            placeholder="EMP-XXXXX or name@company.com"
+            placeholder="EMP-XXXXX"
             autoComplete="username"
             required
             type="text"

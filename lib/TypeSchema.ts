@@ -14,28 +14,45 @@ export type LeaveFormOptions = {
   leaveCases: LeaveCaseSelectOption[];
 };
 
+// วันที่ต้องเป็น YYYY-MM-DD เท่านั้น (กัน "abc" ที่จะกลายเป็น Invalid Date → 500)
+const dateOnlyString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)");
+
+// Rule ทั่วไป: endDate ต้องไม่ก่อน startDate (attach ไปที่ field endDate)
+function refineDateOrder<T extends z.ZodObject<z.ZodRawShape>>(schema: T) {
+  return schema.superRefine((data: z.infer<T>, ctx) => {
+    const { startDate, endDate } = data as { startDate?: string; endDate?: string };
+    if (startDate && endDate && endDate < startDate) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["endDate"],
+        message: "วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มต้น",
+      });
+    }
+  });
+}
+
 // Schema และ Type ที่ Export ออกไปให้หน้า Insert และ Edit ใช้ร่วมกัน
-export const leaveFormSchema = z.object({
+export const leaveFormSchema = refineDateOrder(z.object({
   leaveTypeId: z.uuid("กรุณาเลือกประเภทการลา"),
   leaveCaseId: z.uuid("กรุณาเลือกกรณีการลา"),
-  startDate: z.string().min(1, "กรุณาเลือกวันที่เริ่มต้น"),
-  endDate: z.string().min(1, "กรุณาเลือกวันที่สิ้นสุด"),
+  startDate: dateOnlyString,
+  endDate: dateOnlyString,
   reason: z.string().min(1, "กรุณากรอกเหตุผลการลาอย่างน้อย 1 ตัวอักษร"),
   leavePeriod: z.enum(["full_day", "morning", "afternoon"]).optional(),
-});
+}));
 
 export type LeaveFormValues = z.infer<typeof leaveFormSchema>;
 
-export const createLeaveRequestSchema = z.object({
+// totalDays ไม่รับจาก client — server คำนวณเองจากวันที่ + leavePeriod เสมอ
+export const createLeaveRequestSchema = refineDateOrder(z.object({
   staffId: z.uuid().optional(),
   leaveTypeId: z.uuid(),
   leaveCaseId: z.uuid(),
-  startDate: z.string().min(1),
-  endDate: z.string().min(1),
+  startDate: dateOnlyString,
+  endDate: dateOnlyString,
   reason: z.string().trim().min(1, "กรุณากรอกเหตุผลการลาอย่างน้อย 1 ตัวอักษร").max(500, "เหตุผลการลาต้องไม่เกิน 500 ตัวอักษร"),
-  totalDays: z.number().positive().optional(),
   leavePeriod: z.enum(["full_day", "morning", "afternoon"]).optional(),
-});
+}));
 
 export type CreateLeaveRequestValues = z.infer<typeof createLeaveRequestSchema>;
 

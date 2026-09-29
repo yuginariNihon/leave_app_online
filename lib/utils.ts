@@ -1,6 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import bcrypt from "bcryptjs"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -174,8 +173,4 @@ export function csvCell(value: string | number | null | undefined): string {
   const s = value == null ? "" : String(value);
   const sanitized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
   return `"${sanitized.replace(/"/g, '""')}"`;
-}
-
-export function hashPassword(plain: string): Promise<string> {
-  return bcrypt.hash(plain, 10);
 }

@@ -1,6 +1,7 @@
 import { Prisma, EmploymentStatus } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { toDateOnly, hashPassword, parseDateOnly } from "@/lib/utils";
+import { toDateOnly, parseDateOnly } from "@/lib/utils";
+import { hashPassword } from "@/lib/auth";
 import { randomBytes } from "crypto";
 import { ConflictError } from "@/lib/errors";
 

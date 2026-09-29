@@ -44,6 +44,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Dropdown Always Below**: `SelectContent` in `components/ui/select.tsx` now defaults to `position="popper" side="bottom" sideOffset={4}` — every Radix Select in the project opens below its trigger (previously `item-aligned` could open above). DropdownMenu already opens below by default.
 - **Staff Edit Error Classification**: `updateStaff` throws typed `StaffUpdateConflictError` (email duplicate); `PUT /api/hr/staff/[id]` returns Thai categorized errors — `ข้อมูลไม่ถูกต้อง: ...` (400), `ไม่พบข้อมูลพนักงาน...` (404), `ไม่สามารถบันทึกได้ มีข้อมูลซ้ำ: ...` (409), generic server error (500). `PUT leave-quota` same style + new `usedDays <= maxDays` guard. Edit page surfaces `json.error` detail in form box + quota toast.
 - **Leave History Date Filter Toggle**: `LeaveHistoryFilters.dateField` (`"leave_period" | "created_at"`) — segmented toggle in `LeaveFilters` switches the single date-range to filter `created_at` (วันที่เขียนใบลา, end-range uses end-of-day `T23:59:59.999Z`) or leave-period dates (unchanged behavior). Wired in `leave-history/LeaveHistoryClient` (useFilterWithApply generic) + `/api/leaves/history` (applies to list and CSV export). **Default mode = `"created_at"`** — server SSR initial query (`leave-history/page.tsx`) + client initial state + ล้างตัวกรอง all use `dateField: "created_at"` for current month (ขัดด้วย SSR to match).
+- **Server-Side Leave Validation**: `dateOnlyString` (regex YYYY-MM-DD) + `refineDateOrder` in `TypeSchema.ts`; `assertValidLeaveDateRange` (range, Sunday via UTC `getUTCDay`, company holiday) + `computeLeaveTotalDays` (full day = inclusive days, half day = ÷2) in `leaveService.ts`, shared by POST + PATCH. `totalDays` removed from API schemas — server is the only authority (Zod strips the client field).
+- **Annual Reset Idempotency**: cron updates only `max_days` for existing current-year rows; `used_days` never reset on rerun.
+- **Approval Comment Validation**: Zod schemas in `app/api/leaves/approvals/[id]/route.ts` + `bulk/route.ts` — `status` enum approved/rejected, `approvalIds` UUID array, `comment` `.trim().max(200)`.
+- **Edit Locked After First Approval**: `updateLeaveRequest` throws `ConflictError` (409) when any `LeaveApproval` row has non-null `approver_id`; `LeaveDetailResponse.canEdit` (same rule) drives the edit button (`LeaveDetailsActions`) + edit page redirect. `current_approval_level > 1` is NOT used — it is wrong because auto-approve skips levels without setting `approver_id`.
+- **Cache Invalidation After Authz**: `invalidateDashboardKpi()` moved from the top of all 4 approval mutations to after authorization + successful DB write (including early-return reject paths in both bulk functions).
+- **Login Rate Limit / Sessions**: real `await sleep(30_000)` on both IP (10) and per-user (5) thresholds; `app/api/cron/cleanup-login-history/route.ts` deletes `LoginHistory` older than 90 days; `proxy.ts` fail-closed (redirect `/login` + clear cookie on any session-lookup throw, no `force_change_password` bypass); `hashPassword` (bcrypt) moved from `lib/utils.ts` to `lib/auth.ts` so it never enters a client bundle.
 
 ### In Progress
 - *(none)*
@@ -56,6 +62,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Session: fixed 1-hour expiry (`SESSION_MAX_AGE_SECONDS = 60 * 60`) — no sliding renewal.
 - `.next` cache clean occasionally for stale route types.
 - Prisma enum types → server; `@/lib/generated/prisma/enums` const objects → client.
+- "ผ่านขั้นแรกแล้ว" = `LeaveApproval.approver_id IS NOT NULL` (a human acted). Auto-approved rows never set `approver_id`, so an auto-skipped first level does NOT lock editing.
 
 ## Next Steps
 - *(none)*

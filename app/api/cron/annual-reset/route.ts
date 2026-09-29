@@ -79,13 +79,16 @@ export async function GET(request: NextRequest) {
         chunk.map((t) => {
           const key = `${t.staffId}::${t.leaveTypeId}`;
           if (currentSet.has(key)) {
+            // Row already exists for the target year — refresh only max_days.
+            // Do NOT reset used_days here: if this job re-runs mid-year it would
+            // wipe approvals already consumed against the current quota.
             return tx.userLeaveLimit.updateMany({
               where: {
                 staff_id: t.staffId,
                 leave_type_id: t.leaveTypeId,
                 year,
               },
-              data: { max_days: t.maxDays, used_days: 0 },
+              data: { max_days: t.maxDays },
             });
           }
           return tx.userLeaveLimit.create({

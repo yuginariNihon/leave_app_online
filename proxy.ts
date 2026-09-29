@@ -102,10 +102,13 @@ export async function proxy(request: NextRequest) {
         }
       }
     } catch {
-      if (pathname === "/dashboard/hr") {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-      // Silently fail for other pages; allow request to proceed
+      // DB unavailable — fail closed. Never let a request through without a
+      // validated session (e.g. the force-change-password guard must not be
+      // bypassed temporarily). Redirect to /login; the server error page is
+      // avoided so the user isn't left guessing.
+      const response = NextResponse.redirect(new URL("/login", request.url));
+      response.cookies.delete(SESSION_COOKIE_NAME);
+      return response;
     }
   }
 

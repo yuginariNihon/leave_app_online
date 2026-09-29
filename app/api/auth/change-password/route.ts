@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
-import { requireSessionUser, SESSION_COOKIE_NAME } from "@/lib/auth";
+import { requireSessionUser, SESSION_COOKIE_NAME, hashPassword } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/errors";
-import { hashPassword } from "@/lib/utils";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
