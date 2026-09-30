@@ -43,6 +43,11 @@ type ReportRecord = {
   totalDays: string | null;
   status: string;
   createdAt: string;
+  /** "day" | "hour" */
+  leaveMode?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  hours?: string | null;
 };
 
 export default function LeaveReportPage() {
@@ -335,9 +340,15 @@ export default function LeaveReportPage() {
                         <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{item.departmentName ?? "-"}</TableCell>
                         <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{item.leaveTypeName}</TableCell>
                         <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">
-                          {formatLeaveDateRange(item.startDate, item.endDate)}
+                          {item.leaveMode === "hour"
+                            ? `${formatLeaveDateRange(item.startDate, item.endDate)}${item.startTime ? ` ${item.startTime}–${item.endTime ?? ""}` : ""}`
+                            : formatLeaveDateRange(item.startDate, item.endDate)}
                         </TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{formatDays(item.totalDays)}</TableCell>
+                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">
+                          {item.leaveMode === "hour"
+                            ? `${item.hours ?? ""} ชม. (${formatDays(item.totalDays)})`
+                            : formatDays(item.totalDays)}
+                        </TableCell>
                         <TableCell className="px-6 py-4 whitespace-nowrap">
                           <StatusBadge status={item.status as LeaveStatus} text={statusTextMap[item.status as LeaveStatus] ?? item.status} />
                         </TableCell>

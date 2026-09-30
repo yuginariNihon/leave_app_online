@@ -37,9 +37,13 @@ export function PendingApprovalTable({ data }: { data: PendingApprovalItem[] }) 
                   <td className="py-2.5 px-2 font-medium text-[#1a1a40] whitespace-nowrap">{item.staffName}</td>
                   <td className="py-2.5 px-2 whitespace-nowrap">{item.leaveTypeName}</td>
                   <td className="py-2.5 px-2 whitespace-nowrap text-slate-600">
-                    {item.startDate} — {item.endDate}
+                    {item.leaveMode === "hour"
+                      ? `${item.startDate}${item.startTime ? ` ${item.startTime}–${item.endTime ?? ""}` : ""}`
+                      : `${item.startDate} — ${item.endDate}`}
                   </td>
-                  <td className="py-2.5 px-2 text-center whitespace-nowrap">{item.totalDays}</td>
+                  <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                    {item.leaveMode === "hour" ? `${item.hours ?? 0} ชม. (${item.totalDays})` : item.totalDays}
+                  </td>
                 </tr>
               ))
             )}

@@ -97,6 +97,7 @@ export function SidebarMenu() {
     adminRolesCrud: pathname.startsWith("/dashboard/admin/roles/manage"),
     adminPagePermissions: pathname.startsWith("/dashboard/admin/page-permissions"),
     staffRoles: pathname.startsWith("/dashboard/hr/staff-roles"),
+    leaveQuota: pathname.startsWith("/dashboard/hr/leave-quota"),
     adminRights:
       pathname.startsWith("/dashboard/admin/roles") ||
       pathname.startsWith("/dashboard/hr/staff-roles") ||
@@ -380,6 +381,18 @@ export function SidebarMenu() {
                   </div>
                 )}
               </SidebarMenuItem>
+              {canAccessPage("manage_leave_quota", roles) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className={cn(btnClass(activePaths.leaveQuota), showLabels ? "" : "!w-10 !h-10 !p-0 !justify-center !mx-auto")}
+                    onClick={() => handleNav("/dashboard/hr/leave-quota")}
+                    tooltip={showLabels ? undefined : "จัดการสิทธิ์วันลา"}
+                  >
+                    <FileText className={iconClass(activePaths.leaveQuota)} />
+                    {showLabels && <span>จัดการสิทธิ์วันลา</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               {(canAccessPage("manage_roles", roles) ||
                 canAccessPage("manage_roles_crud", roles) ||
                 canAccessPage("manage_staff_roles", roles) ||

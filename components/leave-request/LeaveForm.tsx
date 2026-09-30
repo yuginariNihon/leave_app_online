@@ -32,6 +32,10 @@ interface LeaveFormProps {
   holidays?: string[];
 }
 
+// Today (Thailand UTC+7) as YYYY-MM-DD, computed once at module load
+// to keep the DatePicker "min" boundary pure during render.
+const TODAY_STR = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+
 export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {},isQuotaExceeded = false,optionsLoading = false,dayCount,onSubmit,createdAt,holidays = [],}: LeaveFormProps) {
   const {register,control,handleSubmit,setValue,clearErrors,formState: { errors },} = form;
 
@@ -39,6 +43,19 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
   const leaveCaseId = useWatch({ control, name: "leaveCaseId" });
   const startDate = useWatch({ control, name: "startDate" });
   const endDate = useWatch({ control, name: "endDate" });
+  const leaveMode = useWatch({ control, name: "leaveMode" });
+  const startTime = useWatch({ control, name: "startTime" });
+  const endTime = useWatch({ control, name: "endTime" });
+
+  const isHour = leaveMode === "hour";
+
+  const computedHours = useMemo(() => {
+    if (!isHour || !startTime || !endTime) return 0;
+    const [sh, sm] = startTime.split(":").map(Number);
+    const [eh, em] = endTime.split(":").map(Number);
+    if (!Number.isFinite(sh) || !Number.isFinite(sm) || !Number.isFinite(eh) || !Number.isFinite(em)) return 0;
+    return (eh * 60 + em - (sh * 60 + sm)) / 60;
+  }, [isHour, startTime, endTime]);
 
   const filteredLeaveCases = useMemo(
     () =>
@@ -167,6 +184,65 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
 
       </div>
 
+      {/* รูปแบบการลา */}
+      <div className="space-y-3">
+        <Label className="text-base font-semibold text-slate-700">
+          รูปแบบการลา<span className="text-red-500 ml-1">*</span>
+        </Label>
+        <Controller
+          control={control}
+          name="leaveMode"
+          render={({ field }) => (
+            <div className="flex flex-wrap gap-6">
+              {[
+                { value: "day", label: "ลาทั้งวัน/ครึ่งวัน" },
+                { value: "hour", label: "ลารายชั่วโมง" },
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${
+                    (field.value || "day") === option.value
+                      ? "border-[#100d41] bg-[#100d41]/5 text-[#100d41] font-semibold"
+                      : "border-gray-200 bg-white text-slate-600 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value={option.value}
+                    checked={(field.value || "day") === option.value}
+                    onChange={() => field.onChange(option.value)}
+                    className="sr-only"
+                  />
+                  <span className="text-sm">{option.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        />
+      </div>
+
+      {isHour ? (
+        <div className="space-y-3">
+          <Label htmlFor="start-date" className="text-base font-semibold text-slate-700">
+            วันที่ลา<span className="text-red-500 ml-1">*</span>
+          </Label>
+          <DatePicker
+            value={startDate}
+            onChange={(v) => {
+              setValue("startDate", v, { shouldValidate: true });
+              setValue("endDate", v, { shouldValidate: true });
+              clearErrors("startDate");
+              clearErrors("endDate");
+            }}
+            min={TODAY_STR}
+            holidays={holidays}
+            placeholder="เลือกวันที่ลา"
+          />
+          {errors.startDate && (
+            <p className="text-sm text-red-500">{errors.startDate.message}</p>
+          )}
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* วันที่เริ่มต้น */}
         <div className="space-y-3">
@@ -215,8 +291,53 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
           )}
         </div>
       </div>
+      )}
 
-      {/* ช่วงเวลา */}
+      {isHour ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <Label htmlFor="start-time" className="text-base font-semibold text-slate-700">
+              เวลาเริ่มต้น<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <input
+              type="time"
+              id="start-time"
+              step={60}
+              min="08:00"
+              max="17:00"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 bg-white text-sm"
+              {...register("startTime", {
+                onChange: () => clearErrors("endTime"),
+              })}
+            />
+            {errors.startTime && (
+              <p className="text-sm text-red-500">{errors.startTime.message}</p>
+            )}
+          </div>
+          <div className="space-y-3">
+            <Label htmlFor="end-time" className="text-base font-semibold text-slate-700">
+              เวลาสิ้นสุด<span className="text-red-500 ml-1">*</span>
+            </Label>
+            <input
+              type="time"
+              id="end-time"
+              step={60}
+              min="08:00"
+              max="17:00"
+              className="w-full h-11 px-3 rounded-lg border border-gray-200 bg-white text-sm"
+              {...register("endTime", {
+                onChange: () => clearErrors("endTime"),
+              })}
+            />
+            {errors.endTime && (
+              <p className="text-sm text-red-500">{errors.endTime.message}</p>
+            )}
+            <p className="text-xs text-slate-500">
+              กำหนดเวลาทำงาน: เช้า 08:00–12:00, บ่าย 13:00–17:00 (ไม่รวมพักเที่ยง 12:00–13:00)
+            </p>
+          </div>
+        </div>
+      ) : (
       <div className="space-y-3">
         <Label className="text-base font-semibold text-slate-700">
           ช่วงเวลา
@@ -253,16 +374,30 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
           )}
         />
       </div>
+      )}
 
       {/* จำนวนวันลา */}
-      <div className="rounded-lg inline-block border border-slate-100">
-        <span className="text-[#100d41] font-medium text-lg">
-          จำนวนวันลา : <span className="font-bold text-2xl ml-1">{dayCount % 1 === 0 ? dayCount.toString() : dayCount.toFixed(1)}</span> วัน
-        </span>
-      </div>
+      {isHour ? (
+        <div className="rounded-lg inline-block border border-slate-100">
+          <span className="text-[#100d41] font-medium text-lg">
+            จำนวนชั่วโมงลา : <span className="font-bold text-2xl ml-1">{computedHours}</span> ชม.
+            <span className="ml-2 text-base font-normal text-slate-500">
+              (คิดเป็น {Number(dayCount)} วัน)
+            </span>
+          </span>
+        </div>
+      ) : (
+        <div className="rounded-lg inline-block border border-slate-100">
+          <span className="text-[#100d41] font-medium text-lg">
+            จำนวนวันลา : <span className="font-bold text-2xl ml-1">{dayCount % 1 === 0 ? dayCount.toString() : dayCount.toFixed(1)}</span> วัน
+          </span>
+        </div>
+      )}
       {isQuotaExceeded && (
         <p className="text-md text-red-600 font-medium">
-          จำนวนวันที่ขอ {dayCount} วัน เกินวันลาคงเหลือ {leaveQuota[leaveTypeId]?.remaining ?? 0} วัน — ไม่สามารถส่งคำขอลาได้
+          {isHour
+            ? `ลาขอ ${computedHours} ชม. (${Number(dayCount)} วัน) เกินวันลาคงเหลือ ${leaveQuota[leaveTypeId]?.remaining ?? 0} วัน — ไม่สามารถส่งคำขอลาได้`
+            : `จำนวนวันที่ขอ ${dayCount} วัน เกินวันลาคงเหลือ ${leaveQuota[leaveTypeId]?.remaining ?? 0} วัน — ไม่สามารถส่งคำขอลาได้`}
         </p>
       )}
 

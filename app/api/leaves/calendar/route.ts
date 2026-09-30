@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { apiErrorResponse } from "@/lib/errors";
+import { timeFromDb } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -31,11 +32,16 @@ export async function GET(request: NextRequest) {
         staff_id: string; staff_name: string;
         department_name: string;
         leave_type_name: string;
+        leave_mode: string;
+        start_time: Date | string | null;
+        end_time: Date | string | null;
+        hours: string | null;
       }[]>`
         SELECT dl.start_date, dl.end_date,
                s.staff_id, s.name AS staff_name,
                d.department_name,
-               lt.leave_type_name
+               lt.leave_type_name,
+               dl.leave_mode, dl.start_time, dl.end_time, dl.hours
         FROM "DataLeave" dl
         JOIN "StaffInfo" s ON s.staff_id = dl.staff_id
         JOIN "Department" d ON d.department_id = s.department_id
@@ -71,7 +77,7 @@ export async function GET(request: NextRequest) {
     // Bucket leaves by calendar date in O(leaves) so day lookup is O(1).
     const pad2 = (n: number) => String(n).padStart(2, "0");
     const localKey = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-    const bucket = new Map<string, { staffName: string; leaveTypeName: string; departmentName: string }[]>();
+    const bucket = new Map<string, { staffName: string; leaveTypeName: string; departmentName: string; leaveMode: string; startTime: string | null; endTime: string | null; hours: string | null }[]>();
 
     for (const r of rows) {
       let s = new Date(r.start_date);
@@ -85,6 +91,10 @@ export async function GET(request: NextRequest) {
         staffName: r.staff_name,
         leaveTypeName: r.leave_type_name,
         departmentName: r.department_name,
+        leaveMode: r.leave_mode ?? "day",
+        startTime: r.start_time ? timeFromDb(r.start_time) : null,
+        endTime: r.end_time ? timeFromDb(r.end_time) : null,
+        hours: r.hours ?? null,
       };
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const k = localKey(d);
@@ -99,7 +109,7 @@ export async function GET(request: NextRequest) {
 
     const days: {
       date: string; isToday: boolean; count: number;
-      leaves: { staffName: string; leaveTypeName: string; departmentName: string }[];
+      leaves: { staffName: string; leaveTypeName: string; departmentName: string; leaveMode: string; startTime: string | null; endTime: string | null; hours: string | null }[];
       holidayName: string | null;
     }[] = [];
 

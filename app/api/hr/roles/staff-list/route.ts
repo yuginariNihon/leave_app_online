@@ -7,10 +7,10 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const auth = await requireHR();
-    if (auth.error) return auth.error;
+    const { session, error } = await requireHR();
+    if (error) return error;
 
-    const staff = await getStaffRoleList();
+    const staff = await getStaffRoleList(!session!.roles.includes("SUPER_ADMIN"));
     return NextResponse.json({ data: staff });
   } catch (error) {
     return apiErrorResponse(error);

@@ -32,8 +32,15 @@ export async function getAllRoles(): Promise<RoleItem[]> {
   }));
 }
 
-export async function getStaffRoleList(): Promise<StaffWithRolesItem[]> {
+export async function getStaffRoleList(excludeSuperAdmin = false): Promise<StaffWithRolesItem[]> {
   const staff = await prisma.staffInfo.findMany({
+    where: excludeSuperAdmin
+      ? {
+          staffRoles: {
+            none: { role: { role_name: "SUPER_ADMIN" } },
+          },
+        }
+      : undefined,
     select: {
       staff_id: true,
       staff_code: true,

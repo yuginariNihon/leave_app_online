@@ -17,8 +17,12 @@ export function UpcomingLeave({ data }: { data: UpcomingLeaveItem[] }) {
                 <p className="text-xs text-slate-500">{item.leaveTypeName}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-slate-600">{item.startDate}</p>
-                <p className="text-xs text-slate-400">{item.totalDays} วัน</p>
+                <p className="text-sm text-slate-600">
+                  {item.leaveMode === "hour" && item.startTime ? `${item.startDate} ${item.startTime}–${item.endTime ?? ""}` : item.startDate}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {item.leaveMode === "hour" ? `${item.hours ?? 0} ชม. (${item.totalDays} วัน)` : `${item.totalDays} วัน`}
+                </p>
               </div>
             </div>
           ))}

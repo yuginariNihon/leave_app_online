@@ -11,6 +11,11 @@ export interface LeaveRecord {
   reason: string | null;
   status: LeaveStatus;
   createdAt: string;
+  /** "day" | "hour" */
+  leaveMode?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  hours?: string | null;
 }
 
 export const statusTextMap: Record<LeaveStatus, string> = {

@@ -3,6 +3,7 @@ import {
   createLeaveRequest,
   validateLeaveRequestDetails,
   LeaveRequestValidationError,
+  timeFromDb,
   type CreateLeaveRequestInput,
 } from "@/lib/services/leaveService";
 import {
@@ -48,6 +49,9 @@ async function buildCreateLeaveRequestInput(
     endDate: input.endDate,
     reason: input.reason,
     leavePeriod: input.leavePeriod,
+    leaveMode: input.leaveMode,
+    startTime: input.startTime,
+    endTime: input.endTime,
   };
 }
 
@@ -61,6 +65,10 @@ function serializeDataLeave(leave: Awaited<ReturnType<typeof createLeaveRequest>
     end_date: leave.end_date?.toISOString() ?? null,
     total_days: leave.total_days?.toString() ?? null,
     leave_period: leave.leave_period,
+    leave_mode: leave.leave_mode,
+    start_time: leave.start_time ? timeFromDb(leave.start_time) : null,
+    end_time: leave.end_time ? timeFromDb(leave.end_time) : null,
+    hours: leave.hours?.toString() ?? null,
     reason: leave.reason,
     leave_status: leave.leave_status,
     created_at: leave.created_at.toISOString(),

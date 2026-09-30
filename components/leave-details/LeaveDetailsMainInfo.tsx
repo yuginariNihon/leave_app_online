@@ -14,6 +14,11 @@ type LeaveDetailsMainInfoProps = {
   endDate: string | null;
   durationDays: number;
   reason: string;
+  /** "day" | "hour" */
+  leaveMode?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  hours?: number | null;
   // ⚠️ File upload — not yet implemented (attachments data not used)
   attachments: AttachmentItem[];
   supervisor?: { name: string; role: string };
@@ -28,10 +33,15 @@ export function LeaveDetailsMainInfo({
   endDate,
   durationDays,
   reason,
+  leaveMode,
+  startTime,
+  endTime,
+  hours,
   attachments,
   supervisor,
 }: LeaveDetailsMainInfoProps) {
   const firstAttachment = attachments.length > 0 ? attachments[0] : null;
+  const isHour = leaveMode === "hour";
 
   return (
     <div className="lg:col-span-2 p-6 md:p-8 lg:border-r border-slate-100 space-y-10">
@@ -60,25 +70,47 @@ export function LeaveDetailsMainInfo({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/80 p-6 rounded-2xl border border-slate-100">
         <div className="flex flex-col space-y-3">
           <label className="text-md font-bold text-slate-400 uppercase tracking-widest">ระยะเวลา</label>
-          <div className="flex items-center gap-4 py-1">
-            <div className="text-center">
-              <div className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1">เริ่มต้น</div>
-              <div className="font-bold text-[#1a1a40] text-lg">{formatThaiShortDate(startDate)}</div>
+          {isHour ? (
+            <div className="flex items-center gap-4 py-1">
+              <div className="text-center">
+                <div className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1">เริ่มต้น</div>
+                <div className="font-bold text-[#1a1a40] text-lg">{formatThaiShortDate(startDate)} {startTime ?? ""}</div>
+              </div>
+              <MoveRight className="w-6 h-6 text-slate-300" />
+              <div className="text-center">
+                <div className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1">สิ้นสุด</div>
+                <div className="font-bold text-[#1a1a40] text-lg">{endTime ?? ""}</div>
+              </div>
             </div>
-            <MoveRight className="w-6 h-6 text-slate-300" />
-            <div className="text-center">
-              <div className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1">สิ้นสุด</div>
-              <div className="font-bold text-[#1a1a40] text-lg">{formatThaiShortDate(endDate)}</div>
+          ) : (
+            <div className="flex items-center gap-4 py-1">
+              <div className="text-center">
+                <div className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1">เริ่มต้น</div>
+                <div className="font-bold text-[#1a1a40] text-lg">{formatThaiShortDate(startDate)}</div>
+              </div>
+              <MoveRight className="w-6 h-6 text-slate-300" />
+              <div className="text-center">
+                <div className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-1">สิ้นสุด</div>
+                <div className="font-bold text-[#1a1a40] text-lg">{formatThaiShortDate(endDate)}</div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex flex-col space-y-3">
           <label className="text-md font-bold text-slate-400 uppercase tracking-widest">จำนวนวันลา</label>
-          <div className="flex items-baseline gap-2 py-1">
-            <span className="text-4xl font-black text-[#1a1a40]">{durationDays}</span>
-            <span className="text-lg font-bold text-slate-400">วัน</span>
-          </div>
+          {isHour ? (
+            <div className="flex items-baseline gap-2 py-1">
+              <span className="text-4xl font-black text-[#1a1a40]">{hours ?? 0}</span>
+              <span className="text-lg font-bold text-slate-400">ชม.</span>
+              <span className="ml-1 text-sm font-semibold text-slate-500">({durationDays} วัน)</span>
+            </div>
+          ) : (
+            <div className="flex items-baseline gap-2 py-1">
+              <span className="text-4xl font-black text-[#1a1a40]">{durationDays}</span>
+              <span className="text-lg font-bold text-slate-400">วัน</span>
+            </div>
+          )}
         </div>
       </div>
 

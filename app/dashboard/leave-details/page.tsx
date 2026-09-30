@@ -232,6 +232,10 @@ export default function LeaveDetailsPage() {
                 endDate={detail.endDate}
                 durationDays={detail.totalDays}
                 reason={detail.reason ?? ""}
+                leaveMode={detail.leaveMode}
+                startTime={detail.startTime}
+                endTime={detail.endTime}
+                hours={detail.hours}
                 attachments={detail.attachments}
                 supervisor={detail.supervisor ?? undefined}
               />
@@ -264,6 +268,10 @@ export default function LeaveDetailsPage() {
           endDate={detail.endDate}
           durationDays={detail.totalDays}
           reason={detail.reason ?? ""}
+          leaveMode={detail.leaveMode}
+          startTime={detail.startTime}
+          endTime={detail.endTime}
+          hours={detail.hours}
           onPrint={() => window.print()}
           onCancel={handleCancel}
           isCancelling={cancelling}

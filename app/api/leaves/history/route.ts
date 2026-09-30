@@ -22,6 +22,10 @@ function buildLeaveHistoryCsvRow(r: {
   leaveTypeName: string;
   totalDays?: string | number | null;
   status: string;
+  leaveMode?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  hours?: string | number | null;
 }): string {
   const dateLabel =
     r.startDate && r.endDate && r.startDate !== r.endDate
@@ -29,10 +33,18 @@ function buildLeaveHistoryCsvRow(r: {
       : r.startDate
         ? formatDateOnly(r.startDate)
         : "";
-  const days = r.totalDays ? `${Number(r.totalDays)} วัน` : "";
+  const isHour = r.leaveMode === "hour";
+  const timePart =
+    isHour && r.startTime && r.endTime ? ` ${r.startTime}–${r.endTime}` : "";
+  const days =
+    isHour && r.hours
+      ? `${Number(r.hours)} ชม.` + (r.totalDays ? ` (${Number(r.totalDays)} วัน)` : "")
+      : r.totalDays
+        ? `${Number(r.totalDays)} วัน`
+        : "";
   return [
     csvCell(formatDateOnly(r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt)),
-    csvCell(dateLabel),
+    csvCell(dateLabel + timePart),
     csvCell(r.leaveTypeName),
     csvCell(days),
     csvCell(statusTextMap[r.status as keyof typeof statusTextMap] ?? r.status),
@@ -102,6 +114,10 @@ export async function GET(request: NextRequest) {
               leaveTypeName: string;
               totalDays?: string | number | null;
               status: string;
+              leaveMode?: string;
+              startTime?: string | null;
+              endTime?: string | null;
+              hours?: string | number | null;
             }>;
             if (!rows.length) break;
             let chunk = "";

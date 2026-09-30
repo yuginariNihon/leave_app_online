@@ -46,6 +46,9 @@ export async function GET(request: NextRequest) {
       "แผนก",
       "ประเภทการลา",
       "วันที่ลา",
+      "เวลาเริ่ม",
+      "เวลาสิ้นสุด",
+      "จำนวนชั่วโมง",
       "จำนวนวัน",
       "สถานะ",
     ];
@@ -68,17 +71,32 @@ export async function GET(request: NextRequest) {
               endDate: string | null;
               totalDays: string | null;
               status: string;
+              leaveMode?: string;
+              startTime?: string | null;
+              endTime?: string | null;
+              hours?: string | null;
             }>;
             if (!rows.length) break;
             let chunk = "";
             for (const r of rows) {
+              const isHour = r.leaveMode === "hour";
+              const daysLabel = isHour
+                ? r.totalDays
+                  ? `${Number(r.totalDays)} วัน (คิดจากชั่วโมง ÷ 8)`
+                  : ""
+                : r.totalDays
+                  ? formatDays(r.totalDays)
+                  : "";
               const cells = [
                 csvCell(r.staffCode),
                 csvCell(r.staffName),
                 csvCell(r.departmentName ?? ""),
                 csvCell(r.leaveTypeName),
                 csvCell(formatLeaveDateRange(r.startDate, r.endDate)),
-                csvCell(r.totalDays ? formatDays(r.totalDays) : ""),
+                csvCell(r.startTime ?? ""),
+                csvCell(r.endTime ?? ""),
+                csvCell(r.hours ?? ""),
+                csvCell(daysLabel),
                 csvCell(statusTextMap[r.status as keyof typeof statusTextMap] ?? r.status),
               ];
               chunk += cells.join(",") + "\n";

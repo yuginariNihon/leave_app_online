@@ -85,6 +85,9 @@ export async function PATCH(
       endDate: parsed.data.endDate,
       reason: parsed.data.reason,
       leavePeriod: parsed.data.leavePeriod,
+      leaveMode: parsed.data.leaveMode,
+      startTime: parsed.data.startTime,
+      endTime: parsed.data.endTime,
     });
 
     return NextResponse.json({ success: true });

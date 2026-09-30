@@ -26,6 +26,11 @@ type LeaveDetailsActionsProps = {
   endDate: string | null;
   durationDays: number;
   reason: string;
+  /** "day" | "hour" */
+  leaveMode?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  hours?: number | null;
   onPrint: () => void;
   onCancel?: (cancelReason: string) => void;
   isCancelling?: boolean;
@@ -39,6 +44,10 @@ export function LeaveDetailsActions({
   startDate,
   endDate,
   durationDays,
+  leaveMode,
+  startTime,
+  endTime,
+  hours,
   onPrint,
   onCancel,
   isCancelling,
@@ -96,11 +105,13 @@ export function LeaveDetailsActions({
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500 text-sm">ช่วงวันที่ลา</span>
-                    <span className="text-gray-900 font-semibold text-sm">{formatLeaveDateRange(startDate, endDate)}</span>
+                    <span className="text-gray-900 font-semibold text-sm">{formatLeaveDateRange(startDate, endDate)}{leaveMode === "hour" && startTime ? ` ${startTime}–${endTime ?? ""}` : ""}</span>
                   </div>
                   <div className="flex justify-between items-center border-t border-gray-200 pt-3 mt-1">
                     <span className="text-gray-500 text-sm font-medium">จำนวนวันลา</span>
-                    <span className="text-red-600 font-bold text-lg">{durationDays} วัน</span>
+                    <span className="text-red-600 font-bold text-lg">
+                      {leaveMode === "hour" ? `${hours ?? 0} ชม. (${durationDays} วัน)` : `${durationDays} วัน`}
+                    </span>
                   </div>
                 </div>
               </section>

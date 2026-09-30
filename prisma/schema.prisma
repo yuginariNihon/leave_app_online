@@ -46,6 +46,12 @@ enum LeavePeriod {
   afternoon
 }
 
+// Request unit: day-based leaves vs hourly (same-day, partial-day) leaves.
+enum LeaveMode {
+  day
+  hour
+}
+
 enum ApproverType {
   Supervisor
   Senior_Supervisor
@@ -253,6 +259,12 @@ model DataLeave {
   end_date   DateTime? @db.Date
 
   total_days Decimal? @db.Decimal(5, 2)
+
+  leave_mode LeaveMode @default(day)
+
+  start_time DateTime? @db.Time(6)
+  end_time   DateTime? @db.Time(6)
+  hours      Decimal? @db.Decimal(5, 2)
 
   reason String? @db.VarChar(500)
 

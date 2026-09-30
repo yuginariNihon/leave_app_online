@@ -17,6 +17,49 @@ export type LeaveFormOptions = {
 // วันที่ต้องเป็น YYYY-MM-DD เท่านั้น (กัน "abc" ที่จะกลายเป็น Invalid Date → 500)
 const dateOnlyString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "รูปแบบวันที่ไม่ถูกต้อง (ต้องเป็น YYYY-MM-DD)");
 
+const timeString = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "รูปแบบเวลาไม่ถูกต้อง (ต้องเป็น HH:mm)");
+
+export const leaveModeSchema = z.enum(["day", "hour"]);
+
+const timeToMinutes = (t: string | undefined): number => {
+  if (!t) return Number.NaN;
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + (m || 0);
+};
+
+// Rule สำหรับลารายชั่วโมง: ต้องอยู่ภายในช่วงทำงาน 08:00–17:00,
+// ไม่ทับช่วงพักเที่ยง 12:00–13:00, และเวลาสิ้นสุดต้องหลังเวลาเริ่มต้น
+function hourWindowRefine<T extends z.ZodObject<z.ZodRawShape>>(schema: T) {
+  return schema.superRefine((data: z.infer<T>, ctx) => {
+    const { leaveMode, startTime, endTime } = data as { leaveMode?: string; startTime?: string; endTime?: string };
+    if (leaveMode !== "hour") return;
+    const WORK_START = 8 * 60;
+    const LUNCH_START = 12 * 60;
+    const LUNCH_END = 13 * 60;
+    const WORK_END = 17 * 60;
+    const s = timeToMinutes(startTime);
+    const e = timeToMinutes(endTime);
+    if (Number.isNaN(s) || Number.isNaN(e)) {
+      ctx.addIssue({ code: "custom", path: ["endTime"], message: "กรุณากรอกเวลาเริ่มต้นและเวลาสิ้นสุด" });
+      return;
+    }
+    if (e <= s) {
+      ctx.addIssue({ code: "custom", path: ["endTime"], message: "เวลาสิ้นสุดต้องหลังเวลาเริ่มต้น" });
+      return;
+    }
+    if (s < WORK_START || e > WORK_END) {
+      ctx.addIssue({ code: "custom", path: ["endTime"], message: "เวลาลารายชั่วโมงต้องอยู่ระหว่าง 08:00–17:00" });
+      return;
+    }
+    const sInLunch = s >= LUNCH_START && s < LUNCH_END;
+    const eInLunch = e > LUNCH_START && e <= LUNCH_END;
+    const crossesLunch = s < LUNCH_START && e > LUNCH_END;
+    if (sInLunch || eInLunch || crossesLunch) {
+      ctx.addIssue({ code: "custom", path: ["endTime"], message: "ไม่สามารถลาช่วงพักเที่ยง (12:00–13:00) ได้" });
+    }
+  });
+}
+
 // Rule ทั่วไป: endDate ต้องไม่ก่อน startDate (attach ไปที่ field endDate)
 function refineDateOrder<T extends z.ZodObject<z.ZodRawShape>>(schema: T) {
   return schema.superRefine((data: z.infer<T>, ctx) => {
@@ -32,14 +75,17 @@ function refineDateOrder<T extends z.ZodObject<z.ZodRawShape>>(schema: T) {
 }
 
 // Schema และ Type ที่ Export ออกไปให้หน้า Insert และ Edit ใช้ร่วมกัน
-export const leaveFormSchema = refineDateOrder(z.object({
+export const leaveFormSchema = hourWindowRefine(refineDateOrder(z.object({
   leaveTypeId: z.uuid("กรุณาเลือกประเภทการลา"),
   leaveCaseId: z.uuid("กรุณาเลือกกรณีการลา"),
   startDate: dateOnlyString,
   endDate: dateOnlyString,
   reason: z.string().min(1, "กรุณากรอกเหตุผลการลาอย่างน้อย 1 ตัวอักษร"),
   leavePeriod: z.enum(["full_day", "morning", "afternoon"]).optional(),
-}));
+  leaveMode: leaveModeSchema.optional(),
+  startTime: timeString.optional(),
+  endTime: timeString.optional(),
+})));
 
 export type LeaveFormValues = z.infer<typeof leaveFormSchema>;
 
@@ -52,6 +98,9 @@ export const createLeaveRequestSchema = refineDateOrder(z.object({
   endDate: dateOnlyString,
   reason: z.string().trim().min(1, "กรุณากรอกเหตุผลการลาอย่างน้อย 1 ตัวอักษร").max(500, "เหตุผลการลาต้องไม่เกิน 500 ตัวอักษร"),
   leavePeriod: z.enum(["full_day", "morning", "afternoon"]).optional(),
+  leaveMode: leaveModeSchema.optional(),
+  startTime: timeString.optional(),
+  endTime: timeString.optional(),
 }));
 
 export type CreateLeaveRequestValues = z.infer<typeof createLeaveRequestSchema>;
@@ -278,4 +327,19 @@ export const updateSectionSchema = z.object({
 });
 
 export type UpdateSectionValues = z.infer<typeof updateSectionSchema>;
+
+// ──────────────────────────────────────────────
+// Leave quota bulk assign (HR)
+// ──────────────────────────────────────────────
+
+export const leaveQuotaAssignSchema = z.object({
+  leaveTypeId: z.uuid("รูปแบบประเภทการลาไม่ถูกต้อง"),
+  staffIds: z.array(z.uuid("รูปแบบรหัสพนักงานไม่ถูกต้อง")).min(1, "กรุณาเลือกพนักงานอย่างน้อย 1 คน"),
+  maxDays: z.coerce
+    .number()
+    .min(0, "จำนวนวันต้องไม่ติดลบ")
+    .max(999, "จำนวนวันต้องไม่เกิน 999 วัน"),
+});
+
+export type LeaveQuotaAssignValues = z.infer<typeof leaveQuotaAssignSchema>;
 

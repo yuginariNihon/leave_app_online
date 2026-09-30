@@ -57,6 +57,7 @@ export default function EditLeavePage() {
       endDate: "",
       reason: "",
       leavePeriod: "full_day",
+      leaveMode: "day",
     },
   });
 
@@ -99,6 +100,9 @@ export default function EditLeavePage() {
             endDate: dateOnly(detail.endDate),
             reason: detail.reason ?? "",
             leavePeriod: (detail.leavePeriod ?? "full_day") as "full_day" | "morning" | "afternoon",
+            leaveMode: (detail.leaveMode ?? "day") as "day" | "hour",
+            startTime: detail.startTime ?? undefined,
+            endTime: detail.endTime ?? undefined,
           });
         }
       } catch (err) {
@@ -132,6 +136,11 @@ export default function EditLeavePage() {
   const startDate = form.watch("startDate");
   const endDate = form.watch("endDate");
   const leavePeriod = form.watch("leavePeriod");
+  const leaveMode = form.watch("leaveMode");
+  const startTime = form.watch("startTime");
+  const endTime = form.watch("endTime");
+
+  const isHour = leaveMode === "hour";
 
   // Calculate leave days (exclude Sundays and holidays)
   const dayCount = useMemo(() => {
@@ -147,9 +156,19 @@ export default function EditLeavePage() {
       }
       cur.setDate(cur.getDate() + 1);
     }
-    if (leavePeriod && leavePeriod !== "full_day") return count / 2;
+    if (!isHour && leavePeriod && leavePeriod !== "full_day") return count / 2;
     return count;
-  }, [startDate, endDate, leavePeriod, holidays]);
+  }, [startDate, endDate, leavePeriod, holidays, isHour]);
+
+  const hoursValue = useMemo(() => {
+    if (!isHour || !startTime || !endTime) return 0;
+    const [sh, sm] = startTime.split(":").map(Number);
+    const [eh, em] = endTime.split(":").map(Number);
+    if (!Number.isFinite(sh) || !Number.isFinite(sm) || !Number.isFinite(eh) || !Number.isFinite(em)) return 0;
+    return (eh * 60 + em - (sh * 60 + sm)) / 60;
+  }, [isHour, startTime, endTime]);
+
+  const effectiveDays = isHour ? hoursValue / 8 : dayCount;
 
   // Submit
   const handleSubmit = async (values: LeaveFormValues) => {
@@ -171,6 +190,9 @@ export default function EditLeavePage() {
           reason: values.reason,
           totalDays: dayCount,
           leavePeriod: values.leavePeriod,
+          leaveMode: values.leaveMode,
+          startTime: values.startTime,
+          endTime: values.endTime,
         }),
       });
 
@@ -288,7 +310,7 @@ export default function EditLeavePage() {
               leaveTypeOptions={leaveTypeOptions}
               leaveCaseOptions={leaveCaseOptions}
               optionsLoading={optionsLoading}
-              dayCount={dayCount}
+              dayCount={effectiveDays}
               onSubmit={handleSubmit}
               createdAt={createdAt}
               holidays={holidays}

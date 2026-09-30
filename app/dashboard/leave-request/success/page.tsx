@@ -42,6 +42,10 @@ type EditDetail = {
   totalDays: number;
   reason: string | null;
   cancelReason: string | null;
+  leaveMode?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  hours?: number | null;
 };
 
 export default async function LeaveRequestSuccessPage({
@@ -71,6 +75,10 @@ export default async function LeaveRequestSuccessPage({
           totalDays: found.totalDays,
           reason: found.reason,
           cancelReason: found.cancelReason,
+          leaveMode: found.leaveMode,
+          startTime: found.startTime,
+          endTime: found.endTime,
+          hours: found.hours,
         };
       }
     } catch {
@@ -139,7 +147,9 @@ export default async function LeaveRequestSuccessPage({
                           วันที่ลา
                         </th>
                         <td className="px-4 py-3 text-slate-700 border-b border-[#e4e2ef]">
-                          {formatThaiShortDate(detail.startDate)} ถึง {formatThaiShortDate(detail.endDate)}
+                          {detail.leaveMode === "hour"
+                            ? `${formatThaiShortDate(detail.startDate)} เวลา ${detail.startTime ?? ""} – ${detail.endTime ?? ""} น.`
+                            : `${formatThaiShortDate(detail.startDate)} ถึง ${formatThaiShortDate(detail.endDate)}`}
                         </td>
                       </tr>
                       <tr>
@@ -147,7 +157,9 @@ export default async function LeaveRequestSuccessPage({
                           จำนวนวัน
                         </th>
                         <td className="px-4 py-3 text-slate-700 border-b border-[#e4e2ef]">
-                          {detail.totalDays} วัน
+                          {detail.leaveMode === "hour"
+                            ? `${detail.hours ?? 0} ชม. (${detail.totalDays} วัน)`
+                            : `${detail.totalDays} วัน`}
                         </td>
                       </tr>
                       {detail.reason && (

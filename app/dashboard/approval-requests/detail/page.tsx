@@ -162,14 +162,18 @@ export default function ApprovalDetailNewPage() {
                 <div className="flex flex-col space-y-2">
                   <label className="text-xs font-bold text-[#46464f]/60 uppercase tracking-widest">ระยะเวลา</label>
                   <div className="flex items-center gap-4">
-                    <div><p className="text-[10px] text-[#46464f] uppercase font-semibold">เริ่มต้น</p><p className="font-bold text-[#131645]">{formatThaiDate(detail.startDate)}</p></div>
+                    <div><p className="text-[10px] text-[#46464f] uppercase font-semibold">เริ่มต้น</p><p className="font-bold text-[#131645]">{formatThaiDate(detail.startDate)}{detail.leaveMode === "hour" && detail.startTime ? ` ${detail.startTime}` : ""}</p></div>
                     <ArrowLeft className="w-4 h-4 text-[#c7c5d0] rotate-180" />
-                    <div><p className="text-[10px] text-[#46464f] uppercase font-semibold">สิ้นสุด</p><p className="font-bold text-[#131645]">{formatThaiDate(detail.endDate)}</p></div>
+                    <div><p className="text-[10px] text-[#46464f] uppercase font-semibold">สิ้นสุด</p><p className="font-bold text-[#131645]">{detail.leaveMode === "hour" ? detail.endTime ?? "-" : formatThaiDate(detail.endDate)}</p></div>
                   </div>
                 </div>
                 <div>
                   <label className="text-xs font-bold text-[#46464f]/60 uppercase tracking-widest">จำนวนวันลา</label>
-                  <p className="text-4xl font-bold text-[#131645] mt-2">{detail.totalDays} <span className="text-lg">วัน</span></p>
+                  {detail.leaveMode === "hour" ? (
+                    <p className="text-4xl font-bold text-[#131645] mt-2">{detail.hours ?? 0} <span className="text-lg">ชม.</span> <span className="text-sm">({detail.totalDays} วัน)</span></p>
+                  ) : (
+                    <p className="text-4xl font-bold text-[#131645] mt-2">{detail.totalDays} <span className="text-lg">วัน</span></p>
+                  )}
                 </div>
               </div>
 

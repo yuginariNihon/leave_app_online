@@ -52,10 +52,16 @@ export function LeaveTable({ data }: LeaveTableProps) {
                   {formatDateOnly(leave.createdAt)}
                 </TableCell>
                 <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">
-                  {formatLeaveDateRange(leave.startDate, leave.endDate)}
+                  {leave.leaveMode === "hour"
+                    ? `${formatLeaveDateRange(leave.startDate, leave.endDate)}${leave.startTime ? ` ${leave.startTime}–${leave.endTime ?? ""}` : ""}`
+                    : formatLeaveDateRange(leave.startDate, leave.endDate)}
                 </TableCell>
                 <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{leave.leaveTypeName}</TableCell>
-                <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{formatDays(leave.totalDays)}</TableCell>
+                <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">
+                  {leave.leaveMode === "hour"
+                    ? `${leave.hours ?? ""} ชม. (${formatDays(leave.totalDays)})`
+                    : formatDays(leave.totalDays)}
+                </TableCell>
                 <TableCell className="px-6 py-4">
                   <StatusBadge status={leave.status} text={statusTextMap[leave.status] ?? leave.status} />
                 </TableCell>

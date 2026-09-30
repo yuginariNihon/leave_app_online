@@ -1,9 +1,9 @@
-import { LeaveStatus, ApprovalStatus, Prisma, LeavePeriod } from "@/lib/generated/prisma/client";
+import { LeaveStatus, ApprovalStatus, LeaveMode, Prisma, LeavePeriod } from "@/lib/generated/prisma/client";
 import type { ApproverType } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import type { LeaveFormOptions } from "@/lib/TypeSchema";
 import z from "zod";
-import { toDateOnly, countInclusiveDays, buildLeaveReferenceId } from "@/lib/utils";
+import { toDateOnly, countInclusiveDays, buildLeaveReferenceId, timeFromDb } from "@/lib/utils";
 import { checkApproversExist, APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
@@ -16,15 +16,113 @@ const SUPERVISOR_POSITION_NAMES = new Set([
 
 export class LeaveRequestValidationError extends ValidationError {}
 
+// ──────────────────────────────────────
+// Hourly leave — working day 08:00–17:00, lunch 12:00–13:00 excluded
+// ──────────────────────────────────────
+export const WORK_DAY_START = "08:00";
+export const LUNCH_START = "12:00";
+export const LUNCH_END = "13:00";
+export const WORK_DAY_END = "17:00";
+export const HOURS_PER_DAY = 8;
+
+export const MORNING_START = WORK_DAY_START;
+export const MORNING_END = LUNCH_START;
+export const AFTERNOON_START = LUNCH_END;
+export const AFTERNOON_END = WORK_DAY_END;
+
+export function parseTimeMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return Number.NaN;
+  return h * 60 + m;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/** "YYYY-MM-DD" for today in Thailand (UTC+7). */
+export function thailandToday(): string {
+  const now = new Date(Date.now() + 7 * 3_600_000);
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    now.getUTCDate(),
+  ).padStart(2, "0")}`;
+}
+
+/** "YYYY-MM-DD" from a string date or Date (UTC date parts). */
+export function toDateOnlyString(value: string | Date): string {
+  const d = toDateOnly(value);
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+}
+
+/** Date for a @db.Time column (epoch date carries the time of day). */
+export function timeToDb(time: string): Date {
+  const [h, m] = time.split(":").map(Number);
+  return new Date(Date.UTC(1970, 0, 1, h, m, 0));
+}
+
+/**
+ * Validates an hourly leave (shared by POST + PATCH):
+ * same start/end day, not in the past (Thailand), working day (Mon–Sat, no
+ * company holiday — reused from assertValidLeaveDateRange), start < end, and
+ * the window sits fully inside one working half (08:00–12:00 / 13:00–17:00).
+ */
+export async function assertValidLeaveTime(
+  startDate: string | Date,
+  endDate: string | Date,
+  startTime: string,
+  endTime: string,
+): Promise<void> {
+  const start = toDateOnlyString(startDate);
+  const end = toDateOnlyString(endDate);
+
+  if (end !== start) {
+    throw new LeaveRequestValidationError("การลารายชั่วโมงต้องเริ่มและสิ้นสุดในวันเดียวกัน");
+  }
+  if (start < thailandToday()) {
+    throw new LeaveRequestValidationError("ไม่สามารถยื่นคำขอลารายชั่วโมงย้อนหลังได้");
+  }
+
+  await assertValidLeaveDateRange(startDate, endDate);
+
+  if (!startTime || !endTime) {
+    throw new LeaveRequestValidationError("กรุณาระบุเวลาเริ่มและเวลาสิ้นสุดของการลา");
+  }
+  const s = parseTimeMinutes(startTime);
+  const e = parseTimeMinutes(endTime);
+  if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) {
+    throw new LeaveRequestValidationError("เวลาเริ่มต้องก่อนเวลาสิ้นสุด");
+  }
+
+  const insideMorning =
+    s >= parseTimeMinutes(MORNING_START) && e <= parseTimeMinutes(MORNING_END);
+  const insideAfternoon =
+    s >= parseTimeMinutes(AFTERNOON_START) && e <= parseTimeMinutes(AFTERNOON_END);
+  if (!insideMorning && !insideAfternoon) {
+    throw new LeaveRequestValidationError(
+      "เวลาลาต้องอยู่ในช่วงเวลาทำงาน (08:00–12:00 หรือ 13:00–17:00) และไม่รวมช่วงพักเที่ยง 12:00–13:00",
+    );
+  }
+}
+
+/** Computes leave hours from HH:mm start/end (2 decimal places). */
+export function computeLeaveHours(startTime: string, endTime: string): number {
+  return round2((parseTimeMinutes(endTime) - parseTimeMinutes(startTime)) / 60);
+}
+
 /**
  * Calculates leave total days server-side (never trust the client):
- * full_day = inclusive day count, morning/afternoon = half per day.
+ * hourly = hours ÷ HOURS_PER_DAY; full_day = inclusive day count,
+ * morning/afternoon = half per day.
  */
 export function computeLeaveTotalDays(
   startDate: string | Date,
   endDate: string | Date,
   leavePeriod?: string,
+  leaveMode?: string,
+  hours?: number,
 ): number {
+  if (leaveMode === "hour") return round2((hours ?? 0) / HOURS_PER_DAY);
   const days = countInclusiveDays(startDate, endDate);
   if (leavePeriod === "morning" || leavePeriod === "afternoon") return days / 2;
   return days;
@@ -73,6 +171,9 @@ export type CreateLeaveRequestInput = {
   endDate: string | Date;
   reason?: string;
   leavePeriod?: string;
+  leaveMode?: string;
+  startTime?: string;
+  endTime?: string;
 };
 
 /**
@@ -147,15 +248,82 @@ export async function validateLeaveRequestDetails(
   };
 }
 
+/** Time window of a half-day period on its date (08:00–12:00 / 13:00–17:00). */
+function halfDayWindow(period: string): [number, number] {
+  if (period === "afternoon") {
+    return [parseTimeMinutes(AFTERNOON_START), parseTimeMinutes(AFTERNOON_END)];
+  }
+  return [parseTimeMinutes(MORNING_START), parseTimeMinutes(MORNING_END)];
+}
+
+function dateBetween(date: string, start: string, end: string): boolean {
+  return date >= start && date <= end;
+}
+
+export type LeaveConflictInput = {
+  startDate: string | Date;
+  endDate: string | Date;
+  leavePeriod?: string;
+  leaveMode?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+};
+
+export type LeaveConflictTarget = {
+  start_date: Date | null;
+  end_date: Date | null;
+  leave_period: LeavePeriod;
+  leave_mode: LeaveMode;
+  start_time: Date | null;
+  end_time: Date | null;
+};
+
 /**
- * Determines whether two leave periods genuinely overlap on the same date.
- * A full_day conflicts with any period; morning + afternoon do not conflict.
+ * Determines whether a (proposed) leave genuinely conflicts with an existing
+ * pending/approved leave:
+ * - day-vs-day: full_day conflicts with anything; morning + afternoon do not.
+ * - hourly-vs-hourly: strict window overlap; disjoint windows on the same day pass.
+ * - hourly marker vs day leave: conflicts if its date is in the range and the
+ *   hour window intersects the day leave (full day = any window).
  */
-function periodsOverlap(a: LeavePeriod | undefined, b: LeavePeriod | undefined): boolean {
-  const pa = a ?? "full_day";
-  const pb = b ?? "full_day";
-  if (pa === "full_day" || pb === "full_day") return true;
-  return pa === pb;
+export function periodsConflict(a: LeaveConflictInput, b: LeaveConflictTarget): boolean {
+  const aMode = a.leaveMode ?? "day";
+  const bMode = b.leave_mode ?? LeaveMode.day;
+  const aPeriod = a.leavePeriod ?? "full_day";
+  const aStartDate = toDateOnlyString(a.startDate);
+  const aEndDate = toDateOnlyString(a.endDate);
+  const bStartDate = toDateOnlyString(b.start_date ?? b.end_date ?? new Date(0));
+  const bEndDate = toDateOnlyString(b.end_date ?? b.start_date ?? new Date(0));
+  const bStartTime = timeFromDb(b.start_time);
+  const bEndTime = timeFromDb(b.end_time);
+
+  if (bMode === "hour") {
+    if (!bStartTime || !bEndTime) return true; // malformed hourly row → treat as conflict
+    const bStart = parseTimeMinutes(bStartTime);
+    const bEnd = parseTimeMinutes(bEndTime);
+    if (aMode === "hour") {
+      const aStart = parseTimeMinutes(a.startTime ?? "");
+      const aEnd = parseTimeMinutes(a.endTime ?? "");
+      return aStartDate === bStartDate && aStart < bEnd && bStart < aEnd;
+    }
+    // a is day-based vs b hourly: conflict on any shared date
+    if (aPeriod === "full_day") return dateBetween(bStartDate, aStartDate, aEndDate);
+    const [ws, we] = halfDayWindow(aPeriod);
+    return dateBetween(bStartDate, aStartDate, aEndDate) && bStart < we && ws < bEnd;
+  }
+
+  // b is day-based
+  if (aMode !== "hour") {
+    if (aPeriod === "full_day" || b.leave_period === "full_day") return true;
+    return aPeriod === b.leave_period;
+  }
+
+  // a hourly vs b day-based
+  const aStart = parseTimeMinutes(a.startTime ?? "");
+  const aEnd = parseTimeMinutes(a.endTime ?? "");
+  if (b.leave_period === "full_day") return dateBetween(aStartDate, bStartDate, bEndDate);
+  const [ws, we] = halfDayWindow(b.leave_period);
+  return dateBetween(aStartDate, bStartDate, bEndDate) && aStart < we && ws < aEnd;
 }
 
 /**
@@ -164,8 +332,22 @@ function periodsOverlap(a: LeavePeriod | undefined, b: LeavePeriod | undefined):
 export async function createLeaveRequest(input: CreateLeaveRequestInput) {
   const startDate = toDateOnly(input.startDate);
   const endDate = toDateOnly(input.endDate);
+  const leaveMode = input.leaveMode ?? "day";
+  const isHour = leaveMode === "hour";
+
   await assertValidLeaveDateRange(input.startDate, input.endDate);
-  const totalDays = computeLeaveTotalDays(startDate, endDate, input.leavePeriod);
+  let hours: number | null = null;
+  if (isHour) {
+    await assertValidLeaveTime(input.startDate, input.endDate, input.startTime ?? "", input.endTime ?? "");
+    hours = computeLeaveHours(input.startTime ?? "", input.endTime ?? "");
+  }
+  const totalDays = computeLeaveTotalDays(
+    startDate,
+    endDate,
+    input.leavePeriod,
+    leaveMode,
+    hours ?? undefined,
+  );
 
   // 1. Get staff info for position & department
   const staff = await prisma.staffInfo.findUnique({
@@ -176,7 +358,7 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
   if (!staff) throw new NotFoundError("Staff not found.");
 
   // ตรวจสอบการทับซ้อนของช่วงเวลาลาที่มีสถานะ pending/approved อยู่แล้ว
-  // (morning + afternoon ในวันเดียวกันไม่ถือว่าทับซ้อนกัน)
+  // (morning + afternoon ในวันเดียวกันไม่ถือว่าทับซ้อนกัน; รายชั่วโมงเทียบเวลาเริ่ม–สิ้นสุดจริง)
   const overlapLeaves = await prisma.dataLeave.findMany({
     where: {
       staff_id: input.staffId,
@@ -184,9 +366,31 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
       start_date: { lte: endDate },
       end_date: { gte: startDate },
     },
-    select: { leave_id: true, leave_period: true },
+    select: {
+      leave_id: true,
+      start_date: true,
+      end_date: true,
+      leave_period: true,
+      leave_mode: true,
+      start_time: true,
+      end_time: true,
+    },
   });
-  if (overlapLeaves.some((o) => periodsOverlap(input.leavePeriod as LeavePeriod | undefined, o.leave_period))) {
+  if (
+    overlapLeaves.some((o) =>
+      periodsConflict(
+        {
+          startDate,
+          endDate,
+          leavePeriod: input.leavePeriod,
+          leaveMode,
+          startTime: isHour ? input.startTime : null,
+          endTime: isHour ? input.endTime : null,
+        },
+        o,
+      ),
+    )
+  ) {
     throw new LeaveRequestValidationError("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
   }
 
@@ -244,7 +448,11 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
         start_date: startDate,
         end_date: endDate,
         total_days: new Prisma.Decimal(totalDays),
-        leave_period: input.leavePeriod as LeavePeriod,
+        leave_period: (input.leavePeriod ?? "full_day") as LeavePeriod,
+        leave_mode: leaveMode as LeaveMode,
+        start_time: isHour ? timeToDb(input.startTime ?? "") : undefined,
+        end_time: isHour ? timeToDb(input.endTime ?? "") : undefined,
+        hours: hours !== null ? new Prisma.Decimal(hours) : undefined,
         reason: input.reason,
         leave_status: allAutoApproved
           ? LeaveStatus.approved
@@ -290,6 +498,9 @@ export type UpdateLeaveRequestInput = {
   endDate: string | Date;
   reason?: string;
   leavePeriod?: string;
+  leaveMode?: string;
+  startTime?: string;
+  endTime?: string;
 };
 
 /**
@@ -333,11 +544,25 @@ export async function updateLeaveRequest(
 
   const startDate = toDateOnly(input.startDate);
   const endDate = toDateOnly(input.endDate);
+  const leaveMode = input.leaveMode ?? "day";
+  const isHour = leaveMode === "hour";
+
   await assertValidLeaveDateRange(input.startDate, input.endDate);
-  const totalDays = computeLeaveTotalDays(startDate, endDate, input.leavePeriod);
+  let hours: number | null = null;
+  if (isHour) {
+    await assertValidLeaveTime(input.startDate, input.endDate, input.startTime ?? "", input.endTime ?? "");
+    hours = computeLeaveHours(input.startTime ?? "", input.endTime ?? "");
+  }
+  const totalDays = computeLeaveTotalDays(
+    startDate,
+    endDate,
+    input.leavePeriod,
+    leaveMode,
+    hours ?? undefined,
+  );
 
   // ตรวจสอบการทับซ้อนของช่วงเวลาลากับใบลาอื่น (ไม่รวมใบปัจจุบัน)
-  // (morning + afternoon ในวันเดียวกันไม่ถือว่าทับซ้อนกัน)
+  // (morning + afternoon ในวันเดียวกันไม่ถือว่าทับซ้อนกัน; รายชั่วโมงเทียบเวลาเริ่ม–สิ้นสุดจริง)
   const overlapLeaves = await prisma.dataLeave.findMany({
     where: {
       staff_id: staffId,
@@ -346,9 +571,31 @@ export async function updateLeaveRequest(
       start_date: { lte: endDate },
       end_date: { gte: startDate },
     },
-    select: { leave_id: true, leave_period: true },
+    select: {
+      leave_id: true,
+      start_date: true,
+      end_date: true,
+      leave_period: true,
+      leave_mode: true,
+      start_time: true,
+      end_time: true,
+    },
   });
-  if (overlapLeaves.some((o) => periodsOverlap(input.leavePeriod as LeavePeriod | undefined, o.leave_period))) {
+  if (
+    overlapLeaves.some((o) =>
+      periodsConflict(
+        {
+          startDate,
+          endDate,
+          leavePeriod: input.leavePeriod,
+          leaveMode,
+          startTime: isHour ? input.startTime : null,
+          endTime: isHour ? input.endTime : null,
+        },
+        o,
+      ),
+    )
+  ) {
     throw new LeaveRequestValidationError("คุณมีคำขอลาที่ได้รับการอนุมัติแล้วหรือกำลังรอการอนุมัติในช่วงเวลานี้");
   }
 
@@ -360,7 +607,11 @@ export async function updateLeaveRequest(
       start_date: startDate,
       end_date: endDate,
       total_days: new Prisma.Decimal(totalDays),
-      leave_period: input.leavePeriod as LeavePeriod | undefined,
+      leave_period: (input.leavePeriod ?? "full_day") as LeavePeriod,
+      leave_mode: leaveMode as LeaveMode,
+      start_time: isHour ? timeToDb(input.startTime ?? "") : undefined,
+      end_time: isHour ? timeToDb(input.endTime ?? "") : undefined,
+      hours: hours !== null ? new Prisma.Decimal(hours) : undefined,
       reason: input.reason,
       updated_at: new Date(),
     },
@@ -440,6 +691,11 @@ export type LeaveHistoryItem = {
   startDate: string | null;
   endDate: string | null;
   totalDays: string | null;
+  /** "day" | "hour" */
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: string | null;
   reason: string | null;
   status: string;
   createdAt: string;
@@ -560,6 +816,10 @@ export async function getLeaveHistoryByStaffId(
       startDate: item.start_date?.toISOString() ?? null,
       endDate: item.end_date?.toISOString() ?? null,
       totalDays: item.total_days?.toString() ?? null,
+      leaveMode: item.leave_mode ?? "day",
+      startTime: item.start_time ? timeFromDb(item.start_time) : null,
+      endTime: item.end_time ? timeFromDb(item.end_time) : null,
+      hours: item.hours?.toString() ?? null,
       reason: item.reason,
       status: item.leave_status,
       createdAt: item.created_at.toISOString(),
@@ -607,6 +867,11 @@ export type LeaveDetailResponse = {
   startDate: string | null;
   endDate: string | null;
   leavePeriod: string;
+  /** "day" | "hour" */
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: number | null;
   leaveTypeId: string;
   leaveCaseId: string;
   leaveTypeName: string;
@@ -792,6 +1057,10 @@ export async function getLeaveDetailById(
     startDate: leave.start_date?.toISOString() ?? null,
     endDate: leave.end_date?.toISOString() ?? null,
     leavePeriod: leave.leave_period ?? "full_day",
+    leaveMode: leave.leave_mode ?? "day",
+    startTime: leave.start_time ? timeFromDb(leave.start_time) : null,
+    endTime: leave.end_time ? timeFromDb(leave.end_time) : null,
+    hours: leave.hours != null ? Number(leave.hours) : null,
     leaveTypeId: leave.leave_type_id,
     leaveCaseId: leave.leave_case_id,
     leaveTypeName: leave.leaveType.leave_type_name,
@@ -944,6 +1213,11 @@ export type RecentLeaveItem = {
   startDate: string | null;
   endDate: string | null;
   totalDays: string | null;
+  /** "day" | "hour" */
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: string | null;
   status: string;
   createdAt: string;
 };
@@ -967,6 +1241,10 @@ export async function getRecentLeavesByStaffId(
     startDate: item.start_date?.toISOString() ?? null,
     endDate: item.end_date?.toISOString() ?? null,
     totalDays: item.total_days?.toString() ?? null,
+    leaveMode: item.leave_mode ?? "day",
+    startTime: item.start_time ? timeFromDb(item.start_time) : null,
+    endTime: item.end_time ? timeFromDb(item.end_time) : null,
+    hours: item.hours?.toString() ?? null,
     status: item.leave_status,
     createdAt: item.created_at.toISOString(),
   }));
@@ -985,6 +1263,11 @@ export type LeaveReportRecord = {
   startDate: string | null;
   endDate: string | null;
   totalDays: string | null;
+  /** "day" | "hour" */
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: string | null;
   status: LeaveStatus;
   createdAt: string;
 };
@@ -1102,6 +1385,10 @@ export async function getLeaveReport(
       startDate: item.start_date?.toISOString() ?? null,
       endDate: item.end_date?.toISOString() ?? null,
       totalDays: item.total_days?.toString() ?? null,
+      leaveMode: item.leave_mode ?? "day",
+      startTime: item.start_time ? timeFromDb(item.start_time) : null,
+      endTime: item.end_time ? timeFromDb(item.end_time) : null,
+      hours: item.hours?.toString() ?? null,
       status: item.leave_status,
       createdAt: item.created_at.toISOString(),
     })),
@@ -1173,9 +1460,258 @@ export async function syncLeaveLimit(
   });
 }
 
+// ──────────────────────────────────────────────
+// Leave limit bulk assign (HR) — ปีปัจจุบันเท่านั้น
+// ──────────────────────────────────────────────
+
+const VACATION_LEAVE_TYPE_NAME = "พักร้อน";
+
+/** Single source of truth for "is this the annual-leave type?" (used by assign + annual reset cron). */
+export function isVacationLeaveType(leaveTypeName: string | null | undefined): boolean {
+  return leaveTypeName === VACATION_LEAVE_TYPE_NAME;
+}
+
+export type MissingQuotaStaffItem = {
+  staffId: string;
+  staffCode: string;
+  name: string;
+  departmentName: string | null;
+  positionName: string | null;
+};
+
+export type MissingQuotaResult = {
+  year: number;
+  leaveType: {
+    leaveTypeId: string;
+    leaveTypeName: string;
+    maxDaysPerYear: number | null;
+    isPaid: boolean;
+    isVacationLeave: boolean;
+  };
+  totalActiveStaff: number;
+  alreadyHave: number;
+  missingCount: number;
+  missing: MissingQuotaStaffItem[];
+};
+
+/** Active staff eligible for a quota (matches the annual-reset cron scope). */
+function activeQuotaStaffWhere(excludeSuperAdmin = false): Prisma.StaffInfoWhereInput {
+  return {
+    is_active: true,
+    start_date: { not: null },
+    ...(excludeSuperAdmin
+      ? { staffRoles: { none: { role: { role_name: "SUPER_ADMIN" } } } }
+      : {}),
+  };
+}
+
+export async function getStaffMissingLeaveLimit(
+  leaveTypeId: string,
+  year: number = new Date().getFullYear(),
+  excludeSuperAdmin = false,
+): Promise<MissingQuotaResult> {
+  const leaveType = await prisma.leaveType.findUnique({
+    where: { leave_type_id: leaveTypeId },
+    select: {
+      leave_type_id: true,
+      leave_type_name: true,
+      max_days_per_year: true,
+      is_paid: true,
+      is_active: true,
+    },
+  });
+  if (!leaveType) {
+    throw new NotFoundError("ไม่พบประเภทการลาที่เลือก");
+  }
+  if (!leaveType.is_active) {
+    throw new ConflictError("ไม่สามารถจัดการสิทธิ์ของประเภทการลาที่ปิดใช้งานอยู่ได้");
+  }
+
+  const staff = await prisma.staffInfo.findMany({
+    where: activeQuotaStaffWhere(excludeSuperAdmin),
+    orderBy: { staff_code: "asc" },
+    select: {
+      staff_id: true,
+      staff_code: true,
+      name: true,
+      department: { select: { department_name: true } },
+      position: { select: { position_name: true } },
+    },
+  });
+
+  const existing = await prisma.userLeaveLimit.findMany({
+    where: { leave_type_id: leaveTypeId, year },
+    select: { staff_id: true },
+  });
+  const existingSet = new Set(existing.map((e) => e.staff_id));
+
+  const missing = staff
+    .filter((s) => !existingSet.has(s.staff_id))
+    .map((s) => ({
+      staffId: s.staff_id,
+      staffCode: s.staff_code,
+      name: s.name,
+      departmentName: s.department?.department_name ?? null,
+      positionName: s.position?.position_name ?? null,
+    }));
+
+  return {
+    year,
+    leaveType: {
+      leaveTypeId: leaveType.leave_type_id,
+      leaveTypeName: leaveType.leave_type_name,
+      maxDaysPerYear: leaveType.max_days_per_year,
+      isPaid: leaveType.is_paid,
+      isVacationLeave: isVacationLeaveType(leaveType.leave_type_name),
+    },
+    totalActiveStaff: staff.length,
+    alreadyHave: staff.length - missing.length,
+    missingCount: missing.length,
+    missing,
+  };
+}
+
+export type AssignLeaveLimitResult = {
+  year: number;
+  leaveTypeName: string;
+  requested: number;
+  created: number;
+  skippedDuplicate: number;
+  skippedInactive: number;
+  skippedSuperAdmin: number;
+};
+
+/**
+ * Creates UserLeaveLimit rows for the current year only.
+ * Never overwrites an existing row (createMany + skipDuplicates), so `used_days` is safe.
+ * For annual leave the quota is computed from years of service + carry-over (max 6 days).
+ */
+export async function assignLeaveLimitToStaff(input: {
+  leaveTypeId: string;
+  staffIds: string[];
+  maxDays: number;
+  year?: number;
+  excludeSuperAdmin?: boolean;
+}): Promise<AssignLeaveLimitResult> {
+  const year = input.year ?? new Date().getFullYear();
+  let requestedIds = Array.from(new Set(input.staffIds));
+  let skippedSuperAdmin = 0;
+
+  // HR must never assign a quota to a SUPER_ADMIN staff — drop them server-side.
+  if (input.excludeSuperAdmin && requestedIds.length > 0) {
+    const admins = await prisma.staffInfo.findMany({
+      where: {
+        staff_id: { in: requestedIds },
+        staffRoles: { some: { role: { role_name: "SUPER_ADMIN" } } },
+      },
+      select: { staff_id: true },
+    });
+    const adminSet = new Set(admins.map((a) => a.staff_id));
+    skippedSuperAdmin = requestedIds.filter((id) => adminSet.has(id)).length;
+    requestedIds = requestedIds.filter((id) => !adminSet.has(id));
+  }
+
+  const leaveType = await prisma.leaveType.findUnique({
+    where: { leave_type_id: input.leaveTypeId },
+    select: { leave_type_id: true, leave_type_name: true, is_active: true },
+  });
+  if (!leaveType) {
+    throw new NotFoundError("ไม่พบประเภทการลาที่เลือก");
+  }
+  if (!leaveType.is_active) {
+    throw new ConflictError("ไม่สามารถจัดการสิทธิ์ของประเภทการลาที่ปิดใช้งานอยู่ได้");
+  }
+
+  const isVacation = isVacationLeaveType(leaveType.leave_type_name);
+  if (!isVacation && (input.maxDays < 0 || !Number.isFinite(input.maxDays))) {
+    throw new ValidationError("ข้อมูลไม่ถูกต้อง: จำนวนวันลาต้องเป็นตัวเลขที่ไม่ติดลบ");
+  }
+
+  const eligible = await prisma.staffInfo.findMany({
+    where: { staff_id: { in: requestedIds }, ...activeQuotaStaffWhere() },
+    select: { staff_id: true, start_date: true },
+  });
+  const eligibleMap = new Map(eligible.map((s) => [s.staff_id, s.start_date]));
+  const targetIds = eligible.map((s) => s.staff_id);
+
+  const skippedInactive = requestedIds.filter((id) => !eligibleMap.has(id)).length;
+
+  const existing = await prisma.userLeaveLimit.findMany({
+    where: { leave_type_id: input.leaveTypeId, year, staff_id: { in: targetIds } },
+    select: { staff_id: true },
+  });
+  const existingSet = new Set(existing.map((e) => e.staff_id));
+  const toCreate = targetIds.filter((id) => !existingSet.has(id));
+  const skippedDuplicate = targetIds.length - toCreate.length;
+
+  if (toCreate.length === 0) {
+    return {
+      year,
+      leaveTypeName: leaveType.leave_type_name,
+      requested: requestedIds.length,
+      created: 0,
+      skippedDuplicate,
+      skippedInactive,
+      skippedSuperAdmin,
+    };
+  }
+
+  // Batch carry-over lookup: one query for all previous-year vacation rows.
+  const prevLimits = isVacation
+    ? await prisma.userLeaveLimit.findMany({
+        where: {
+          leave_type_id: input.leaveTypeId,
+          year: year - 1,
+          staff_id: { in: toCreate },
+        },
+        select: { staff_id: true, max_days: true, used_days: true },
+      })
+    : [];
+  const prevLimitMap = new Map(prevLimits.map((p) => [p.staff_id, p]));
+
+  const rows = toCreate.map((staffId) => {
+    let maxDays = input.maxDays;
+    if (isVacation) {
+      const startDate = eligibleMap.get(staffId);
+      const yearsOfService = startDate
+        ? Math.floor((Date.now() - startDate.getTime()) / (365.25 * 86400000))
+        : 0;
+      const entitlement = getVacationEntitlement(yearsOfService);
+      const prev = prevLimitMap.get(staffId);
+      const unused = prev
+        ? Math.max(0, Number(prev.max_days) - Number(prev.used_days))
+        : 0;
+      maxDays = entitlement + Math.min(unused, 6);
+    }
+    return {
+      staff_id: staffId,
+      leave_type_id: input.leaveTypeId,
+      year,
+      max_days: maxDays,
+      used_days: 0,
+    };
+  });
+
+  const created = await prisma.userLeaveLimit.createMany({
+    data: rows,
+    skipDuplicates: true,
+  });
+
+  return {
+    year,
+    leaveTypeName: leaveType.leave_type_name,
+    requested: requestedIds.length,
+    created: created.count,
+    skippedDuplicate,
+    skippedInactive,
+    skippedSuperAdmin,
+  };
+}
+
 export * from "@/lib/services/staffService";
 export * from "@/lib/services/masterDataService";
 export * from "@/lib/services/roleService";
 export * from "@/lib/services/workflowService";
 export * from "@/lib/services/profileService";
 export * from "@/lib/services/userService";
+export { timeFromDb, minutesToTime } from "@/lib/utils";

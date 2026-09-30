@@ -9,25 +9,35 @@ import { NotFoundError, ConflictError, ValidationError, ForbiddenError, Unauthor
 // Advance Helper
 // ──────────────────────────────────────────────
 
-// Splits an inclusive [start, end] date range into per-calendar-year day counts,
-// so multi-year leaves are charged to the correct annual quota.
-// Uses UTC end-of-day math so results are identical on any server timezone.
-function splitDaysByYear(start: Date, end: Date): Map<number, number> {
-  const dayCounts = new Map<number, number>();
-
-  if (end < start) throw new ValidationError("End date before start date.");
-
-  // Convert to UTC day boundaries (00:00 UTC) to keep year-splitting timezone-agnostic.
-  const s = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
-  const e = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
-
+// Splits `total_days` across the calendar years spanned by [start, end],
+// proportionally by inclusive day count per year (last year absorbs rounding).
+// Uses the stored total_days (already half-day ÷2 / hourly ÷8) instead of counting
+// raw dates — so a morning leave Fri→Mon (2.0 days) charges 2 half-days, not 4.
+function computeChargeByYear(start: Date, end: Date, totalDays: number): Map<number, number> {
   const msPerDay = 86_400_000;
-  for (let y = start.getUTCFullYear(); y <= end.getUTCFullYear(); y++) {
+  const s = start.getTime();
+  const e = end.getTime();
+  const totalInclusive = Math.round((e - s) / msPerDay) + 1;
+
+  const result = new Map<number, number>();
+  let remaining = totalDays;
+  const years: number[] = [];
+  for (let y = start.getUTCFullYear(); y <= end.getUTCFullYear(); y++) years.push(y);
+
+  years.forEach((y, idx) => {
     const yearStart = Math.max(s, Date.UTC(y, 0, 1));
     const yearEnd = Math.min(e, Date.UTC(y + 1, 0, 1) - 1);
-    dayCounts.set(y, Math.round((yearEnd - yearStart) / msPerDay) + 1);
-  }
-  return dayCounts;
+    const daysInYear = Math.round((yearEnd - yearStart) / msPerDay) + 1;
+    if (idx === years.length - 1) {
+      result.set(y, Math.round(remaining * 100) / 100);
+    } else {
+      const share = totalDays * (daysInYear / totalInclusive);
+      const rounded = Math.round(share * 100) / 100;
+      result.set(y, rounded);
+      remaining -= rounded;
+    }
+  });
+  return result;
 }
 
 export async function updateUsedDaysOnApproval(
@@ -52,10 +62,12 @@ export async function updateUsedDaysOnApproval(
   if (!startDate) return;
   const endDate = leave.end_date ?? startDate;
 
-  // Split total days by calendar year so the quota used is accurate per year
-  const dayCounts = splitDaysByYear(startDate, endDate);
+  // Split the stored total_days by calendar year so the quota used is accurate
+  // per year (and so half-day/hourly leaves charge their true fraction of a day).
+  const totalDaysNum = Number(leave.total_days);
+  const chargeByYear = computeChargeByYear(startDate, endDate, totalDaysNum);
 
-  for (const [year, days] of dayCounts) {
+  for (const [year, days] of chargeByYear) {
     const quota = await db.userLeaveLimit.findUnique({
       where: {
         staff_id_leave_type_id_year: {

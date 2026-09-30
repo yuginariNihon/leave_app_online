@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { EmploymentStatus, LeaveStatus } from "@/lib/generated/prisma/client";
+import { timeFromDb } from "@/lib/utils";
 
 export type DashboardKpiData = {
   pendingApprovals: number;
@@ -31,6 +32,11 @@ export type PendingApprovalItem = {
   startDate: string;
   endDate: string;
   totalDays: number;
+  /** "day" | "hour" */
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: number | null;
 };
 
 export type TodaysLeaveItem = {
@@ -38,6 +44,11 @@ export type TodaysLeaveItem = {
   leaveTypeName: string;
   leavePeriod: string;
   departmentName: string;
+  /** "day" | "hour" */
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: number | null;
 };
 
 export type UpcomingLeaveItem = {
@@ -45,6 +56,11 @@ export type UpcomingLeaveItem = {
   leaveTypeName: string;
   startDate: string;
   totalDays: number;
+  /** "day" | "hour" */
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: number | null;
 };
 
 export type RecentActivityItem = {
@@ -182,6 +198,10 @@ export async function getPendingApprovals(limit = 5): Promise<PendingApprovalIte
     startDate: l.start_date?.toISOString().split("T")[0] ?? "",
     endDate: l.end_date?.toISOString().split("T")[0] ?? "",
     totalDays: Number(l.total_days ?? 0),
+    leaveMode: l.leave_mode ?? "day",
+    startTime: l.start_time ? timeFromDb(l.start_time) : null,
+    endTime: l.end_time ? timeFromDb(l.end_time) : null,
+    hours: l.hours != null ? Number(l.hours) : null,
   }));
 }
 
@@ -208,6 +228,10 @@ export async function getTodaysLeave(): Promise<TodaysLeaveItem[]> {
     leaveTypeName: l.leaveType.leave_type_name,
     leavePeriod: l.leave_period,
     departmentName: l.staff.department?.department_name ?? "",
+    leaveMode: l.leave_mode ?? "day",
+    startTime: l.start_time ? timeFromDb(l.start_time) : null,
+    endTime: l.end_time ? timeFromDb(l.end_time) : null,
+    hours: l.hours != null ? Number(l.hours) : null,
   }));
 }
 
@@ -236,6 +260,10 @@ export async function getUpcomingLeave(daysAhead = 7): Promise<UpcomingLeaveItem
     leaveTypeName: l.leaveType.leave_type_name,
     startDate: l.start_date?.toISOString().split("T")[0] ?? "",
     totalDays: Number(l.total_days ?? 0),
+    leaveMode: l.leave_mode ?? "day",
+    startTime: l.start_time ? timeFromDb(l.start_time) : null,
+    endTime: l.end_time ? timeFromDb(l.end_time) : null,
+    hours: l.hours != null ? Number(l.hours) : null,
   }));
 }
 

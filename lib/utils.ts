@@ -174,3 +174,17 @@ export function csvCell(value: string | number | null | undefined): string {
   const sanitized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
   return `"${sanitized.replace(/"/g, '""')}"`;
 }
+
+export function minutesToTime(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+/** HH:mm from a @db.Time value (epoch-date Date). */
+export function timeFromDb(value: Date | string | null | undefined): string | null {
+  if (!value) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return minutesToTime(d.getUTCHours() * 60 + d.getUTCMinutes());
+}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
-import { getStaffDetail, updateStaff, StaffUpdateConflictError } from "@/lib/services/leaveService";
+import { getStaffDetail, updateStaff, StaffUpdateConflictError, getStaffRoleNames } from "@/lib/services/leaveService";
 import { updateStaffSchema } from "@/lib/TypeSchema";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
@@ -18,6 +18,15 @@ export async function GET(
     if (error) return error;
 
     const { id } = await params;
+
+    // HR must not read SUPER_ADMIN staff at all → hide (404).
+    if (!session?.roles.includes("SUPER_ADMIN")) {
+      const targetRoles = await getStaffRoleNames(id);
+      if (targetRoles.includes("SUPER_ADMIN")) {
+        return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+      }
+    }
+
     const staff = await getStaffDetail(id);
     if (!staff) {
       return NextResponse.json({ error: "Staff not found" }, { status: 404 });
@@ -57,6 +66,17 @@ export async function PUT(
     });
     if (!existing) {
       return NextResponse.json({ error: "ไม่พบข้อมูลพนักงาน (อาจถูกลบไปแล้ว)" }, { status: 404 });
+    }
+
+    // HR must not modify SUPER_ADMIN staff.
+    if (!auth.session?.roles.includes("SUPER_ADMIN")) {
+      const targetRoles = await getStaffRoleNames(id);
+      if (targetRoles.includes("SUPER_ADMIN")) {
+        return NextResponse.json(
+          { error: "ไม่สามารถแก้ไขข้อมูลพนักงานที่อยู่ในระดับ SUPER_ADMIN ได้" },
+          { status: 403 },
+        );
+      }
     }
 
     const updated = await updateStaff(id, parsed.data);

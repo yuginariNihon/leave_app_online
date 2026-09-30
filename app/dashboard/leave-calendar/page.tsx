@@ -12,7 +12,15 @@ type DayData = {
   date: string;
   isToday: boolean;
   count: number;
-  leaves: { staffName: string; leaveTypeName: string; departmentName: string }[];
+  leaves: {
+    staffName: string;
+    leaveTypeName: string;
+    departmentName: string;
+    leaveMode?: string;
+    startTime?: string | null;
+    endTime?: string | null;
+    hours?: string | null;
+  }[];
   holidayName: string | null;
 };
 
@@ -188,7 +196,7 @@ export default function LeaveCalendarPage() {
                               key={idx}
                               className={`px-1.5 py-0.5 rounded text-[10px] font-semibold leading-tight ${style.bg} ${style.text} ${style.border} border truncate`}
                             >
-                              {l.staffName} ({l.leaveTypeName})
+                              {l.staffName}{l.leaveMode === "hour" && l.startTime ? ` (${l.startTime}–${l.endTime ?? ""})` : ` (${l.leaveTypeName})`}
                             </div>
                           );
                         })}
@@ -316,7 +324,11 @@ export default function LeaveCalendarPage() {
                               <p className="text-xs text-slate-500">{l.departmentName}</p>
                             </div>
                           </div>
-                          <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${style.bg} ${style.text} ${style.border}`}>{l.leaveTypeName}</span>
+                          <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${style.bg} ${style.text} ${style.border}`}>
+                            {l.leaveMode === "hour"
+                              ? `${l.leaveTypeName} ${l.startTime ?? ""}–${l.endTime ?? ""} น.`
+                              : l.leaveTypeName}
+                          </span>
                         </div>
                       );
                     })}

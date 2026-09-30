@@ -53,6 +53,7 @@ export default function LeaveRequestPage() {
       endDate: "",
       reason: "",
       leavePeriod: "full_day",
+      leaveMode: "day",
     },
   });
 
@@ -88,6 +89,11 @@ export default function LeaveRequestPage() {
   const endDate = form.watch("endDate");
   const leaveTypeId = form.watch("leaveTypeId");
   const leavePeriod = form.watch("leavePeriod");
+  const leaveMode = form.watch("leaveMode");
+  const startTime = form.watch("startTime");
+  const endTime = form.watch("endTime");
+
+  const isHour = leaveMode === "hour";
 
   // Calculate leave days (exclude Sundays and holidays)
   const dayCount = useMemo(() => {
@@ -103,13 +109,24 @@ export default function LeaveRequestPage() {
       }
       cur.setDate(cur.getDate() + 1);
     }
-    if (leavePeriod && leavePeriod !== "full_day") return count / 2;
+    if (!isHour && leavePeriod && leavePeriod !== "full_day") return count / 2;
     return count;
-  }, [startDate, endDate, leavePeriod, holidays]);
+  }, [startDate, endDate, leavePeriod, holidays, isHour]);
+
+  // Hourly leave: hours and converted day-equivalent (hours ÷ 8)
+  const hoursValue = useMemo(() => {
+    if (!isHour || !startTime || !endTime) return 0;
+    const [sh, sm] = startTime.split(":").map(Number);
+    const [eh, em] = endTime.split(":").map(Number);
+    if (!Number.isFinite(sh) || !Number.isFinite(sm) || !Number.isFinite(eh) || !Number.isFinite(em)) return 0;
+    return (eh * 60 + em - (sh * 60 + sm)) / 60;
+  }, [isHour, startTime, endTime]);
+
+  const effectiveDays = isHour ? hoursValue / 8 : dayCount;
 
   // Check if requested days exceed remaining quota
   const totalRemaining = leaveTypeId ? leaveQuota[leaveTypeId]?.remaining ?? Infinity : Infinity;
-  const isQuotaExceeded = dayCount > 0 && totalRemaining < Infinity && dayCount > totalRemaining;
+  const isQuotaExceeded = effectiveDays > 0 && totalRemaining < Infinity && effectiveDays > totalRemaining;
 
   // Prefill when editing
   useEffect(() => {
@@ -131,6 +148,12 @@ export default function LeaveRequestPage() {
       if (reason) form.setValue("reason", reason);
       const period = searchParams.get("leavePeriod");
       if (period) form.setValue("leavePeriod", period as "full_day" | "morning" | "afternoon");
+      const elMode = searchParams.get("leaveMode");
+      if (elMode === "day" || elMode === "hour") form.setValue("leaveMode", elMode);
+      const sTime = searchParams.get("startTime");
+      if (sTime) form.setValue("startTime", sTime);
+      const eTime = searchParams.get("endTime");
+      if (eTime) form.setValue("endTime", eTime);
     }
   }, [searchParams, form]);
 
@@ -138,11 +161,13 @@ export default function LeaveRequestPage() {
   const handleSubmit = async (values: LeaveFormValues) => {
     setSubmitError("");
 
-    // Validate quota before submitting
+    const isHourSubmit = (values.leaveMode || "day") === "hour";
     const quota = leaveQuota[values.leaveTypeId];
-    if (quota && dayCount > quota.remaining) {
+    if (quota && effectiveDays > quota.remaining) {
       setSubmitError(
-        `วันลาที่ขอ (${dayCount} วัน) เกินจำนวนวันที่เหลืออยู่ (${quota.remaining} วัน) สำหรับประเภทการลานี้`
+        isHourSubmit
+          ? `เวลาที่ขอ (${hoursValue} ชม. / ${effectiveDays.toFixed(2)} วัน) เกินจำนวนวันที่เหลืออยู่ (${quota.remaining} วัน) สำหรับประเภทการลานี้`
+          : `วันลาที่ขอ (${dayCount} วัน) เกินจำนวนวันที่เหลืออยู่ (${quota.remaining} วัน) สำหรับประเภทการลานี้`
       );
       setShowErrorOverlay(true);
       return;
@@ -160,6 +185,9 @@ export default function LeaveRequestPage() {
           reason: values.reason,
           totalDays: dayCount,
           leavePeriod: values.leavePeriod,
+          leaveMode: values.leaveMode,
+          startTime: values.startTime,
+          endTime: values.endTime,
         }),
       });
       leaveId = json.data.leave_id;
@@ -285,7 +313,7 @@ export default function LeaveRequestPage() {
               leaveQuota={leaveQuota}
               isQuotaExceeded={isQuotaExceeded}
               optionsLoading={optionsLoading}
-              dayCount={dayCount}
+              dayCount={effectiveDays}
               onSubmit={handleSubmit}
               holidays={holidays}
             />

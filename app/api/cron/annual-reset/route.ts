@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getVacationEntitlement } from "@/lib/services/leaveService";
+import { getVacationEntitlement, isVacationLeaveType } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
 
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     currentYear.map((l) => `${l.staff_id}::${l.leave_type_id}`),
   );
 
-  const vacationType = leaveTypes.find((l) => l.leave_type_name === "พักร้อน");
+  const vacationType = leaveTypes.find((l) => isVacationLeaveType(l.leave_type_name));
   const prevVacation = vacationType
     ? await prisma.userLeaveLimit.findMany({
         where: { year: prevYear, leave_type_id: vacationType.leave_type_id },

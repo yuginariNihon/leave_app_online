@@ -18,7 +18,11 @@ export function TodaysLeaveList({ data }: { data: TodaysLeaveItem[] }) {
               </div>
               <div className="text-right">
                 <p className="text-sm text-slate-600">{item.leaveTypeName}</p>
-                <p className="text-xs text-slate-400">{item.leavePeriod}</p>
+                <p className="text-xs text-slate-400">
+                  {item.leaveMode === "hour"
+                    ? `${item.startTime ?? ""}–${item.endTime ?? ""} น. (${item.hours ?? 0} ชม.)`
+                    : item.leavePeriod}
+                </p>
               </div>
             </div>
           ))}

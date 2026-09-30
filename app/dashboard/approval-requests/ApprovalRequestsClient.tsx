@@ -341,7 +341,11 @@ export default function ApprovalRequestsClient({
                         </span>
                       </div>
                       <span className="text-[13px] font-semibold leading-[18px] text-[#47464e] shrink-0 ml-2 whitespace-nowrap">
-                        {item.totalDays ? `${parseFloat(item.totalDays)} วัน` : ""}
+                        {item.leaveMode === "hour"
+                          ? `${item.hours ?? ""} ชม. (${parseFloat(item.totalDays ?? "0")} วัน)`
+                          : item.totalDays
+                            ? `${parseFloat(item.totalDays)} วัน`
+                            : ""}
                       </span>
                     </div>
                   ))}

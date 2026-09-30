@@ -3,6 +3,7 @@ import type { ApproverType } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import { UnauthorizedError, ForbiddenError } from "@/lib/errors";
+import { timeFromDb } from "@/lib/utils";
 
 
 // ──────────────────────────────────────────────
@@ -18,6 +19,11 @@ export type ApprovalRequestItem = {
   startDate: string | null;
   endDate: string | null;
   totalDays: string | null;
+  /** "day" | "hour" */
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: string | null;
   reason: string | null;
   createdAt: string;
   approvalLevel: number;
@@ -160,17 +166,21 @@ export async function getPendingApprovals(
         return {
           data: approvals.map((a) => ({
             approvalId: a.approval_id,
-            leaveId: a.leave_id,
-            staffName: a.leave.staff?.name ?? "",
-            staffCode: a.leave.staff?.staff_code ?? "",
-            leaveTypeName: a.leave.leaveType?.leave_type_name ?? "",
-            startDate: a.leave.start_date?.toISOString() ?? null,
-            endDate: a.leave.end_date?.toISOString() ?? null,
-            totalDays: a.leave.total_days?.toString() ?? null,
-            reason: a.leave.reason,
-            createdAt: a.leave.created_at.toISOString(),
-            approvalLevel: a.approval_level,
-          })),
+leaveId: a.leave_id,
+      staffName: a.leave.staff?.name ?? "",
+      staffCode: a.leave.staff?.staff_code ?? "",
+      leaveTypeName: a.leave.leaveType?.leave_type_name ?? "",
+      startDate: a.leave.start_date?.toISOString() ?? null,
+      endDate: a.leave.end_date?.toISOString() ?? null,
+      totalDays: a.leave.total_days?.toString() ?? null,
+      leaveMode: a.leave.leave_mode ?? "day",
+      startTime: a.leave.start_time ? timeFromDb(a.leave.start_time) : null,
+      endTime: a.leave.end_time ? timeFromDb(a.leave.end_time) : null,
+      hours: a.leave.hours?.toString() ?? null,
+      reason: a.leave.reason,
+      createdAt: a.leave.created_at.toISOString(),
+      approvalLevel: a.approval_level,
+    })),
           total,
           totalPages: Math.ceil(total / limit),
         };
@@ -241,6 +251,10 @@ export async function getPendingApprovals(
       startDate: a.leave.start_date?.toISOString() ?? null,
       endDate: a.leave.end_date?.toISOString() ?? null,
       totalDays: a.leave.total_days?.toString() ?? null,
+            leaveMode: a.leave.leave_mode ?? "day",
+            startTime: a.leave.start_time ? timeFromDb(a.leave.start_time) : null,
+            endTime: a.leave.end_time ? timeFromDb(a.leave.end_time) : null,
+            hours: a.leave.hours?.toString() ?? null,
       reason: a.leave.reason,
       createdAt: a.leave.created_at.toISOString(),
       approvalLevel: a.approval_level,
@@ -407,6 +421,10 @@ export async function getHrPendingApprovals(
       startDate: a.leave.start_date?.toISOString() ?? null,
       endDate: a.leave.end_date?.toISOString() ?? null,
       totalDays: a.leave.total_days?.toString() ?? null,
+            leaveMode: a.leave.leave_mode ?? "day",
+            startTime: a.leave.start_time ? timeFromDb(a.leave.start_time) : null,
+            endTime: a.leave.end_time ? timeFromDb(a.leave.end_time) : null,
+            hours: a.leave.hours?.toString() ?? null,
       reason: a.leave.reason,
       createdAt: a.leave.created_at.toISOString(),
       approvalLevel: a.approval_level,
@@ -464,6 +482,11 @@ export type ApprovalHistoryItem = {
   startDate: string | null;
   endDate: string | null;
   totalDays: string | null;
+  /** "day" | "hour" */
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: string | null;
   reason: string | null;
   status: string;
   comment: string | null;
@@ -614,6 +637,10 @@ export async function getApprovalHistory(
     startDate: a.leave.start_date?.toISOString() ?? null,
     endDate: a.leave.end_date?.toISOString() ?? null,
     totalDays: a.leave.total_days?.toString() ?? null,
+    leaveMode: a.leave.leave_mode ?? "day",
+    startTime: a.leave.start_time ? timeFromDb(a.leave.start_time) : null,
+    endTime: a.leave.end_time ? timeFromDb(a.leave.end_time) : null,
+    hours: a.leave.hours?.toString() ?? null,
     reason: a.leave.reason ?? null,
     status: a.approval_status,
     comment: a.approval_comment ?? null,
