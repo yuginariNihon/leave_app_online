@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getVacationEntitlement, isVacationLeaveType } from "@/lib/services/leaveService";
+import {
+  computeDefaultMaxDays,
+  isVacationLeaveType,
+  loadVacationCarryOverMap,
+  yearsOfServiceFrom,
+} from "@/lib/services/leaveQuotaService";
 
 export const runtime = "nodejs";
 
@@ -10,7 +15,6 @@ export async function GET(request: NextRequest) {
   }
 
   const year = new Date().getFullYear();
-  const prevYear = year - 1;
 
   const staffList = await prisma.staffInfo.findMany({
     where: { is_active: true, start_date: { not: null } },
@@ -32,15 +36,13 @@ export async function GET(request: NextRequest) {
   );
 
   const vacationType = leaveTypes.find((l) => isVacationLeaveType(l.leave_type_name));
-  const prevVacation = vacationType
-    ? await prisma.userLeaveLimit.findMany({
-        where: { year: prevYear, leave_type_id: vacationType.leave_type_id },
-        select: { staff_id: true, max_days: true, used_days: true },
+  const vacationCarryOver = vacationType
+    ? await loadVacationCarryOverMap(prisma, {
+        leaveTypeId: vacationType.leave_type_id,
+        year,
+        staffIds: staffList.map((s) => s.staff_id),
       })
-    : [];
-  const prevVacationMap = new Map(
-    prevVacation.map((l) => [l.staff_id, l]),
-  );
+    : new Map<string, number>();
 
   // Compute all desired (max_days) values in memory
   const targets: { staffId: string; leaveTypeId: string; maxDays: number }[] = [];
@@ -48,24 +50,14 @@ export async function GET(request: NextRequest) {
   let other = 0;
   for (const staff of staffList) {
     for (const lt of leaveTypes) {
-      let maxDays: number;
-      if (vacationType && lt.leave_type_id === vacationType.leave_type_id) {
-        const yearsOfService = Math.floor((Date.now() - staff.start_date!.getTime()) / (365.25 * 86400000));
-        const entitlement = getVacationEntitlement(yearsOfService);
-        let carry = 0;
-        if (entitlement > 0) {
-          const prev = prevVacationMap.get(staff.staff_id);
-          if (prev) {
-            const unused = Math.max(0, Number(prev.max_days) - Number(prev.used_days));
-            carry = Math.min(unused, 6);
-          }
-        }
-        maxDays = entitlement + carry;
-        vacation++;
-      } else {
-        maxDays = lt.max_days_per_year ?? 0;
-        other++;
-      }
+      const maxDays = computeDefaultMaxDays({
+        leaveTypeName: lt.leave_type_name,
+        maxDaysPerYear: lt.max_days_per_year,
+        yearsOfService: yearsOfServiceFrom(staff.start_date),
+        carryOverDays: vacationCarryOver.get(staff.staff_id) ?? 0,
+      });
+      if (vacationType && lt.leave_type_id === vacationType.leave_type_id) vacation++;
+      else other++;
       targets.push({ staffId: staff.staff_id, leaveTypeId: lt.leave_type_id, maxDays });
     }
   }

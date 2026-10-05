@@ -37,8 +37,6 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
 
   useEffect(() => {
     let cancelled = false;
-    let timer: ReturnType<typeof setInterval>;
-
     const refresh = async () => {
       try {
         const data = await apiFetch<{ count?: unknown }>("/api/notifications/unread-count", { cache: "no-store" });
@@ -49,7 +47,7 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
     };
 
     refresh();
-    timer = setInterval(refresh, NOTIFICATION_POLL_MS);
+    const timer = setInterval(refresh, NOTIFICATION_POLL_MS);
     const handleFocus = () => refresh();
     window.addEventListener("focus", handleFocus);
 

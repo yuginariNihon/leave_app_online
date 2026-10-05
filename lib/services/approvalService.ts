@@ -2,6 +2,7 @@ import { ApprovalStatus, LeaveStatus, Prisma } from "@/lib/generated/prisma/clie
 import { prisma } from "@/lib/prisma";
 import { checkApproverExists, checkApproverForStaff, checkApproverForStaffBatch } from "@/lib/services/approverUtils";
 import { getCachedWorkflow } from "@/lib/services/workflowCache";
+import { resolveDefaultMaxDays } from "@/lib/services/leaveQuotaService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
 import { NotFoundError, ConflictError, ValidationError, ForbiddenError, UnauthorizedError } from "@/lib/errors";
 
@@ -79,8 +80,31 @@ export async function updateUsedDaysOnApproval(
       select: { max_days: true, used_days: true },
     });
 
-    // Only enforce the annual quota if a limit row is defined for that year
-    if (quota && Number(quota.used_days) + days > Number(quota.max_days)) {
+    // No quota row yet → auto-provision it from the leave type default
+    // (annual leave = seniority formula + carry-over) instead of skipping the
+    // cap check, which used to let the first leave through and then lock the
+    // staff out of that leave type for the rest of the year (max_days = 0).
+    let maxDays: number;
+    let usedDays: number;
+    if (quota) {
+      maxDays = Number(quota.max_days);
+      usedDays = Number(quota.used_days);
+    } else {
+      const resolved = await resolveDefaultMaxDays(db, {
+        staffId: leave.staff_id,
+        leaveTypeId: leave.leave_type_id,
+        year,
+      });
+      maxDays = resolved.maxDays;
+      usedDays = 0;
+      if (resolved.source === "unconfigured") {
+        throw new ValidationError(
+          "ประเภทการลานี้ยังไม่ได้กำหนดโควตาขั้นต้น กรุณาแจ้งผู้ดูแลระบบกำหนดจำนวนวันลาก่อนอนุมัติ",
+        );
+      }
+    }
+
+    if (usedDays + days > maxDays) {
       throw new ValidationError("ไม่สามารถอนุมัติใบลาได้เนื่องจากสะสมวันลารวมเกินโควตาที่กำหนด");
     }
 
@@ -99,7 +123,7 @@ export async function updateUsedDaysOnApproval(
         leave_type_id: leave.leave_type_id,
         year,
         used_days: increment,
-        max_days: quota ? quota.max_days : new Prisma.Decimal(0),
+        max_days: new Prisma.Decimal(maxDays),
       },
     });
   }

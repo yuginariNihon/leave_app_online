@@ -27,16 +27,12 @@ const timeToMinutes = (t: string | undefined): number => {
   return h * 60 + (m || 0);
 };
 
-// Rule สำหรับลารายชั่วโมง: ต้องอยู่ภายในช่วงทำงาน 08:00–17:00,
-// ไม่ทับช่วงพักเที่ยง 12:00–13:00, และเวลาสิ้นสุดต้องหลังเวลาเริ่มต้น
+// Rule สำหรับลารายชั่วโมง: ต้องกรอกเวลาเริ่ม/สิ้นสุด และเวลาสิ้นสุดต้องหลังเวลาเริ่มต้น
+// (ผู้ใช้เลือกช่วงเวลาได้อิสระ ไม่จำกัดช่วงทำงาน/พักเที่ยง — เซิร์ฟเวอร์ตรวจซ้ำอีกชั้น)
 function hourWindowRefine<T extends z.ZodObject<z.ZodRawShape>>(schema: T) {
   return schema.superRefine((data: z.infer<T>, ctx) => {
     const { leaveMode, startTime, endTime } = data as { leaveMode?: string; startTime?: string; endTime?: string };
     if (leaveMode !== "hour") return;
-    const WORK_START = 8 * 60;
-    const LUNCH_START = 12 * 60;
-    const LUNCH_END = 13 * 60;
-    const WORK_END = 17 * 60;
     const s = timeToMinutes(startTime);
     const e = timeToMinutes(endTime);
     if (Number.isNaN(s) || Number.isNaN(e)) {
@@ -45,17 +41,6 @@ function hourWindowRefine<T extends z.ZodObject<z.ZodRawShape>>(schema: T) {
     }
     if (e <= s) {
       ctx.addIssue({ code: "custom", path: ["endTime"], message: "เวลาสิ้นสุดต้องหลังเวลาเริ่มต้น" });
-      return;
-    }
-    if (s < WORK_START || e > WORK_END) {
-      ctx.addIssue({ code: "custom", path: ["endTime"], message: "เวลาลารายชั่วโมงต้องอยู่ระหว่าง 08:00–17:00" });
-      return;
-    }
-    const sInLunch = s >= LUNCH_START && s < LUNCH_END;
-    const eInLunch = e > LUNCH_START && e <= LUNCH_END;
-    const crossesLunch = s < LUNCH_START && e > LUNCH_END;
-    if (sInLunch || eInLunch || crossesLunch) {
-      ctx.addIssue({ code: "custom", path: ["endTime"], message: "ไม่สามารถลาช่วงพักเที่ยง (12:00–13:00) ได้" });
     }
   });
 }

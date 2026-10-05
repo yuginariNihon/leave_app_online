@@ -29,6 +29,9 @@ import { apiFetch } from "@/lib/api";
 
 export type LeaveQuotaMap = Record<string, { usedDays: number; maxDays: number; remaining: number }>;
 
+/** Server rounds total_days to 2dp — mirror it so the UI never promises more than the approve path allows. */
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 export default function LeaveRequestPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -36,6 +39,7 @@ export default function LeaveRequestPage() {
   const [submitError, setSubmitError] = useState("");
   const [showErrorOverlay, setShowErrorOverlay] = useState(false);
   const [leaveQuota, setLeaveQuota] = useState<LeaveQuotaMap>({});
+  const [unassignedLeaveTypeIds, setUnassignedLeaveTypeIds] = useState<string[]>([]);
   const [holidays, setHolidays] = useState<string[]>([]);
   const [holidayError, setHolidayError] = useState("");
   const [quotaError, setQuotaError] = useState("");
@@ -63,8 +67,13 @@ export default function LeaveRequestPage() {
 
     async function loadQuota() {
       try {
-        const result = await apiFetch<{ data?: LeaveQuotaMap }>("/api/leave-quota");
-        if (!cancelled) setLeaveQuota(result.data ?? {});
+        const result = await apiFetch<{
+          data?: LeaveQuotaMap;
+          meta?: { unassignedLeaveTypeIds?: string[] };
+        }>("/api/leave-quota");
+        if (cancelled) return;
+        setLeaveQuota(result.data ?? {});
+        setUnassignedLeaveTypeIds(result.meta?.unassignedLeaveTypeIds ?? []);
       } catch {
         if (!cancelled) setQuotaError("ไม่สามารถโหลดข้อมูลสิทธิ์วันลาได้");
       }
@@ -122,11 +131,17 @@ export default function LeaveRequestPage() {
     return (eh * 60 + em - (sh * 60 + sm)) / 60;
   }, [isHour, startTime, endTime]);
 
-  const effectiveDays = isHour ? hoursValue / 8 : dayCount;
+  const effectiveDays = isHour ? round2(hoursValue / 8) : dayCount;
+
+  // Leave types with no quota row: the server applies the type default on
+  // approval, so don't pretend the remaining balance is unlimited.
+  const isLeaveTypeUnassigned =
+    !!leaveTypeId && !leaveQuota[leaveTypeId] && unassignedLeaveTypeIds.includes(leaveTypeId);
 
   // Check if requested days exceed remaining quota
   const totalRemaining = leaveTypeId ? leaveQuota[leaveTypeId]?.remaining ?? Infinity : Infinity;
-  const isQuotaExceeded = effectiveDays > 0 && totalRemaining < Infinity && effectiveDays > totalRemaining;
+  const isQuotaExceeded =
+    !isLeaveTypeUnassigned && effectiveDays > 0 && totalRemaining < Infinity && effectiveDays > totalRemaining;
 
   // Prefill when editing
   useEffect(() => {
@@ -312,6 +327,7 @@ export default function LeaveRequestPage() {
               leaveCaseOptions={leaveCaseOptions}
               leaveQuota={leaveQuota}
               isQuotaExceeded={isQuotaExceeded}
+              unassignedLeaveTypeIds={unassignedLeaveTypeIds}
               optionsLoading={optionsLoading}
               dayCount={effectiveDays}
               onSubmit={handleSubmit}

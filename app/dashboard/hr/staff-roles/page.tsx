@@ -49,15 +49,21 @@ export default function StaffRolesPage() {
 
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) setFetchKey((k) => k + 1);
+      // Refetch on back/forward-cache restore. setState belongs here (event
+      // listener) rather than in the fetch effect — see fetchData below.
+      if (e.persisted) {
+        setLoading(true);
+        setError("");
+        setFetchKey((k) => k + 1);
+      }
     };
     window.addEventListener("pageshow", onPageShow);
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError("");
+    // No setState before the first await: this runs inside an effect and a
+    // synchronous update there triggers a cascading render (react-hooks rule).
     try {
       const [staffJson, rolesJson] = await Promise.all([
         apiFetch<{ data: StaffWithRoles[] }>("/api/hr/roles/staff-list"),
@@ -65,6 +71,7 @@ export default function StaffRolesPage() {
       ]);
       setData(staffJson.data);
       setRoleOptions(rolesJson.data);
+      setError("");
     } catch {
       setError("ไม่สามารถโหลดข้อมูลได้");
     } finally {
@@ -73,6 +80,9 @@ export default function StaffRolesPage() {
   }, []);
 
   useEffect(() => {
+    // Data comes from an external system; every setState happens after the
+    // fetch resolves, so there is no synchronous cascading render here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData, fetchKey]);
 

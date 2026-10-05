@@ -24,6 +24,8 @@ interface LeaveFormProps {
   leaveTypeOptions: LeaveSelectOption[];
   leaveCaseOptions: LeaveCaseSelectOption[];
   leaveQuota?: Record<string, { usedDays: number; maxDays: number; remaining: number }>;
+  /** Active leave types this staff has no quota row for → server applies the type default on approval */
+  unassignedLeaveTypeIds?: string[];
   isQuotaExceeded?: boolean;
   optionsLoading?: boolean;
   dayCount: number;
@@ -36,7 +38,7 @@ interface LeaveFormProps {
 // to keep the DatePicker "min" boundary pure during render.
 const TODAY_STR = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
 
-export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {},isQuotaExceeded = false,optionsLoading = false,dayCount,onSubmit,createdAt,holidays = [],}: LeaveFormProps) {
+export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {},unassignedLeaveTypeIds = [],isQuotaExceeded = false,optionsLoading = false,dayCount,onSubmit,createdAt,holidays = [],}: LeaveFormProps) {
   const {register,control,handleSubmit,setValue,clearErrors,formState: { errors },} = form;
 
   const leaveTypeId = useWatch({ control, name: "leaveTypeId" });
@@ -129,6 +131,11 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
           {leaveTypeId && leaveQuota[leaveTypeId] && (
             <p className="text-sm text-slate-700 mt-1">
               วันลาคงเหลือ: <span className="font-semibold text-[#100d41]">{leaveQuota[leaveTypeId].remaining}</span> / {leaveQuota[leaveTypeId].maxDays} วัน
+            </p>
+          )}
+          {leaveTypeId && !leaveQuota[leaveTypeId] && unassignedLeaveTypeIds.includes(leaveTypeId) && (
+            <p className="text-sm text-amber-600 mt-1">
+              ประเภทการลานี้ยังไม่ได้กำหนดโควตา — ระบบจะใช้ค่าเริ่มต้นของประเภทการลานี้ตอนอนุมัติ
             </p>
           )}
         </div>
@@ -303,8 +310,6 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
               type="time"
               id="start-time"
               step={60}
-              min="08:00"
-              max="17:00"
               className="w-full h-11 px-3 rounded-lg border border-gray-200 bg-white text-sm"
               {...register("startTime", {
                 onChange: () => clearErrors("endTime"),
@@ -322,8 +327,6 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
               type="time"
               id="end-time"
               step={60}
-              min="08:00"
-              max="17:00"
               className="w-full h-11 px-3 rounded-lg border border-gray-200 bg-white text-sm"
               {...register("endTime", {
                 onChange: () => clearErrors("endTime"),
@@ -333,7 +336,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
               <p className="text-sm text-red-500">{errors.endTime.message}</p>
             )}
             <p className="text-xs text-slate-500">
-              กำหนดเวลาทำงาน: เช้า 08:00–12:00, บ่าย 13:00–17:00 (ไม่รวมพักเที่ยง 12:00–13:00)
+              ระบุเวลาเริ่มต้นและเวลาสิ้นสุดตามที่ต้องการได้เลย (เช่น 09:00–11:30 หรือ 20:00–22:00)
             </p>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { toDateOnly, parseDateOnly } from "@/lib/utils";
 import { hashPassword } from "@/lib/auth";
 import { randomBytes } from "crypto";
 import { ConflictError } from "@/lib/errors";
+import { computeDefaultMaxDays, yearsOfServiceFrom } from "@/lib/services/leaveQuotaService";
 
 export class StaffUpdateConflictError extends ConflictError {}
 
@@ -451,7 +452,7 @@ export async function createStaff(
 
   const activeLeaveTypes = await prisma.leaveType.findMany({
     where: { is_active: true },
-    select: { leave_type_id: true, max_days_per_year: true },
+    select: { leave_type_id: true, leave_type_name: true, max_days_per_year: true },
   });
   const currentYear = new Date().getFullYear();
   for (const lt of activeLeaveTypes) {
@@ -467,7 +468,12 @@ export async function createStaff(
         staff_id: staff.staff_id,
         leave_type_id: lt.leave_type_id,
         year: currentYear,
-        max_days: lt.max_days_per_year ?? 0,
+        max_days: computeDefaultMaxDays({
+          leaveTypeName: lt.leave_type_name,
+          maxDaysPerYear: lt.max_days_per_year,
+          yearsOfService: yearsOfServiceFrom(staff.start_date),
+          carryOverDays: 0,
+        }),
         used_days: 0,
       },
       update: {},
@@ -545,7 +551,7 @@ export async function importStaff(
   await prisma.$transaction(async (tx) => {
     const activeLeaveTypes = await tx.leaveType.findMany({
       where: { is_active: true },
-      select: { leave_type_id: true, max_days_per_year: true },
+      select: { leave_type_id: true, leave_type_name: true, max_days_per_year: true },
     });
     const currentYear = new Date().getFullYear();
 
@@ -667,7 +673,13 @@ export async function importStaff(
             staff_id: createdStaff.staff_id,
             leave_type_id: lt.leave_type_id,
             year: currentYear,
-            max_days: lt.max_days_per_year ?? 0,
+            // Newly imported staff have no previous-year rows → carry-over 0
+            max_days: computeDefaultMaxDays({
+              leaveTypeName: lt.leave_type_name,
+              maxDaysPerYear: lt.max_days_per_year,
+              yearsOfService: yearsOfServiceFrom(startDate),
+              carryOverDays: 0,
+            }),
             used_days: 0,
           });
         }

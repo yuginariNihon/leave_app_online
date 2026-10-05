@@ -5,6 +5,14 @@ import type { LeaveFormOptions } from "@/lib/TypeSchema";
 import z from "zod";
 import { toDateOnly, countInclusiveDays, buildLeaveReferenceId, timeFromDb } from "@/lib/utils";
 import { checkApproversExist, APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
+import {
+  computeDefaultMaxDays,
+  getVacationEntitlement,
+  isVacationLeaveType,
+  loadVacationCarryOverMap,
+  yearsOfServiceFrom,
+  VACATION_LEAVE_TYPE_NAME,
+} from "@/lib/services/leaveQuotaService";
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
 import { NotFoundError, ValidationError, ForbiddenError, ConflictError } from "@/lib/errors";
@@ -17,7 +25,8 @@ const SUPERVISOR_POSITION_NAMES = new Set([
 export class LeaveRequestValidationError extends ValidationError {}
 
 // ──────────────────────────────────────
-// Hourly leave — working day 08:00–17:00, lunch 12:00–13:00 excluded
+// Hourly leave — ผู้ใช้เลือกช่วงเวลาได้อิสระ (คิดเป็นชั่วโมง ÷ HOURS_PER_DAY)
+// ค่าช่วงเวลาเช้า/บ่ายด้านล่างใช้สำหรับตรวจชนกันของการลาครึ่งวัน (morning/afternoon)
 // ──────────────────────────────────────
 export const WORK_DAY_START = "08:00";
 export const LUNCH_START = "12:00";
@@ -64,8 +73,8 @@ export function timeToDb(time: string): Date {
 /**
  * Validates an hourly leave (shared by POST + PATCH):
  * same start/end day, not in the past (Thailand), working day (Mon–Sat, no
- * company holiday — reused from assertValidLeaveDateRange), start < end, and
- * the window sits fully inside one working half (08:00–12:00 / 13:00–17:00).
+ * company holiday — reused from assertValidLeaveDateRange), both times given,
+ * and start < end. ผู้ใช้เลือกช่วงเวลาได้อิสระ ไม่ต้องอยู่ในช่วงเช้า/บ่าย.
  */
 export async function assertValidLeaveTime(
   startDate: string | Date,
@@ -92,16 +101,6 @@ export async function assertValidLeaveTime(
   const e = parseTimeMinutes(endTime);
   if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) {
     throw new LeaveRequestValidationError("เวลาเริ่มต้องก่อนเวลาสิ้นสุด");
-  }
-
-  const insideMorning =
-    s >= parseTimeMinutes(MORNING_START) && e <= parseTimeMinutes(MORNING_END);
-  const insideAfternoon =
-    s >= parseTimeMinutes(AFTERNOON_START) && e <= parseTimeMinutes(AFTERNOON_END);
-  if (!insideMorning && !insideAfternoon) {
-    throw new LeaveRequestValidationError(
-      "เวลาลาต้องอยู่ในช่วงเวลาทำงาน (08:00–12:00 หรือ 13:00–17:00) และไม่รวมช่วงพักเที่ยง 12:00–13:00",
-    );
   }
 }
 
@@ -1402,48 +1401,35 @@ export async function getLeaveReport(
   };
 }
 
-export function getVacationEntitlement(yearsOfService: number): number {
-  if (yearsOfService < 1) return 0;
-  if (yearsOfService <= 3) return 6;
-  if (yearsOfService <= 6) return 8;
-  return 10;
-}
-
 export async function syncVacationLeaveLimit(
   staffId: string,
   year: number,
   vacationTypeId: string,
   startDate: Date,
 ) {
-  const yearsOfService = Math.floor((Date.now() - startDate.getTime()) / (365.25 * 86400000));
-  const entitlement = getVacationEntitlement(yearsOfService);
+  const yearsOfService = yearsOfServiceFrom(startDate);
 
-  if (entitlement === 0) {
-    await prisma.userLeaveLimit.upsert({
-      where: { staff_id_leave_type_id_year: { staff_id: staffId, leave_type_id: vacationTypeId, year } },
-      create: { staff_id: staffId, leave_type_id: vacationTypeId, year, max_days: 0, used_days: 0 },
-      update: { max_days: 0, used_days: 0 },
+  let carryOverDays = 0;
+  if (getVacationEntitlement(yearsOfService ?? 0) > 0) {
+    const carry = await loadVacationCarryOverMap(prisma, {
+      leaveTypeId: vacationTypeId,
+      year,
+      staffIds: [staffId],
     });
-    return;
+    carryOverDays = carry.get(staffId) ?? 0;
   }
 
-  const prevLimit = await prisma.userLeaveLimit.findUnique({
-    where: { staff_id_leave_type_id_year: { staff_id: staffId, leave_type_id: vacationTypeId, year: year - 1 } },
-    select: { max_days: true, used_days: true },
+  const maxDays = computeDefaultMaxDays({
+    leaveTypeName: VACATION_LEAVE_TYPE_NAME,
+    maxDaysPerYear: 0,
+    yearsOfService,
+    carryOverDays,
   });
-
-  let carry = 0;
-  if (prevLimit) {
-    const unused = Math.max(0, Number(prevLimit.max_days) - Number(prevLimit.used_days));
-    carry = Math.min(unused, 6);
-  }
-
-  const total = entitlement + carry;
 
   await prisma.userLeaveLimit.upsert({
     where: { staff_id_leave_type_id_year: { staff_id: staffId, leave_type_id: vacationTypeId, year } },
-    create: { staff_id: staffId, leave_type_id: vacationTypeId, year, max_days: total, used_days: 0 },
-    update: { max_days: total, used_days: 0 },
+    create: { staff_id: staffId, leave_type_id: vacationTypeId, year, max_days: maxDays, used_days: 0 },
+    update: { max_days: maxDays, used_days: 0 },
   });
 }
 
@@ -1463,13 +1449,6 @@ export async function syncLeaveLimit(
 // ──────────────────────────────────────────────
 // Leave limit bulk assign (HR) — ปีปัจจุบันเท่านั้น
 // ──────────────────────────────────────────────
-
-const VACATION_LEAVE_TYPE_NAME = "พักร้อน";
-
-/** Single source of truth for "is this the annual-leave type?" (used by assign + annual reset cron). */
-export function isVacationLeaveType(leaveTypeName: string | null | undefined): boolean {
-  return leaveTypeName === VACATION_LEAVE_TYPE_NAME;
-}
 
 export type MissingQuotaStaffItem = {
   staffId: string;
@@ -1613,7 +1592,12 @@ export async function assignLeaveLimitToStaff(input: {
 
   const leaveType = await prisma.leaveType.findUnique({
     where: { leave_type_id: input.leaveTypeId },
-    select: { leave_type_id: true, leave_type_name: true, is_active: true },
+    select: {
+      leave_type_id: true,
+      leave_type_name: true,
+      is_active: true,
+      max_days_per_year: true,
+    },
   });
   if (!leaveType) {
     throw new NotFoundError("ไม่พบประเภทการลาที่เลือก");
@@ -1657,37 +1641,28 @@ export async function assignLeaveLimitToStaff(input: {
   }
 
   // Batch carry-over lookup: one query for all previous-year vacation rows.
-  const prevLimits = isVacation
-    ? await prisma.userLeaveLimit.findMany({
-        where: {
-          leave_type_id: input.leaveTypeId,
-          year: year - 1,
-          staff_id: { in: toCreate },
-        },
-        select: { staff_id: true, max_days: true, used_days: true },
+  const carryOverMap = isVacation
+    ? await loadVacationCarryOverMap(prisma, {
+        leaveTypeId: input.leaveTypeId,
+        year,
+        staffIds: toCreate,
       })
-    : [];
-  const prevLimitMap = new Map(prevLimits.map((p) => [p.staff_id, p]));
+    : new Map<string, number>();
 
   const rows = toCreate.map((staffId) => {
-    let maxDays = input.maxDays;
-    if (isVacation) {
-      const startDate = eligibleMap.get(staffId);
-      const yearsOfService = startDate
-        ? Math.floor((Date.now() - startDate.getTime()) / (365.25 * 86400000))
-        : 0;
-      const entitlement = getVacationEntitlement(yearsOfService);
-      const prev = prevLimitMap.get(staffId);
-      const unused = prev
-        ? Math.max(0, Number(prev.max_days) - Number(prev.used_days))
-        : 0;
-      maxDays = entitlement + Math.min(unused, 6);
-    }
+    const startDate = eligibleMap.get(staffId);
     return {
       staff_id: staffId,
       leave_type_id: input.leaveTypeId,
       year,
-      max_days: maxDays,
+      // Annual leave ignores the manual input (seniority formula + carry-over);
+      // every other type uses the HR-entered number.
+      max_days: computeDefaultMaxDays({
+        leaveTypeName: leaveType.leave_type_name,
+        maxDaysPerYear: input.maxDays,
+        yearsOfService: yearsOfServiceFrom(startDate),
+        carryOverDays: carryOverMap.get(staffId) ?? 0,
+      }),
       used_days: 0,
     };
   });
@@ -1714,4 +1689,5 @@ export * from "@/lib/services/roleService";
 export * from "@/lib/services/workflowService";
 export * from "@/lib/services/profileService";
 export * from "@/lib/services/userService";
+export * from "@/lib/services/leaveQuotaService";
 export { timeFromDb, minutesToTime } from "@/lib/utils";

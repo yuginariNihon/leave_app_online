@@ -61,7 +61,9 @@ export default function LeaveCalendarPage() {
   const monthParam = `${year}-${String(month + 1).padStart(2, "0")}`;
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    // No setState before the first await: this runs inside an effect and a
+    // synchronous update there triggers a cascading render (react-hooks rule).
+    // Showing the spinner on a refetch is the caller's job (see nav handlers).
     try {
       const [calJson, pendJson] = await Promise.all([
         apiFetch<{ days?: DayData[] }>(`/api/leaves/calendar?month=${monthParam}`).catch((err) => {
@@ -91,13 +93,17 @@ export default function LeaveCalendarPage() {
     } finally {
       setLoading(false);
     }
-  }, [monthParam]);
+  }, [isHR, monthParam]);
 
+  // Data comes from an external system; every setState happens after the fetch
+  // resolves, so there is no synchronous cascading render here.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const goToPrevMonth = () => { if (month === 0) { setYear((y) => y - 1); setMonth(11); } else { setMonth((m) => m - 1); } };
-  const goToNextMonth = () => { if (month === 11) { setYear((y) => y + 1); setMonth(0); } else { setMonth((m) => m + 1); } };
-  const goToToday = () => { const d = new Date(); setYear(d.getFullYear()); setMonth(d.getMonth()); };
+  // setState here (event handler) is fine — the fetch effect stays pure.
+  const goToPrevMonth = () => { setLoading(true); if (month === 0) { setYear((y) => y - 1); setMonth(11); } else { setMonth((m) => m - 1); } };
+  const goToNextMonth = () => { setLoading(true); if (month === 11) { setYear((y) => y + 1); setMonth(0); } else { setMonth((m) => m + 1); } };
+  const goToToday = () => { setLoading(true); const d = new Date(); setYear(d.getFullYear()); setMonth(d.getMonth()); };
 
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const prevMonthDays = new Date(year, month, 0).getDate();

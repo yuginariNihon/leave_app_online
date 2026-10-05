@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { getUnassignedLeaveTypeIds } from "@/lib/services/leaveQuotaService";
 import { getLeaveRightsByStaffId } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -13,7 +14,10 @@ export async function GET() {
     const { session, error } = await requireAuth();
     if (error) return error;
 
-    const quota = await getLeaveRightsByStaffId(session.staffId);
+    const [quota, unassignedLeaveTypeIds] = await Promise.all([
+      getLeaveRightsByStaffId(session.staffId),
+      getUnassignedLeaveTypeIds(session.staffId),
+    ]);
 
     const quotaMap: Record<string, { usedDays: number; maxDays: number; remaining: number }> = {};
     for (const item of quota) {
@@ -25,7 +29,7 @@ export async function GET() {
     }
 
     return NextResponse.json(
-      { data: quotaMap },
+      { data: quotaMap, meta: { unassignedLeaveTypeIds } },
       { headers: { "Cache-Control": CACHE_FIVE_SECONDS } },
     );
   } catch (error) {

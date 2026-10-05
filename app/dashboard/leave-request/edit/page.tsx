@@ -168,7 +168,8 @@ export default function EditLeavePage() {
     return (eh * 60 + em - (sh * 60 + sm)) / 60;
   }, [isHour, startTime, endTime]);
 
-  const effectiveDays = isHour ? hoursValue / 8 : dayCount;
+  // Server rounds total_days to 2dp — mirror it so quota checks match the approve path.
+  const effectiveDays = isHour ? Math.round((hoursValue / 8) * 100) / 100 : dayCount;
 
   // Submit
   const handleSubmit = async (values: LeaveFormValues) => {
