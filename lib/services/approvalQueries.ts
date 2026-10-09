@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import { UnauthorizedError, ForbiddenError } from "@/lib/errors";
 import { timeFromDb } from "@/lib/utils";
+import { getCachedHrWorkflowSteps } from "@/lib/services/workflowCache";
 
 
 // ──────────────────────────────────────────────
@@ -289,17 +290,14 @@ export async function getHrDashboardStats(staffId: string): Promise<HrDashboardS
   const isHR = await checkHRRole(staffId);
   if (!isHR) throw new UnauthorizedError("Unauthorized: HR role required.");
 
-  const hrSteps = await prisma.leaveWorkflowStep.findMany({
-    where: { approver_type: "HR" as ApproverType },
-    include: { workflow: { select: { position_id: true } } },
-  });
+  const hrSteps = await getCachedHrWorkflowSteps();
 
   const orConditions = hrSteps.map((s) => ({
     approval_status: ApprovalStatus.pending,
     approver_id: null,
     approval_level: s.approval_level,
     leave: {
-      staff: { position_id: s.workflow.position_id },
+      staff: { position_id: s.position_id },
       leave_status: LeaveStatus.pending,
       current_approval_level: s.approval_level,
     },
@@ -347,27 +345,30 @@ export async function getHrDashboardStats(staffId: string): Promise<HrDashboardS
   return { pendingApprovals, approvedToday, totalLeavesThisMonth, totalLeavesThisYear, activeStaffCount, terminatedStaffCount };
 }
 
-export async function getHrPendingApprovals(
-  staffId: string,
-  page: number = 1,
-  limit: number = 10,
+/**
+ * Pending approvals that are waiting on HR. Shared by the HR list and the
+ * notification badge so the badge never has to run the paged list query.
+ * Returns null when no workflow defines an HR step.
+ */
+async function buildHrPendingWhere(
   filters?: ApprovalFilters,
-): Promise<{ data: ApprovalRequestItem[]; total: number; totalPages: number }> {
-  const isHR = await checkHRRole(staffId);
-  if (!isHR) throw new UnauthorizedError("Unauthorized: HR role required.");
+): Promise<Prisma.LeaveApprovalWhereInput | null> {
+  const hrSteps = await getCachedHrWorkflowSteps();
+  if (hrSteps.length === 0) return null;
 
-  // Find all workflow steps where approver_type = "HR"
-  const hrSteps = await prisma.leaveWorkflowStep.findMany({
-    where: { approver_type: "HR" as ApproverType },
-    include: { workflow: { select: { position_id: true } } },
-  });
+  const searchFilter = filters?.search
+    ? { contains: filters.search, mode: "insensitive" as const }
+    : null;
 
   const orConditions = hrSteps.map((s) => ({
     approval_status: ApprovalStatus.pending,
     approver_id: null,
     approval_level: s.approval_level,
     leave: {
-      staff: { position_id: s.workflow.position_id },
+      staff: {
+        position_id: s.position_id,
+        ...(searchFilter ? { staff_code: searchFilter } : {}),
+      },
       leave_status: LeaveStatus.pending,
       current_approval_level: s.approval_level,
       ...(filters?.leaveTypeId ? { leave_type_id: filters.leaveTypeId } : {}),
@@ -382,20 +383,27 @@ export async function getHrPendingApprovals(
     },
   }));
 
-  if (filters?.search) {
-    const searchFilter = { contains: filters.search, mode: "insensitive" as const };
-    for (const cond of orConditions) {
-      (cond.leave.staff as Record<string, unknown>).staff_code = searchFilter;
-    }
-  }
+  return { OR: orConditions };
+}
 
-  if (orConditions.length === 0) {
+export async function getHrPendingApprovals(
+  staffId: string,
+  page: number = 1,
+  limit: number = 10,
+  filters?: ApprovalFilters,
+): Promise<{ data: ApprovalRequestItem[]; total: number; totalPages: number }> {
+  const isHR = await checkHRRole(staffId);
+  if (!isHR) throw new UnauthorizedError("Unauthorized: HR role required.");
+
+  // Find all workflow steps where approver_type = "HR"
+  const where = await buildHrPendingWhere(filters);
+  if (!where) {
     return { data: [], total: 0, totalPages: 0 };
   }
 
   const [approvals, total] = await Promise.all([
     prisma.leaveApproval.findMany({
-      where: { OR: orConditions },
+      where,
       include: {
         leave: {
           include: {
@@ -408,7 +416,7 @@ export async function getHrPendingApprovals(
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.leaveApproval.count({ where: { OR: orConditions } }),
+    prisma.leaveApproval.count({ where }),
   ]);
 
   return {
@@ -439,17 +447,20 @@ export async function getHrPendingApprovals(
 // ──────────────────────────────────────────────
 
 export async function getNotificationCount(staffId: string): Promise<number> {
-  const isHR = await checkHRRole(staffId);
-  if (isHR) {
-    return (await getHrPendingApprovals(staffId, 1, 1)).total;
+  // One roles query answers both questions — this runs on a 60s poll, so a
+  // duplicate role lookup is a wasted DB round trip every time.
+  const roles = await prisma.staffRole.findMany({
+    where: { staff_id: staffId },
+    select: { role: { select: { role_name: true } } },
+  });
+  const roleNames = roles.map((r) => r.role.role_name.toUpperCase());
+
+  if (roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN")) {
+    const where = await buildHrPendingWhere();
+    return where ? prisma.leaveApproval.count({ where }) : 0;
   }
 
-  const userRoles = await prisma.staffRole.findMany({
-    where: { staff_id: staffId },
-    include: { role: { select: { role_name: true } } },
-  });
-  const isApprover = userRoles.some((r) => r.role.role_name.toLowerCase() === "approver");
-  if (isApprover) {
+  if (roleNames.includes("APPROVER")) {
     return (await getPendingApprovals(staffId, 1, 1)).total;
   }
 

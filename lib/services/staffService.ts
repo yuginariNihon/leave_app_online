@@ -455,16 +455,11 @@ export async function createStaff(
     select: { leave_type_id: true, leave_type_name: true, max_days_per_year: true },
   });
   const currentYear = new Date().getFullYear();
-  for (const lt of activeLeaveTypes) {
-    await prisma.userLeaveLimit.upsert({
-      where: {
-        staff_id_leave_type_id_year: {
-          staff_id: staff.staff_id,
-          leave_type_id: lt.leave_type_id,
-          year: currentYear,
-        },
-      },
-      create: {
+  // One round trip instead of one upsert per leave type. skipDuplicates keeps
+  // any existing row untouched (same guarantee as the previous upsert/update:{}).
+  if (activeLeaveTypes.length > 0) {
+    await prisma.userLeaveLimit.createMany({
+      data: activeLeaveTypes.map((lt) => ({
         staff_id: staff.staff_id,
         leave_type_id: lt.leave_type_id,
         year: currentYear,
@@ -475,8 +470,8 @@ export async function createStaff(
           carryOverDays: 0,
         }),
         used_days: 0,
-      },
-      update: {},
+      })),
+      skipDuplicates: true,
     });
   }
 

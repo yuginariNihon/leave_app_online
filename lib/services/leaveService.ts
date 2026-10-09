@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import type { LeaveFormOptions } from "@/lib/TypeSchema";
 import z from "zod";
 import { toDateOnly, countInclusiveDays, buildLeaveReferenceId, timeFromDb } from "@/lib/utils";
+import { allocateLeaveNo, gregorianToThaiYear } from "@/lib/services/leaveNumberService";
 import { checkApproversExist, APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import {
   computeDefaultMaxDays,
@@ -439,6 +440,9 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
 
   // 5-7. Create leave, approvals, and update used days in a single transaction
   const leave = await prisma.$transaction(async (tx) => {
+    const thaiYear = gregorianToThaiYear(new Date(startDate));
+    const leaveNo = await allocateLeaveNo(tx, thaiYear);
+
     const created = await tx.dataLeave.create({
       data: {
         staff_id: input.staffId,
@@ -457,6 +461,7 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
           ? LeaveStatus.approved
           : LeaveStatus.pending,
         current_approval_level: firstPendingLevel ?? 1,
+        leave_no: leaveNo,
       },
     });
 
@@ -685,6 +690,7 @@ export type LeaveHistoryFilters = {
 export type LeaveHistoryItem = {
   leaveId: string;
   referenceId: string;
+  leaveNo: string | null;
   leaveTypeName: string;
   leaveCaseName: string;
   startDate: string | null;
@@ -809,7 +815,8 @@ export async function getLeaveHistoryByStaffId(
   return {
     data: data.map((item) => ({
       leaveId: item.leave_id,
-      referenceId: buildLeaveReferenceId(item.leave_id),
+      referenceId: item.leave_no ?? buildLeaveReferenceId(item.leave_id),
+      leaveNo: item.leave_no ?? null,
       leaveTypeName: item.leaveType.leave_type_name,
       leaveCaseName: item.leaveCase.case_name,
       startDate: item.start_date?.toISOString() ?? null,
@@ -818,7 +825,7 @@ export async function getLeaveHistoryByStaffId(
       leaveMode: item.leave_mode ?? "day",
       startTime: item.start_time ? timeFromDb(item.start_time) : null,
       endTime: item.end_time ? timeFromDb(item.end_time) : null,
-      hours: item.hours?.toString() ?? null,
+      hours: item.hours !== undefined && item.hours !== null ? String(item.hours) : null,
       reason: item.reason,
       status: item.leave_status,
       createdAt: item.created_at.toISOString(),
@@ -857,8 +864,9 @@ export type LeaveAttachmentItem = {
 export type LeaveDetailResponse = {
   leaveId: string;
   referenceId: string;
+  leaveNo: string | null;
   status: string;
-  /** false เมื่อ leave_status != pending หรือผ่านขั้นตอนการอนุมัติแรกแล้ว (มี approver_id) */
+  /** false ถ้า leave_status != pending หรือมีการอนุมัติแล้ว (approver_id ไม่ null) */
   canEdit: boolean;
   reason: string | null;
   totalDays: number;
@@ -886,6 +894,134 @@ export type LeaveDetailResponse = {
   supervisor: { name: string; role: string } | null;
   quota: { remaining: number; total: number; percent: number } | null;
 };
+
+export type CalendarLeaveEntry = {
+  staffName: string;
+  leaveTypeName: string;
+  departmentName: string;
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: string | null;
+};
+
+export type CalendarDay = {
+  date: string;
+  isToday: boolean;
+  count: number;
+  leaves: CalendarLeaveEntry[];
+  holidayName: string | null;
+};
+
+/**
+ * Approved leaves + holidays for a month, bucketed per calendar date.
+ * Defaults to the current month when monthParam is null/empty ("YYYY-MM").
+ */
+export async function getLeaveCalendar(
+  monthParam?: string | null,
+): Promise<{ days: CalendarDay[]; month: string }> {
+  const year = monthParam ? Number(monthParam.split("-")[0]) : new Date().getFullYear();
+  const month = monthParam ? Number(monthParam.split("-")[1]) - 1 : new Date().getMonth();
+
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 0);
+
+  const [rows, holidayRows] = await Promise.all([
+    prisma.$queryRaw<{
+      start_date: Date; end_date: Date;
+      staff_id: string; staff_name: string;
+      department_name: string;
+      leave_type_name: string;
+      leave_mode: string;
+      start_time: Date | string | null;
+      end_time: Date | string | null;
+      hours: string | null;
+    }[]>`
+      SELECT dl.start_date, dl.end_date,
+             s.staff_id, s.name AS staff_name,
+             d.department_name,
+             lt.leave_type_name,
+             dl.leave_mode, dl.start_time, dl.end_time, dl.hours
+      FROM "DataLeave" dl
+      JOIN "StaffInfo" s ON s.staff_id = dl.staff_id
+      JOIN "Department" d ON d.department_id = s.department_id
+      JOIN "LeaveType" lt ON lt.leave_type_id = dl.leave_type_id
+      WHERE dl.leave_status = 'approved'
+        AND dl.start_date <= ${monthEnd}::date
+        AND dl.end_date >= ${monthStart}::date
+      ORDER BY dl.start_date ASC
+    `,
+    prisma.$queryRaw<{ holiday_name: string; holiday_date: Date; is_recurring: boolean }[]>`
+      SELECT holiday_name, holiday_date, is_recurring
+      FROM "Holiday"
+      WHERE (holiday_date >= ${monthStart}::date AND holiday_date <= ${monthEnd}::date)
+         OR (is_recurring = true AND EXTRACT(MONTH FROM holiday_date) = ${month + 1})
+      ORDER BY EXTRACT(DAY FROM holiday_date) ASC
+    `,
+  ]);
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Build holiday map: holiday_date string → holiday_name
+  const holidayMap = new Map<string, string>();
+  for (const h of holidayRows) {
+    const hYear = h.is_recurring ? year : h.holiday_date.getFullYear();
+    const dateStr = `${hYear}-${pad(h.holiday_date.getMonth() + 1)}-${pad(h.holiday_date.getDate())}`;
+    holidayMap.set(dateStr, h.holiday_name);
+  }
+
+  // Bucket leaves by calendar date in O(leaves) so day lookup is O(1).
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+  const localKey = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const bucket = new Map<string, CalendarLeaveEntry[]>();
+
+  for (const r of rows) {
+    let s = new Date(r.start_date);
+    let e = new Date(r.end_date);
+    if (s > e) [s, e] = [e, s];
+    if (e < monthStart) continue;
+    if (s > monthEnd) continue;
+    const start = s < monthStart ? monthStart : s;
+    const end = e > monthEnd ? monthEnd : e;
+    const entry: CalendarLeaveEntry = {
+      staffName: r.staff_name,
+      leaveTypeName: r.leave_type_name,
+      departmentName: r.department_name,
+      leaveMode: r.leave_mode ?? "day",
+      startTime: r.start_time ? timeFromDb(r.start_time) : null,
+      endTime: r.end_time ? timeFromDb(r.end_time) : null,
+      hours: r.hours ?? null,
+    };
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const k = localKey(d);
+      let arr = bucket.get(k);
+      if (!arr) {
+        arr = [];
+        bucket.set(k, arr);
+      }
+      arr.push(entry);
+    }
+  }
+
+  const days: CalendarDay[] = [];
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`;
+    days.push({
+      date: dateStr,
+      isToday: dateStr === todayStr,
+      count: bucket.get(dateStr)?.length ?? 0,
+      leaves: bucket.get(dateStr) ?? [],
+      holidayName: holidayMap.get(dateStr) ?? null,
+    });
+  }
+
+  return { days, month: monthParam || `${year}-${String(month + 1).padStart(2, "0")}` };
+}
 
 export async function getLeaveDetailById(
   leaveId: string,
@@ -1047,7 +1183,8 @@ export async function getLeaveDetailById(
 
   return {
     leaveId: leave.leave_id,
-    referenceId: `#LV-${leave.leave_id.slice(0, 8).toUpperCase()}`,
+    referenceId: leave.leave_no ?? `#LV-${leave.leave_id.slice(0, 8).toUpperCase()}`,
+    leaveNo: leave.leave_no ?? null,
     status: leave.leave_status,
     canEdit: leave.leave_status === LeaveStatus.pending && !hasActedApproval,
     reason: leave.reason,

@@ -36,6 +36,7 @@ const MODE_CONFIG: Record<
 };
 
 type EditDetail = {
+  referenceId?: string | null;
   leaveTypeName: string;
   startDate: string | null;
   endDate: string | null;
@@ -69,6 +70,7 @@ export default async function LeaveRequestSuccessPage({
       const found = await getLeaveDetailById(params.leaveId, user.staffId, user.roles);
       if (found) {
         detail = {
+          referenceId: found.referenceId,
           leaveTypeName: found.leaveTypeName,
           startDate: found.startDate,
           endDate: found.endDate,
@@ -84,6 +86,13 @@ export default async function LeaveRequestSuccessPage({
     } catch {
       detail = null;
     }
+  }
+
+  let referenceIdDisplay = "-";
+  if (detail?.referenceId) {
+    referenceIdDisplay = detail.referenceId;
+  } else if (params.leaveId) {
+    referenceIdDisplay = buildLeaveReferenceId(params.leaveId);
   }
 
   return (
@@ -110,7 +119,7 @@ export default async function LeaveRequestSuccessPage({
                         รหัสคำขอ
                       </th>
                       <td className="px-4 py-3 text-slate-900 font-bold border-b border-[#e4e2ef]">
-                        {buildLeaveReferenceId(params.leaveId)}
+                        {referenceIdDisplay}
                       </td>
                     </tr>
                   )}

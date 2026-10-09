@@ -1,282 +1,56 @@
-"use client";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { getSessionUser } from "@/lib/auth";
+import { getLeaveDetailById, type LeaveDetailResponse } from "@/lib/services/leaveService";
+import { logReadAccess } from "@/lib/services/auditService";
+import LeaveDetailsClient from "./LeaveDetailsClient";
 
-import { useState, useEffect, useCallback } from "react";
-import { flushSync } from "react-dom";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { LeaveDetailsHeader } from "@/components/leave-details/LeaveDetailsHeader";
-import { LeaveDetailsMainInfo } from "@/components/leave-details/LeaveDetailsMainInfo";
-import { LeaveDetailsApprovalSidebar } from "@/components/leave-details/LeaveDetailsApprovalSidebar";
-import { LeaveDetailsActions } from "@/components/leave-details/LeaveDetailsActions";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import type { LeaveDetailResponse } from "@/lib/services/leaveService";
-import { getLeaveDetailId } from "@/lib/navigation-state";
-import { formatDateTime, currentSubmitTime, buildLeaveReferenceId } from "@/lib/utils";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
-import { apiFetch } from "@/lib/api";
+export const dynamic = "force-dynamic";
 
-function buildActivities(detail: LeaveDetailResponse) {
-  const activities: Array<{ title: string; date: string; isCurrent: boolean; subtitle?: string }> =
-    [
-      {
-        title: "ส่งคำขอลาหยุด",
-        date: formatDateTime(detail.createdAt),
-        isCurrent: false,
-      },
-    ];
+export default async function LeaveDetailsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ leaveId?: string }>;
+}) {
+  const user = await getSessionUser();
+  if (!user?.staffId) redirect("/login");
 
-  if (detail.status === "cancelled") {
-    activities.push({
-      title: "ยกเลิกคำขอ",
-      date: "ปัจจุบัน",
-      isCurrent: true,
-    });
-  } else if (detail.approvals.length > 0) {
-    detail.approvals.forEach((a) => {
-      const baseTitle =
-        a.status === "approved"
-          ? "ได้รับอนุมัติแล้ว"
-          : a.status === "rejected"
-            ? "ไม่ได้รับอนุมัติ"
-            : "รอการพิจารณา";
+  const { leaveId } = await searchParams;
 
-      const suffix =
-        a.status !== "pending"
-          ? `โดย ${a.approverName}`
-          : "รอการพิจารณา";
+  let initialDetail: LeaveDetailResponse | null = null;
+  let initialError = "";
 
-      const subtitle = a.approverRole ? `(${a.approverRole})` : undefined;
-
-      activities.push({
-        title: `${baseTitle} ${suffix}`,
-        subtitle,
-        date: a.approvedAt ? formatDateTime(a.approvedAt) : "ปัจจุบัน",
-        isCurrent: a.status === "pending",
-      });
-    });
-  } else {
-    activities.push({
-      title: "รอการพิจารณาจากหัวหน้างาน",
-      date: "ปัจจุบัน",
-      isCurrent: true,
-    });
-  }
-
-  return activities;
-}
-
-export default function LeaveDetailsPage() {
-  const router = useRouter();
-
-  const [detail, setDetail] = useState<LeaveDetailResponse | null>(null);
-  const [leaveId, setLeaveId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [cancelling, setCancelling] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [cancelError, setCancelError] = useState("");
-  const [showErrorOverlay, setShowErrorOverlay] = useState(false);
-  const searchParams = useSearchParams();
-
-  const fetchDetail = useCallback(async () => {
-    const idFromUrl = searchParams?.get("leaveId") ?? null;
-    const id = idFromUrl ?? getLeaveDetailId();
-
-    if (!id) {
-      setLoading(false);
-      setError("ไม่พบรหัสคำขอลา");
-      return;
-    }
-
-    setLeaveId(id);
-    setLoading(true);
-    setError("");
-
+  if (leaveId) {
+    // Mirrors GET /api/leaves/detail, including the messages and the audit log.
     try {
-      const json = await apiFetch<{ data: LeaveDetailResponse }>(
-        `/api/leaves/detail?leaveId=${encodeURIComponent(id)}`,
-      );
-
-      setDetail(json.data ?? null);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch leave detail",
-      );
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchDetail();
-  }, [fetchDetail]);
-
-  const handleCancel = async (cancelReason?: string) => {
-    if (!leaveId) return;
-
-    setCancelling(true);
-
-    try {
-      await apiFetch(`/api/leaves/${leaveId}/cancel`, {
-        method: "PATCH",
-        body: JSON.stringify({ cancelReason }),
-      });
-
-      flushSync(() => {
-        setIsSuccess(true);
-      });
-      if (leaveId) {
-        router.replace(
-          `/dashboard/leave-request/success?mode=cancel&submittedAt=${encodeURIComponent(currentSubmitTime())}&leaveId=${encodeURIComponent(leaveId)}`,
+      const detail = await getLeaveDetailById(leaveId, user.staffId, user.roles);
+      if (detail) {
+        initialDetail = detail;
+        const headersList = await headers();
+        logReadAccess(
+          user.userId,
+          user.staffId,
+          "leave",
+          leaveId,
+          headersList.get("x-forwarded-for")?.split(",")[0].trim(),
+          headersList.get("user-agent") ?? undefined,
         );
       } else {
-        router.replace(
-          `/dashboard/leave-request/success?mode=cancel&submittedAt=${encodeURIComponent(currentSubmitTime())}`,
-        );
+        initialError = "Leave request not found.";
       }
     } catch (err) {
-      setCancelError(
-        err instanceof Error ? err.message : "ไม่สามารถยกเลิกคำขอลาได้",
-      );
-      setShowErrorOverlay(true);
-    } finally {
-      setCancelling(false);
+      initialError =
+        err instanceof Error && err.message === "Forbidden"
+          ? "Forbidden"
+          : "Failed to fetch leave detail.";
     }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#fcf8fc] flex items-center justify-center font-sans">
-        <p className="text-slate-500">กำลังโหลด...</p>
-      </div>
-    );
   }
-
-  if (error || !detail) {
-    return (
-      <div className="min-h-screen bg-[#fcf8fc] flex flex-col items-center justify-center gap-4 font-sans">
-        <p className="text-red-500">{error ?? "ไม่พบข้อมูล"}</p>
-        <Button variant="outline" className="bg-[#1a1a40]/5 hover:bg-[#1a1a40]/10" onClick={() => router.back()}>
-          กลับ
-        </Button>
-      </div>
-    );
-  }
-
-  const activities = buildActivities(detail);
-
-  const displayReferenceId = buildLeaveReferenceId(detail.leaveId);
-
-  const decidedApproval = [...detail.approvals]
-    .filter(
-      (a) =>
-        (a.status === "approved" || a.status === "rejected") &&
-        a.approvedAt !== null,
-    )
-    .sort((a, b) => a.level - b.level)
-    .pop();
-  const decisionTime = decidedApproval?.approvedAt ?? undefined;
 
   return (
-    <div className="min-h-screen bg-[#fcf8fc] flex flex-col font-sans">
-      <main className="flex-grow w-full max-w-7xl mx-auto px-4 md:px-8 py-10">
-        {(cancelling || isSuccess) && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#f8f9ff]/80 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="w-12 h-12 animate-spin text-[#100d41]" />
-              <p className="font-bold text-[#100d41]">กำลังยกเลิกคำขอ...</p>
-            </div>
-          </div>
-        )}
-        <ResultErrorOverlay
-          open={showErrorOverlay}
-          title="ยกเลิกคำขอลาไม่สำเร็จ"
-          message={cancelError}
-          onClose={() => setShowErrorOverlay(false)}
-        />
-        
-        <div className="w-full mb-8 flex items-center justify-between gap-2">
-          <AppBreadcrumb
-            items={[{ label: "Home", href: "/dashboard" }, { label: "Leave Details" }]}
-          />
-          <Button
-            variant="ghost"
-            className="flex items-center gap-2 h-10 text-[#1a1a40] font-semibold bg-[#1a1a40]/5 hover:bg-[#1a1a40]/10 shrink-0"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">กลับไปหน้าประวัติ</span>
-          </Button>
-        </div>
-
-        <Card className="bg-white border border-slate-200 rounded-xl relative overflow-hidden shadow-sm">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#1a1a40]/5 to-transparent rounded-bl-full pointer-events-none"></div>
-
-          <LeaveDetailsHeader
-            title="รายละเอียดคำขอลา"
-            referenceId={displayReferenceId}
-            status={detail.status}
-            statusDate={decisionTime}
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <LeaveDetailsMainInfo
-                leaveTypeName={detail.leaveTypeName}
-                requestedDate={detail.createdAt}
-                startDate={detail.startDate}
-                endDate={detail.endDate}
-                durationDays={detail.totalDays}
-                reason={detail.reason ?? ""}
-                leaveMode={detail.leaveMode}
-                startTime={detail.startTime}
-                endTime={detail.endTime}
-                hours={detail.hours}
-                attachments={detail.attachments}
-                supervisor={detail.supervisor ?? undefined}
-              />
-
-              {detail.status === "cancelled" && detail.cancelReason && (
-                <div className="mx-6 md:mx-8 mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                  <label className="text-md font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
-                    เหตุผลในการยกเลิก
-                  </label>
-                  <p className="text-slate-700">{detail.cancelReason}</p>
-                </div>
-              )}
-            </div>
-
-            <LeaveDetailsApprovalSidebar
-              approvals={detail.approvals}
-              status={detail.status}
-              quota={detail.quota ?? undefined}
-              activities={activities}
-            />
-          </div>
-        </Card>
-
-        <LeaveDetailsActions
-          leaveId={detail.leaveId}
-          status={detail.status}
-          canEdit={detail.canEdit}
-          leaveTypeName={detail.leaveTypeName}
-          startDate={detail.startDate}
-          endDate={detail.endDate}
-          durationDays={detail.totalDays}
-          reason={detail.reason ?? ""}
-          leaveMode={detail.leaveMode}
-          startTime={detail.startTime}
-          endTime={detail.endTime}
-          hours={detail.hours}
-          onPrint={() => window.print()}
-          onCancel={handleCancel}
-          isCancelling={cancelling}
-        />
-      </main>
-    </div>
+    <LeaveDetailsClient
+      initialDetail={initialDetail}
+      initialLeaveId={leaveId ?? null}
+      initialError={initialError}
+    />
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api";
 import type {
   LeaveCaseSelectOption,
   LeaveSelectOption,
@@ -29,16 +30,16 @@ export function useLeaveOptions(enabled = true): UseLeaveOptionsResult {
       setOptionsError("");
 
       try {
-        const res = await fetch("/api/leave-options");
-        const result = await res.json().catch(() => null);
-
-        if (!res.ok) {
-          throw new Error(result?.error ?? "Failed to load leave options.");
-        }
+        const result = await apiFetch<{
+          data?: {
+            leaveTypes?: LeaveSelectOption[];
+            leaveCases?: LeaveCaseSelectOption[];
+          };
+        }>("/api/leave-options");
 
         if (!cancelled) {
-          setLeaveTypeOptions(result.data.leaveTypes ?? []);
-          setLeaveCaseOptions(result.data.leaveCases ?? []);
+          setLeaveTypeOptions(result.data?.leaveTypes ?? []);
+          setLeaveCaseOptions(result.data?.leaveCases ?? []);
         }
       } catch (err) {
         if (!cancelled) {

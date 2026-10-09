@@ -1,21 +1,15 @@
 import { getLeaveTrendData, getLeaveTypeDistribution, getPendingApprovals, getTodaysLeave, getUpcomingLeave, getRecentActivities, getDeptLeaveComparison, getApprovalStatusStats, getDashboardKpiData } from "@/lib/services/dashboardService";
 import { KpiCards } from "./KpiCards";
-import { LeaveTrendChart } from "./LeaveTrendChart";
-import { LeaveTypePieChart } from "./LeaveTypePieChart";
-import { DeptLeaveComparison } from "./DeptLeaveComparison";
-import { ApprovalStatusStats } from "./ApprovalStatusStats";
+import {
+  DeferredTrendChart,
+  DeferredTypePieChart,
+  DeferredDeptComparison,
+  DeferredStatusStats,
+} from "./DeferredCharts";
 import { PendingApprovalTable } from "./PendingApprovalTable";
 import { TodaysLeaveList } from "./TodaysLeaveList";
 import { UpcomingLeave } from "./UpcomingLeave";
 import { RecentActivities } from "./RecentActivities";
-
-export function SectionSkeleton({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-2xl border border-slate-200 bg-slate-100/70 ${className ?? ""}`}
-    />
-  );
-}
 
 export async function KpiSection() {
   const data = await getDashboardKpiData();
@@ -24,22 +18,22 @@ export async function KpiSection() {
 
 export async function TrendChartSection() {
   const data = await getLeaveTrendData();
-  return <LeaveTrendChart data={data} />;
+  return <DeferredTrendChart data={data} />;
 }
 
 export async function TypePieChartSection() {
   const data = await getLeaveTypeDistribution();
-  return <LeaveTypePieChart data={data} />;
+  return <DeferredTypePieChart data={data} />;
 }
 
 export async function DeptComparisonSection() {
   const data = await getDeptLeaveComparison();
-  return <DeptLeaveComparison data={data} />;
+  return <DeferredDeptComparison data={data} />;
 }
 
 export async function StatusStatsSection() {
   const data = await getApprovalStatusStats();
-  return <ApprovalStatusStats data={data} />;
+  return <DeferredStatusStats data={data} />;
 }
 
 export async function PendingApprovalSection() {

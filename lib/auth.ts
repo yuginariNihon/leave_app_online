@@ -76,12 +76,21 @@ async function getSessionUserImpl(): Promise<SessionUser | null> {
 
   try {
     const hashedToken = hashToken(token);
+    // Roles come back in the same round trip as the session — a separate
+    // staffRole query would cost another full DB round trip on every request
+    // (the DB is remote, so each one is ~100ms).
     const session = await prisma.session.findUnique({
       where: { token: hashedToken },
       include: {
         user: {
           include: {
-            staff: true,
+            staff: {
+              include: {
+                staffRoles: {
+                  include: { role: { select: { role_name: true } } },
+                },
+              },
+            },
           },
         },
       },
@@ -98,10 +107,7 @@ async function getSessionUserImpl(): Promise<SessionUser | null> {
       return null;
     }
 
-    const staffRoles = await prisma.staffRole.findMany({
-      where: { staff_id: session.user.staff.staff_id },
-      include: { role: { select: { role_name: true } } },
-    });
+    const staffRoles = session.user.staff?.staffRoles ?? [];
 
     return {
       userId: session.user_id,

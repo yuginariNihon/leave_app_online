@@ -7,7 +7,8 @@ import { getLeaveRightsByStaffId } from "@/lib/services/leaveService";
 export const runtime = "nodejs";
 
 const CACHE_FIVE_SECONDS =
-  "public, max-age=5, stale-while-revalidate=5";
+  // `private` — this response is per-user; a shared cache must never store it.
+  "private, max-age=5, stale-while-revalidate=5";
 
 export async function GET() {
   try {

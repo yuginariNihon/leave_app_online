@@ -7,7 +7,8 @@ import { ShieldCheck, History, List, CalendarDays } from "lucide-react";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { Reveal } from "@/components/Reveal";
-import { SectionSkeleton, KpiSection, TrendChartSection, TypePieChartSection, DeptComparisonSection, StatusStatsSection, PendingApprovalSection, TodaysLeaveSection, UpcomingLeaveSection, RecentActivitiesSection } from "./DashboardSections";
+import { SectionSkeleton } from "./SectionSkeleton";
+import { KpiSection, TrendChartSection, TypePieChartSection, DeptComparisonSection, StatusStatsSection, PendingApprovalSection, TodaysLeaveSection, UpcomingLeaveSection, RecentActivitiesSection } from "./DashboardSections";
 
 export default async function HrDashboardPage() {
   const user = await requireSessionUser();

@@ -188,3 +188,10 @@ export function timeFromDb(value: Date | string | null | undefined): string | nu
   if (Number.isNaN(d.getTime())) return null;
   return minutesToTime(d.getUTCHours() * 60 + d.getUTCMinutes());
 }
+
+export function timeToDb(time: string): Date {
+  const [hh, mm] = (time ?? "").split(":");
+  const h = parseInt(hh, 10) || 0;
+  const m = parseInt(mm, 10) || 0;
+  return new Date(Date.UTC(1970, 0, 1, h, m, 0));
+}

@@ -38,6 +38,9 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
   useEffect(() => {
     let cancelled = false;
     const refresh = async () => {
+      // Don't poll for a tab nobody is looking at — each poll costs a DB round
+      // trip on the server.
+      if (document.visibilityState === "hidden") return;
       try {
         const data = await apiFetch<{ count?: unknown }>("/api/notifications/unread-count", { cache: "no-store" });
         if (!cancelled) setNotificationCount(typeof data.count === "number" ? data.count : 0);
@@ -49,12 +52,18 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
     refresh();
     const timer = setInterval(refresh, NOTIFICATION_POLL_MS);
     const handleFocus = () => refresh();
+    // Coming back to the tab is the moment a refresh actually matters.
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
     window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisible);
 
     return () => {
       cancelled = true;
       clearInterval(timer);
       window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisible);
     };
   }, []);
 
