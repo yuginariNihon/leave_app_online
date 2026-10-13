@@ -3,11 +3,33 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { PAGE_KEY_BY_PREFIX } from "@/lib/menu-config";
+import { LOGIN_NEXT_COOKIE, LOGIN_NEXT_MAX_AGE_SECONDS } from "@/lib/loginNextCookie";
 
 const SESSION_COOKIE_NAME = "leave_app_db_session";
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
+}
+
+/**
+ * Redirects to /login and remembers where the user was heading so loginAction
+ * can bring them back after a successful login. `next` = pathname + search
+ * (e.g. /dashboard/leave-details?leaveId=abc), stored URL-encoded in an
+ * httpOnly cookie with a 5-minute TTL. The value is only ever used by
+ * loginAction after strict /dashboard validation — never trusted directly.
+ */
+function loginRedirect(request: NextRequest): NextResponse {
+  const response = NextResponse.redirect(new URL("/login", request.url));
+  const next = request.nextUrl.pathname + request.nextUrl.search;
+  response.cookies.set(LOGIN_NEXT_COOKIE, encodeURIComponent(next), {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: new URL(request.url).protocol === "https:",
+    path: "/",
+    maxAge: LOGIN_NEXT_MAX_AGE_SECONDS,
+  });
+  response.cookies.delete(SESSION_COOKIE_NAME);
+  return response;
 }
 
 const USER_PAGES: string[] = [];
@@ -41,7 +63,7 @@ export async function proxy(request: NextRequest) {
 
   // Auth check
   if (pathname.startsWith("/dashboard") && !hasSession) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return loginRedirect(request);
   }
 
   if (pathname === "/login" && hasSession) {
@@ -78,9 +100,7 @@ export async function proxy(request: NextRequest) {
         const isHR = roleNames.includes("HR") || roleNames.includes("SUPER_ADMIN");
 
         if (!isValid) {
-          const response = NextResponse.redirect(new URL("/login", request.url));
-          response.cookies.delete(SESSION_COOKIE_NAME);
-          return response;
+          return loginRedirect(request);
         }
 
         // Forced password changes apply to every dashboard route, including
@@ -106,9 +126,7 @@ export async function proxy(request: NextRequest) {
       // validated session (e.g. the force-change-password guard must not be
       // bypassed temporarily). Redirect to /login; the server error page is
       // avoided so the user isn't left guessing.
-      const response = NextResponse.redirect(new URL("/login", request.url));
-      response.cookies.delete(SESSION_COOKIE_NAME);
-      return response;
+      return loginRedirect(request);
     }
   }
 

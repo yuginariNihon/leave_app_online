@@ -13,7 +13,6 @@ import {
 import { StatusBadge } from "./StatusBadge";
 import type { LeaveRecord } from "./types";
 import { statusTextMap } from "./types";
-import { setLeaveDetailId } from "@/lib/navigation-state";
 import { formatDateOnly, formatLeaveDateRange, formatDays } from "@/lib/utils";
 
 interface LeaveTableProps {
@@ -24,7 +23,6 @@ export function LeaveTable({ data }: LeaveTableProps) {
   const router = useRouter();
 
   const handleViewDetail = (leaveId: string) => {
-    setLeaveDetailId(leaveId);
     router.push(`/dashboard/leave-details?leaveId=${encodeURIComponent(leaveId)}`);
   };
 

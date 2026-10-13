@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Save, Loader2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Loader2 } from "lucide-react";
 import { StaffForm } from "@/components/hr/StaffForm";
-import type { StaffMasterData, StaffDetailData, LeaveRightItem } from "@/lib/services/leaveService";
+import type { StaffMasterData, StaffDetailData } from "@/lib/services/leaveService";
 import type { UpdateStaffValues } from "@/lib/TypeSchema";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { apiFetch } from "@/lib/api";
@@ -19,9 +17,6 @@ export default function EditStaffPage() {
 
   const [masterData, setMasterData] = useState<StaffMasterData | null>(null);
   const [detail, setDetail] = useState<StaffDetailData | null>(null);
-  const [quota, setQuota] = useState<LeaveRightItem[]>([]);
-  const [editableQuota, setEditableQuota] = useState<Record<string, { usedDays: number; maxDays: number }>>({});
-  const [quotaSaving, setQuotaSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -34,24 +29,13 @@ export default function EditStaffPage() {
     async function load() {
       setLoading(true);
       try {
-const [masterJson, detailJson, quotaJson] = await Promise.all([
+const [masterJson, detailJson] = await Promise.all([
           apiFetch<{ data: StaffMasterData }>("/api/hr/master-data"),
           apiFetch<{ data: StaffDetailData }>(`/api/hr/staff/${staffId}`),
-          apiFetch<{ data: LeaveRightItem[] }>(`/api/hr/staff/${staffId}/leave-quota`).catch(() => null),
         ]);
 
         setMasterData(masterJson.data);
         setDetail(detailJson.data);
-
-        if (quotaJson) {
-          const qdata = quotaJson.data ?? [];
-          setQuota(qdata);
-          const map: Record<string, { usedDays: number; maxDays: number }> = {};
-          for (const item of qdata) {
-            map[item.leaveTypeId] = { usedDays: item.usedDays, maxDays: item.maxDays };
-          }
-          setEditableQuota(map);
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
@@ -61,31 +45,6 @@ const [masterJson, detailJson, quotaJson] = await Promise.all([
 
     load();
   }, [staffId]);
-
-  const handleSaveQuota = async () => {
-    if (!staffId) return;
-    setQuotaSaving(true);
-    try {
-      const quotas = Object.entries(editableQuota).map(([leaveTypeId, vals]) => ({
-        leaveTypeId,
-        maxDays: vals.maxDays,
-        usedDays: vals.usedDays,
-      }));
-await apiFetch(`/api/hr/staff/${staffId}/leave-quota`, {
-        method: "PUT",
-        body: JSON.stringify({ quotas }),
-      });
-      toast.success("อัปเดตสิทธิ์ลาคงเหลือเรียบร้อยแล้ว");
-      const refetchJson = await apiFetch<{ data: LeaveRightItem[] }>(`/api/hr/staff/${staffId}/leave-quota`).catch(() => null);
-      if (refetchJson) {
-        setQuota(refetchJson.data ?? []);
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "ไม่สามารถบันทึกสิทธิ์วันลาได้");
-    } finally {
-      setQuotaSaving(false);
-    }
-  };
 
   const onSubmit = async (values: UpdateStaffValues) => {
     if (!staffId) return;
@@ -179,80 +138,20 @@ await apiFetch(`/api/hr/staff/${staffId}`, {
               onBack={() => router.back()}
             />
 
-            {/* Leave Quota Section */}
-            <div className="mt-8 bg-white rounded-2xl border border-[#c6c6cd]/30 overflow-hidden p-8"
-              style={{ boxShadow: "0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 8px -1px rgba(15, 23, 42, 0.03)" }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-semibold text-[#0F172A]">
-                  สิทธิ์ลาคงเหลือ ({new Date().getFullYear()})
-                </h3>
-                <Button
-                  type="button"
-                  disabled={quotaSaving}
-                  className="h-9 px-4 text-xs font-semibold rounded-lg bg-[#0F172A] text-white hover:bg-[#1E293B]"
-                  onClick={handleSaveQuota}
-                >
-                  {quotaSaving ? (
-                    <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />กำลังบันทึก...</>
-                  ) : (
-                    <><Save className="w-3.5 h-3.5 mr-1.5" />บันทึกสิทธิ์ลา</>
-                  )}
-                </Button>
+            <div className="mt-8 flex items-center justify-between rounded-2xl border border-[#c6c6cd]/30 bg-white p-6">
+              <div>
+                <h3 className="text-base font-semibold text-[#0F172A]">สิทธิ์การลา</h3>
+                <p className="mt-0.5 text-sm text-[#45464d]">
+                  จัดการจำนวนวันและเปิด/ปิดสิทธิ์การลาได้ที่หน้าจัดการสิทธิ์การลา
+                </p>
               </div>
-              {quota.length === 0 ? (
-                <p className="text-sm text-[#45464d]">ไม่มีข้อมูลสิทธิลา</p>
-              ) : (
-                <div className="space-y-4">
-                  {quota.map((item) => {
-                    const val = editableQuota[item.leaveTypeId] ?? { usedDays: item.usedDays, maxDays: item.maxDays };
-                    const percent = val.maxDays > 0 ? (val.usedDays / val.maxDays) * 100 : 0;
-                    return (
-                      <div key={item.leaveTypeId}>
-                        <div className="flex justify-between text-sm mb-1 items-center">
-                          <span className="font-medium text-[#0F172A]">
-                            {item.leaveTypeName}
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="number"
-                              min={0}
-                              className="w-[70px] h-8 text-center rounded-lg border border-[#c6c6cd] text-sm outline-none focus:border-[#2563EB] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.1)]"
-                              value={val.usedDays}
-                              onChange={(e) => {
-                                const v = Math.max(0, Number(e.target.value) || 0);
-                                setEditableQuota((prev) => ({
-                                  ...prev,
-                                  [item.leaveTypeId]: { ...prev[item.leaveTypeId], usedDays: v },
-                                }));
-                              }}
-                            />
-                            <span className="text-[#45464d]">/</span>
-                            <input
-                              type="number"
-                              min={0}
-                              className="w-[70px] h-8 text-center rounded-lg border border-[#c6c6cd] text-sm outline-none focus:border-[#2563EB] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.1)]"
-                              value={val.maxDays}
-                              onChange={(e) => {
-                                const v = Math.max(0, Number(e.target.value) || 0);
-                                setEditableQuota((prev) => ({
-                                  ...prev,
-                                  [item.leaveTypeId]: { ...prev[item.leaveTypeId], maxDays: v },
-                                }));
-                              }}
-                            />
-                            <span className="text-[#45464d]">วัน</span>
-                          </div>
-                        </div>
-                        <Progress
-                          value={percent}
-                          className="h-2 bg-[#eff4ff]"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() => router.push(`/dashboard/hr/staff-list/leave-quota?id=${staffId}`)}
+                className="shrink-0 rounded-lg bg-[#0F172A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1E293B]"
+              >
+                จัดการสิทธิ์การลา
+              </button>
             </div>
           </div>
         </section>

@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Pencil, Power, PowerOff } from "lucide-react";
+import { CalendarCheck, FileText, Pencil, Power, PowerOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -53,6 +53,14 @@ export function StaffTable({ data, onToggleActive, togglingIds }: StaffTableProp
                   <div className="flex items-center justify-center gap-3">
                     <button
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
+                      title="จัดการสิทธิ์การลา"
+                      onClick={() => router.push(`/dashboard/hr/staff-list/leave-quota?id=${staff.staffId}`)}
+                    >
+                      <CalendarCheck className="w-[20px] h-[20px]" />
+                    </button>
+                    <button
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
+                      title="แก้ไขข้อมูลพนักงาน"
                       onClick={() => router.push(`/dashboard/hr/staff-list/edit?id=${staff.staffId}`)}
                     >
                       <Pencil className="w-[20px] h-[20px]" />

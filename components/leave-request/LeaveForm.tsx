@@ -130,7 +130,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
           )}
           {leaveTypeId && leaveQuota[leaveTypeId] && (
             <p className="text-sm text-slate-700 mt-1">
-              วันลาคงเหลือ: <span className="font-semibold text-[#100d41]">{leaveQuota[leaveTypeId].remaining}</span> / {leaveQuota[leaveTypeId].maxDays} วัน
+              วันลาคงเหลือ: <span className="font-semibold text-[#100d41]">{Number(leaveQuota[leaveTypeId].remaining).toFixed(2)}</span> / {Number(leaveQuota[leaveTypeId].maxDays).toFixed(2)} วัน
             </p>
           )}
           {leaveTypeId && !leaveQuota[leaveTypeId] && unassignedLeaveTypeIds.includes(leaveTypeId) && (
@@ -202,7 +202,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
           render={({ field }) => (
             <div className="flex flex-wrap gap-6">
               {[
-                { value: "day", label: "ลาทั้งวัน/ครึ่งวัน" },
+                { value: "day", label: "ลาทั้งวัน" },
                 { value: "hour", label: "ลารายชั่วโมง" },
               ].map((option) => (
                 <label
@@ -300,7 +300,7 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
       </div>
       )}
 
-      {isHour ? (
+      {isHour && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-3">
             <Label htmlFor="start-time" className="text-base font-semibold text-slate-700">
@@ -340,67 +340,30 @@ export function LeaveForm({form,leaveTypeOptions,leaveCaseOptions,leaveQuota = {
             </p>
           </div>
         </div>
-      ) : (
-      <div className="space-y-3">
-        <Label className="text-base font-semibold text-slate-700">
-          ช่วงเวลา
-        </Label>
-        <Controller
-          control={control}
-          name="leavePeriod"
-          render={({ field }) => (
-            <div className="flex flex-wrap gap-6">
-              {[
-                { value: "full_day", label: "เต็มวัน" },
-                { value: "morning", label: "ครึ่งเช้า" },
-                { value: "afternoon", label: "ครึ่งบ่าย" },
-              ].map((option) => (
-                <label
-                  key={option.value}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${
-                    (field.value || "full_day") === option.value
-                      ? "border-[#100d41] bg-[#100d41]/5 text-[#100d41] font-semibold"
-                      : "border-gray-200 bg-white text-slate-600 hover:border-gray-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    value={option.value}
-                    checked={(field.value || "full_day") === option.value}
-                    onChange={() => field.onChange(option.value)}
-                    className="sr-only"
-                  />
-                  <span className="text-sm">{option.label}</span>
-                </label>
-              ))}
-            </div>
-          )}
-        />
-      </div>
       )}
 
       {/* จำนวนวันลา */}
       {isHour ? (
         <div className="rounded-lg inline-block border border-slate-100">
           <span className="text-[#100d41] font-medium text-lg">
-            จำนวนชั่วโมงลา : <span className="font-bold text-2xl ml-1">{computedHours}</span> ชม.
+            จำนวนชั่วโมงลา : <span className="font-bold text-2xl ml-1">{computedHours.toFixed(2)}</span> ชม.
             <span className="ml-2 text-base font-normal text-slate-500">
-              (คิดเป็น {Number(dayCount)} วัน)
+              (คิดเป็น {Number(dayCount).toFixed(2)} วัน)
             </span>
           </span>
         </div>
       ) : (
         <div className="rounded-lg inline-block border border-slate-100">
           <span className="text-[#100d41] font-medium text-lg">
-            จำนวนวันลา : <span className="font-bold text-2xl ml-1">{dayCount % 1 === 0 ? dayCount.toString() : dayCount.toFixed(1)}</span> วัน
+            จำนวนวันลา : <span className="font-bold text-2xl ml-1">{Number(dayCount).toFixed(2)}</span> วัน
           </span>
         </div>
       )}
       {isQuotaExceeded && (
         <p className="text-md text-red-600 font-medium">
           {isHour
-            ? `ลาขอ ${computedHours} ชม. (${Number(dayCount)} วัน) เกินวันลาคงเหลือ ${leaveQuota[leaveTypeId]?.remaining ?? 0} วัน — ไม่สามารถส่งคำขอลาได้`
-            : `จำนวนวันที่ขอ ${dayCount} วัน เกินวันลาคงเหลือ ${leaveQuota[leaveTypeId]?.remaining ?? 0} วัน — ไม่สามารถส่งคำขอลาได้`}
+            ? `ลาขอ ${computedHours.toFixed(2)} ชม. (${Number(dayCount).toFixed(2)} วัน) เกินวันลาคงเหลือ ${Number(leaveQuota[leaveTypeId]?.remaining ?? 0).toFixed(2)} วัน — ไม่สามารถส่งคำขอลาได้`
+            : `จำนวนวันที่ขอ ${Number(dayCount).toFixed(2)} วัน เกินวันลาคงเหลือ ${Number(leaveQuota[leaveTypeId]?.remaining ?? 0).toFixed(2)} วัน — ไม่สามารถส่งคำขอลาได้`}
         </p>
       )}
 

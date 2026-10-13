@@ -11,7 +11,6 @@ import { LeaveDetailsApprovalSidebar } from "@/components/leave-details/LeaveDet
 import { LeaveDetailsActions } from "@/components/leave-details/LeaveDetailsActions";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import type { LeaveDetailResponse } from "@/lib/services/leaveService";
-import { getLeaveDetailId } from "@/lib/navigation-state";
 import { formatDateTime, currentSubmitTime } from "@/lib/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
@@ -98,8 +97,7 @@ export default function LeaveDetailsClient({
   const skipFirstFetch = useRef(preloaded);
 
   const fetchDetail = useCallback(async () => {
-    const idFromUrl = searchParams?.get("leaveId") ?? null;
-    const id = idFromUrl ?? getLeaveDetailId();
+    const id = searchParams?.get("leaveId") ?? null;
 
     if (!id) {
       setLoading(false);
@@ -282,6 +280,7 @@ export default function LeaveDetailsClient({
           leaveId={detail.leaveId}
           status={detail.status}
           canEdit={detail.canEdit}
+          isOwner={detail.isOwner}
           leaveTypeName={detail.leaveTypeName}
           startDate={detail.startDate}
           endDate={detail.endDate}

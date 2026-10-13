@@ -4,6 +4,11 @@ import { checkApproverExists, checkApproverForStaff, checkApproverForStaffBatch 
 import { getCachedWorkflow } from "@/lib/services/workflowCache";
 import { resolveDefaultMaxDays } from "@/lib/services/leaveQuotaService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
+import {
+  scheduleLeaveApprovedEmail,
+  scheduleLeaveRejectedEmail,
+  scheduleLeaveNextApproverEmail,
+} from "@/lib/services/leaveMailerService";
 import { NotFoundError, ConflictError, ValidationError, ForbiddenError, UnauthorizedError } from "@/lib/errors";
 
 // ──────────────────────────────────────────────
@@ -148,6 +153,9 @@ async function advanceLeaveApproval(
     orderBy: { approval_level: "asc" },
   });
 
+  let becameApproved = false;
+  let awaitingApprover = false;
+
   await prisma.$transaction(async (tx) => {
     if (pendingApprovals.length === 0) {
       await tx.dataLeave.update({
@@ -155,6 +163,7 @@ async function advanceLeaveApproval(
         data: { leave_status: LeaveStatus.approved, updated_at: new Date() },
       });
       await updateUsedDaysOnApproval(leaveId, tx);
+      becameApproved = true;
       return;
     }
 
@@ -175,6 +184,7 @@ async function advanceLeaveApproval(
           where: { leave_id: leaveId },
           data: { current_approval_level: approval.approval_level, updated_at: new Date() },
         });
+        awaitingApprover = true;
         return;
       }
 
@@ -196,7 +206,14 @@ async function advanceLeaveApproval(
       data: { leave_status: LeaveStatus.approved, updated_at: new Date() },
     });
     await updateUsedDaysOnApproval(leaveId, tx);
+    becameApproved = true;
   });
+
+  if (becameApproved) {
+    scheduleLeaveApprovedEmail(leaveId);
+  } else if (awaitingApprover) {
+    scheduleLeaveNextApproverEmail(leaveId);
+  }
 }
 
 // ──────────────────────────────────────────────
@@ -292,6 +309,7 @@ export async function updateApprovalStatus(
       where: { leave_id: approval.leave_id },
       data: { leave_status: LeaveStatus.rejected, updated_at: new Date() },
     });
+    scheduleLeaveRejectedEmail(approval.leave_id, comment);
     return approval;
   }
 
@@ -431,6 +449,7 @@ export async function bulkUpdateApprovalStatus(
       where: { leave_id: { in: leaveIds } },
       data: { leave_status: LeaveStatus.rejected, updated_at: new Date() },
     });
+    leaveIds.forEach((id) => scheduleLeaveRejectedEmail(id, comment));
     invalidateDashboardKpi();
     return;
   }
@@ -535,6 +554,7 @@ export async function hrUpdateApprovalStatus(
       where: { leave_id: approval.leave_id },
       data: { leave_status: LeaveStatus.rejected, updated_at: new Date() },
     });
+    scheduleLeaveRejectedEmail(approval.leave_id, comment);
     return approval;
   }
 
@@ -631,6 +651,7 @@ export async function hrBulkUpdateApprovalStatus(
       where: { leave_id: { in: leaveIds } },
       data: { leave_status: LeaveStatus.rejected, updated_at: new Date() },
     });
+    leaveIds.forEach((id) => scheduleLeaveRejectedEmail(id, comment));
     invalidateDashboardKpi();
     return;
   }

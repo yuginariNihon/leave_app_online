@@ -213,3 +213,83 @@ export async function checkApproverForStaffBatch(
     }),
   );
 }
+
+export type ApproverContact = {
+  staffId: string;
+  name: string;
+  email: string;
+};
+
+/**
+ * Resolves the contact details (name + email) of every eligible approver for
+ * a given ApproverType. Mirrors checkApproverExists/checkApproverForStaff but
+ * returns the actual people instead of a boolean, so callers can notify them.
+ *
+ * - HR step: any active staff holding the HR or SUPER_ADMIN role.
+ * - Position step: active staff in the same department with a matching position.
+ * - Specific_Person: not resolvable (no position mapping) -> empty list.
+ */
+export async function getApproverContacts(
+  staffId: string,
+  departmentId: string,
+  approverType: string,
+): Promise<ApproverContact[]> {
+  if (approverType === "HR") {
+    const hrStaff = await prisma.staffInfo.findMany({
+      where: {
+        is_active: true,
+        user: { email: { not: null } },
+        staffRoles: {
+          some: {
+            role: {
+              role_name: { in: ["HR", "SUPER_ADMIN"], mode: "insensitive" },
+            },
+          },
+        },
+      },
+      select: {
+        staff_id: true,
+        name: true,
+        user: { select: { email: true } },
+      },
+    });
+
+    return hrStaff
+      .filter((s) => s.user?.email)
+      .map((s) => ({
+        staffId: s.staff_id,
+        name: s.name,
+        email: s.user!.email as string,
+      }));
+  }
+
+  const positionNames = APPROVER_POSITION_NAMES[approverType];
+  if (!positionNames?.length) return [];
+
+  const positionIds = await getPositionIds(positionNames);
+  if (positionIds.length === 0) return [];
+
+  const staffList = await prisma.staffInfo.findMany({
+    where: {
+      department_id: departmentId,
+      staff_id: { not: staffId },
+      is_active: true,
+      position_id: { in: positionIds },
+      staffRoles: { some: {} },
+      user: { email: { not: null } },
+    },
+    select: {
+      staff_id: true,
+      name: true,
+      user: { select: { email: true } },
+    },
+  });
+
+  return staffList
+    .filter((s) => s.user?.email)
+    .map((s) => ({
+      staffId: s.staff_id,
+      name: s.name,
+      email: s.user!.email as string,
+    }));
+}

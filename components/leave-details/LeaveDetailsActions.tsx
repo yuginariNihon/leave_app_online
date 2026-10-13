@@ -21,6 +21,7 @@ type LeaveDetailsActionsProps = {
   leaveId: string;
   status: string;
   canEdit: boolean;
+  isOwner: boolean;
   leaveTypeName: string;
   startDate: string | null;
   endDate: string | null;
@@ -40,6 +41,7 @@ export function LeaveDetailsActions({
   leaveId,
   status,
   canEdit,
+  isOwner,
   leaveTypeName,
   startDate,
   endDate,
@@ -52,7 +54,7 @@ export function LeaveDetailsActions({
   onCancel,
   isCancelling,
 }: LeaveDetailsActionsProps) {
-  const isPending = status === LeaveStatus.pending;
+  const isPending = status === LeaveStatus.pending && isOwner;
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -161,7 +163,7 @@ export function LeaveDetailsActions({
           </AlertDialogContent>
         </AlertDialog>
       )}
-      {canEdit && (
+      {canEdit && isOwner && (
         <Button
           variant="secondary"
           className="bg-white border border-gray-200 text-[#1a1a40] px-8 h-14 rounded-xl font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -12,7 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { setLeaveDetailId } from "@/lib/navigation-state";
 import { formatDateOnly, formatLeaveDateRange, formatDays } from "@/lib/utils";
 import type { ApprovalRequestItem } from "@/lib/services/approvalService";
 
@@ -113,7 +112,6 @@ export function ApprovalTable({
                       <button
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
                         onClick={() => {
-                          setLeaveDetailId(item.leaveId);
                           router.push(`${detailBasePath}?leaveId=${encodeURIComponent(item.leaveId)}`);
                         }}
                       >

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import type { LeaveFormOptions } from "@/lib/TypeSchema";
 import z from "zod";
 import { toDateOnly, countInclusiveDays, buildLeaveReferenceId, timeFromDb } from "@/lib/utils";
-import { allocateLeaveNo, gregorianToThaiYear } from "@/lib/services/leaveNumberService";
+import { allocateLeaveNo } from "@/lib/services/leaveNumberService";
 import { checkApproversExist, APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import {
   computeDefaultMaxDays,
@@ -16,6 +16,10 @@ import {
 } from "@/lib/services/leaveQuotaService";
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
+import {
+  scheduleLeaveCreatedEmail,
+  scheduleLeaveCancelledEmail,
+} from "@/lib/services/leaveMailerService";
 import { NotFoundError, ValidationError, ForbiddenError, ConflictError } from "@/lib/errors";
 
 const SUPERVISOR_POSITION_NAMES = new Set([
@@ -440,8 +444,8 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
 
   // 5-7. Create leave, approvals, and update used days in a single transaction
   const leave = await prisma.$transaction(async (tx) => {
-    const thaiYear = gregorianToThaiYear(new Date(startDate));
-    const leaveNo = await allocateLeaveNo(tx, thaiYear);
+    const year = new Date(startDate).getUTCFullYear();
+    const leaveNo = await allocateLeaveNo(tx, year);
 
     const created = await tx.dataLeave.create({
       data: {
@@ -492,6 +496,9 @@ export async function createLeaveRequest(input: CreateLeaveRequestInput) {
   });
 
   invalidateDashboardKpi();
+
+  scheduleLeaveCreatedEmail(leave.leave_id);
+
   return leave;
 }
 
@@ -663,6 +670,7 @@ export async function cancelLeaveRequest(leaveId: string, staffId: string, cance
   ]);
 
   invalidateDashboardKpi();
+  scheduleLeaveCancelledEmail(leaveId);
   return updatedLeave;
 }
 
@@ -868,6 +876,8 @@ export type LeaveDetailResponse = {
   status: string;
   /** false ถ้า leave_status != pending หรือมีการอนุมัติแล้ว (approver_id ไม่ null) */
   canEdit: boolean;
+  /** true เมื่อผู้เปิดดูเป็นเจ้าของใบลา (ต้องเป็นเจ้าของจึงยกเลิก/แก้ไขได้) */
+  isOwner: boolean;
   reason: string | null;
   totalDays: number;
   createdAt: string;
@@ -1187,6 +1197,7 @@ export async function getLeaveDetailById(
     leaveNo: leave.leave_no ?? null,
     status: leave.leave_status,
     canEdit: leave.leave_status === LeaveStatus.pending && !hasActedApproval,
+    isOwner,
     reason: leave.reason,
     totalDays: Number(leave.total_days ?? 0),
     createdAt: leave.created_at.toISOString(),
@@ -1283,7 +1294,7 @@ export async function getDashboardLeaveStats(
   const [leaveLimits, pending, approved, rejected, cancelled] =
     await Promise.all([
       prisma.userLeaveLimit.findMany({
-        where: { staff_id: staffId, year: new Date().getFullYear() },
+        where: { staff_id: staffId, year: new Date().getFullYear(), is_active: true },
         select: { max_days: true, used_days: true },
       }),
       prisma.dataLeave.count({
@@ -1318,6 +1329,7 @@ export type LeaveRightItem = {
   leaveTypeName: string;
   usedDays: number;
   maxDays: number;
+  isActive: boolean;
 };
 
 export async function getLeaveRightsByStaffId(
@@ -1330,6 +1342,7 @@ export async function getLeaveRightsByStaffId(
       leave_type_id: true,
       max_days: true,
       used_days: true,
+      is_active: true,
       leaveType: { select: { leave_type_name: true } },
     },
     orderBy: { leaveType: { leave_type_name: "asc" } },
@@ -1340,6 +1353,36 @@ export async function getLeaveRightsByStaffId(
     leaveTypeName: l.leaveType.leave_type_name,
     usedDays: Number(l.used_days),
     maxDays: Number(l.max_days),
+    isActive: l.is_active,
+  }));
+}
+
+/**
+ * สิทธิ์การลาที่ "เปิดใช้งาน" เท่านั้น — ใช้กับหน้าพนักงาน (Dashboard)
+ * และยอดคงเหลือที่แสดงต่อพนักงาน ส่วนสิทธิ์ที่ HR ปิดไว้จะถูกซ่อน
+ */
+export async function getActiveLeaveRightsByStaffId(
+  staffId: string,
+  year: number = new Date().getFullYear(),
+): Promise<LeaveRightItem[]> {
+  const limits = await prisma.userLeaveLimit.findMany({
+    where: { staff_id: staffId, year, is_active: true },
+    select: {
+      leave_type_id: true,
+      max_days: true,
+      used_days: true,
+      is_active: true,
+      leaveType: { select: { leave_type_name: true } },
+    },
+    orderBy: { leaveType: { leave_type_name: "asc" } },
+  });
+
+  return limits.map((l) => ({
+    leaveTypeId: l.leave_type_id,
+    leaveTypeName: l.leaveType.leave_type_name,
+    usedDays: Number(l.used_days),
+    maxDays: Number(l.max_days),
+    isActive: l.is_active,
   }));
 }
 

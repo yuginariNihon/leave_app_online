@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Download, FileText, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ export default function LeaveReportClient({
   initialStartDate,
   initialEndDate,
 }: Props) {
+  const router = useRouter();
   const { live: { searchTerm, departmentFilter, typeFilter, startDate, endDate }, setFilter, applied: appliedFilters, page: currentPage, setPage: setCurrentPage, submit: handleSearchSubmit, reset: handleReset } = useFilterWithApply({
     searchTerm: "",
     departmentFilter: "all",
@@ -316,7 +318,11 @@ export default function LeaveReportClient({
                 <TableBody className="divide-y divide-[#c8c5d0]">
                   {data.length > 0 ? (
                     data.map((item) => (
-                      <TableRow key={item.leaveId} className="hover:bg-[#eff4ff]/30 transition-all duration-200">
+                      <TableRow
+                        key={item.leaveId}
+                        onClick={() => router.push(`/dashboard/leave-details?leaveId=${encodeURIComponent(item.leaveId)}`)}
+                        className="hover:bg-[#eff4ff]/30 transition-all duration-200 cursor-pointer"
+                      >
                         <TableCell className="px-6 py-4 text-[14px] leading-[20px] font-semibold whitespace-nowrap">{item.staffCode}</TableCell>
                         <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{item.staffName}</TableCell>
                         <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{item.departmentName ?? "-"}</TableCell>

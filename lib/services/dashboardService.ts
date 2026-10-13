@@ -40,6 +40,7 @@ export type PendingApprovalItem = {
 };
 
 export type TodaysLeaveItem = {
+  leaveId: string;
   staffName: string;
   leaveTypeName: string;
   leavePeriod: string;
@@ -52,6 +53,7 @@ export type TodaysLeaveItem = {
 };
 
 export type UpcomingLeaveItem = {
+  leaveId: string;
   staffName: string;
   leaveTypeName: string;
   startDate: string;
@@ -224,6 +226,7 @@ export async function getTodaysLeave(): Promise<TodaysLeaveItem[]> {
   });
 
   return leaves.map((l) => ({
+    leaveId: l.leave_id,
     staffName: l.staff.name,
     leaveTypeName: l.leaveType.leave_type_name,
     leavePeriod: l.leave_period,
@@ -256,6 +259,7 @@ export async function getUpcomingLeave(daysAhead = 7): Promise<UpcomingLeaveItem
   });
 
   return leaves.map((l) => ({
+    leaveId: l.leave_id,
     staffName: l.staff.name,
     leaveTypeName: l.leaveType.leave_type_name,
     startDate: l.start_date?.toISOString().split("T")[0] ?? "",

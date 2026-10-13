@@ -9,7 +9,7 @@ import { RecentLeaveList } from "@/components/RecentLeaveList";
 import {
   getStaffProfile,
   getDashboardLeaveStats,
-  getLeaveRightsByStaffId,
+  getActiveLeaveRightsByStaffId,
   getRecentLeavesByStaffId,
 } from "@/lib/services/leaveService";
 import { BottomActionBar } from "@/components/BottomActionBar";
@@ -22,13 +22,14 @@ export default async function DashboardPage() {
 
   const [stats, rights, recentLeaves] = await Promise.all([
     getDashboardLeaveStats(user.staffId),
-    getLeaveRightsByStaffId(user.staffId),
+    getActiveLeaveRightsByStaffId(user.staffId),
     getRecentLeavesByStaffId(user.staffId),
   ]);
 
   return (
-    <div className="min-h-full flex flex-col pb-24 lg:pb-0">
+    <div className="min-h-full flex flex-col pb-24 lg:pb-0 bg-gradient-to-b from-[#f5f6ff] via-white to-[#eef1fb]">
       <DashboardIntro userName={profile.name} />
+      <br />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8 flex flex-col gap-6">
           <LeaveStatsCards stats={stats} />

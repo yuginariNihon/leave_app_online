@@ -2,8 +2,9 @@
 
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { createSession, deleteSession } from "@/lib/auth";
+import { LOGIN_NEXT_COOKIE } from "@/lib/loginNextCookie";
 import { prisma } from "@/lib/prisma";
 import {
   findUserByIdentifier,
@@ -16,6 +17,25 @@ export type LoginState = {
 };
 
 const RATE_LIMIT_DELAY_MS = 30_000;
+
+/**
+ * The `next` cookie is untrusted input (anyone can write a cookie for the
+ * domain). Only a path under /dashboard is ever accepted — this closes the
+ * open-redirect vector (external URLs, protocol-relative //evil.com, etc.).
+ */
+function safeNextPath(raw: string | undefined): string | null {
+  if (!raw) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+  if (!decoded.startsWith("/dashboard")) return null;
+  if (decoded.includes("//") || /[\\\r\n]/.test(decoded)) return null;
+  if (/^[a-z]+:/i.test(decoded)) return null;
+  return decoded;
+}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -30,6 +50,13 @@ export async function loginAction(
   const headersList = await headers();
   const ipAddress = headersList.get("x-forwarded-for")?.split(",")[0].trim() || undefined;
   const userAgent = headersList.get("user-agent") || undefined;
+
+  // Read the remembered destination once and always clear it — a stale value
+  // must never leak into a later login attempt.
+  const cookieStore = await cookies();
+  const nextRaw = cookieStore.get(LOGIN_NEXT_COOKIE)?.value;
+  cookieStore.delete(LOGIN_NEXT_COOKIE);
+  const nextPath = safeNextPath(nextRaw);
 
   if (!identifier || !password) {
     return { message: "Please enter your employee ID/email and password." };
@@ -107,7 +134,7 @@ export async function loginAction(
     redirect("/dashboard/reset-password?force=true");
   }
 
-  redirect(isHR ? "/dashboard/hr" : "/dashboard");
+  redirect(nextPath ?? (isHR ? "/dashboard/hr" : "/dashboard"));
 }
 
 export async function logoutAction() {

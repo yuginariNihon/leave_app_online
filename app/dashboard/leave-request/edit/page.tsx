@@ -20,7 +20,6 @@ import { ArrowLeft, CalendarDays, Loader2 } from "lucide-react";
 
 import { leaveFormSchema, LeaveFormValues } from "@/lib/TypeSchema";
 import { LeaveForm } from "@/components/leave-request/LeaveForm";
-import { getEditLeaveId } from "@/lib/navigation-state";
 import { currentSubmitTime, dateOnly } from "@/lib/utils";
 import { useLeaveOptions } from "@/hooks/useLeaveOptions";
 import { WarningBanner } from "@/components/ui/warning-banner";
@@ -66,8 +65,7 @@ export default function EditLeavePage() {
     let cancelled = false;
 
     async function loadDetail() {
-      const queryId = searchParams?.get("leaveId") ?? null;
-      const id = queryId ?? getEditLeaveId();
+      const id = searchParams?.get("leaveId") ?? null;
 
       if (!id) {
         if (!cancelled) {

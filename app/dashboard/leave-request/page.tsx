@@ -162,7 +162,7 @@ export default function LeaveRequestPage() {
       if (end) form.setValue("endDate", end);
       if (reason) form.setValue("reason", reason);
       const period = searchParams.get("leavePeriod");
-      if (period) form.setValue("leavePeriod", period as "full_day" | "morning" | "afternoon");
+      if (period === "full_day") form.setValue("leavePeriod", period);
       const elMode = searchParams.get("leaveMode");
       if (elMode === "day" || elMode === "hour") form.setValue("leaveMode", elMode);
       const sTime = searchParams.get("startTime");
@@ -181,8 +181,8 @@ export default function LeaveRequestPage() {
     if (quota && effectiveDays > quota.remaining) {
       setSubmitError(
         isHourSubmit
-          ? `เวลาที่ขอ (${hoursValue} ชม. / ${effectiveDays.toFixed(2)} วัน) เกินจำนวนวันที่เหลืออยู่ (${quota.remaining} วัน) สำหรับประเภทการลานี้`
-          : `วันลาที่ขอ (${dayCount} วัน) เกินจำนวนวันที่เหลืออยู่ (${quota.remaining} วัน) สำหรับประเภทการลานี้`
+          ? `เวลาที่ขอ (${hoursValue.toFixed(2)} ชม. / ${effectiveDays.toFixed(2)} วัน) เกินจำนวนวันที่เหลืออยู่ (${Number(quota.remaining).toFixed(2)} วัน) สำหรับประเภทการลานี้`
+          : `วันลาที่ขอ (${Number(dayCount).toFixed(2)} วัน) เกินจำนวนวันที่เหลืออยู่ (${Number(quota.remaining).toFixed(2)} วัน) สำหรับประเภทการลานี้`
       );
       setShowErrorOverlay(true);
       return;

@@ -1,8 +1,11 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import type { UpcomingLeaveItem } from "@/lib/services/dashboardService"
 
 export function UpcomingLeave({ data }: { data: UpcomingLeaveItem[] }) {
+  const router = useRouter()
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
       <h3 className="font-semibold text-[#1a1a40] mb-4">การลาที่กำลังจะมาถึง</h3>
@@ -10,8 +13,12 @@ export function UpcomingLeave({ data }: { data: UpcomingLeaveItem[] }) {
         <p className="text-slate-400 text-sm py-4 text-center">ไม่มีการลาที่กำลังจะมาถึง</p>
       ) : (
         <div className="space-y-3">
-          {data.map((item, i) => (
-            <div key={i} className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0">
+          {data.map((item) => (
+            <div
+              key={item.leaveId}
+              onClick={() => router.push(`/dashboard/leave-details?leaveId=${encodeURIComponent(item.leaveId)}`)}
+              className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0 cursor-pointer hover:bg-slate-50 rounded-lg px-2 -mx-2 transition-colors"
+            >
               <div>
                 <p className="font-medium text-[#1a1a40] text-sm">{item.staffName}</p>
                 <p className="text-xs text-slate-500">{item.leaveTypeName}</p>

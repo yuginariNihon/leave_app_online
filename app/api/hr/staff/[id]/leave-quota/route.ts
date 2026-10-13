@@ -65,6 +65,12 @@ export async function PUT(
           { status: 400 },
         );
       }
+      if (q.isActive !== undefined && typeof q.isActive !== "boolean") {
+        return NextResponse.json(
+          { error: "ข้อมูลไม่ถูกต้อง: isActive ต้องเป็นค่า true หรือ false" },
+          { status: 400 },
+        );
+      }
       if (q.usedDays < 0 || q.maxDays < 0) {
         return NextResponse.json({ error: "ข้อมูลไม่ถูกต้อง: ค่าจำนวนวันต้องไม่ติดลบ" }, { status: 400 });
       }
@@ -77,8 +83,10 @@ export async function PUT(
     }
 
     await prisma.$transaction(
-      quotas.map((q: { leaveTypeId: string; maxDays: number; usedDays: number }) =>
-        prisma.userLeaveLimit.upsert({
+      quotas.map((q: { leaveTypeId: string; maxDays: number; usedDays: number; isActive?: boolean }) => {
+        const activeUpdate =
+          typeof q.isActive === "boolean" ? { is_active: q.isActive } : {};
+        return prisma.userLeaveLimit.upsert({
           where: {
             staff_id_leave_type_id_year: {
               staff_id: id,
@@ -89,6 +97,7 @@ export async function PUT(
           update: {
             max_days: q.maxDays,
             used_days: q.usedDays,
+            ...activeUpdate,
           },
           create: {
             staff_id: id,
@@ -96,9 +105,10 @@ export async function PUT(
             year,
             max_days: q.maxDays,
             used_days: q.usedDays,
+            is_active: q.isActive ?? true,
           },
-        }),
-      ),
+        });
+      }),
     );
 
     const updated = await getLeaveRightsByStaffId(id, year);

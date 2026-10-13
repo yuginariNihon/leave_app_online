@@ -1,10 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { ExternalLink } from "lucide-react"
 import type { PendingApprovalItem } from "@/lib/services/dashboardService"
 
 export function PendingApprovalTable({ data }: { data: PendingApprovalItem[] }) {
+  const router = useRouter()
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -33,7 +36,11 @@ export function PendingApprovalTable({ data }: { data: PendingApprovalItem[] }) 
               </tr>
             ) : (
               data.map((item) => (
-                <tr key={item.leaveId} className="border-b border-slate-100 hover:bg-slate-50">
+                <tr
+                  key={item.leaveId}
+                  onClick={() => router.push(`/dashboard/approval-requests/hr/detail?leaveId=${encodeURIComponent(item.leaveId)}`)}
+                  className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
+                >
                   <td className="py-2.5 px-2 font-medium text-[#1a1a40] whitespace-nowrap">{item.staffName}</td>
                   <td className="py-2.5 px-2 whitespace-nowrap">{item.leaveTypeName}</td>
                   <td className="py-2.5 px-2 whitespace-nowrap text-slate-600">
