@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
-import { getStaffDetail, updateStaff, StaffUpdateConflictError, getStaffRoleNames } from "@/lib/services/leaveService";
+import { getStaffDetail, updateStaff, getStaffRoleNames } from "@/lib/services/leaveService";
 import { updateStaffSchema } from "@/lib/TypeSchema";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
@@ -82,12 +82,6 @@ export async function PUT(
     const updated = await updateStaff(id, parsed.data);
     return NextResponse.json({ data: updated });
   } catch (error) {
-    if (error instanceof StaffUpdateConflictError) {
-      return NextResponse.json(
-        { error: `ไม่สามารถบันทึกได้ มีข้อมูลซ้ำ: ${error.message}` },
-        { status: 409 },
-      );
-    }
     return apiErrorResponse(error);
   }
 }
@@ -136,13 +130,23 @@ export async function PATCH(
       }
     }
 
-    await prisma.staffInfo.update({
-      where: { staff_id: id },
-      data: {
-        is_active: isActive,
-        terminated_at: isActive ? null : new Date(),
-        updated_at: new Date(),
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.staffInfo.update({
+        where: { staff_id: id },
+        data: {
+          is_active: isActive,
+          terminated_at: isActive ? null : new Date(),
+          updated_at: new Date(),
+        },
+      });
+
+      // ปิดรายชื่อพนักงาน → ปิดสิทธิ์การลาทุกประเภทของพนักงานคนนั้นด้วย
+      if (isActive === false) {
+        await tx.userLeaveLimit.updateMany({
+          where: { staff_id: id },
+          data: { is_active: false },
+        });
+      }
     });
 
     return NextResponse.json({ success: true });

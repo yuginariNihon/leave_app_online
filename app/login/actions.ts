@@ -7,7 +7,7 @@ import { createSession, deleteSession } from "@/lib/auth";
 import { LOGIN_NEXT_COOKIE } from "@/lib/loginNextCookie";
 import { prisma } from "@/lib/prisma";
 import {
-  findUserByIdentifier,
+  findUserByStaffCode,
   createLoginHistory,
   updateLastLogin,
 } from "@/lib/services/userService";
@@ -45,7 +45,7 @@ export async function loginAction(
   _state: LoginState,
   formData: FormData
 ): Promise<LoginState> {
-  const identifier = String(formData.get("identifier") ?? "").trim();
+  const staffCode = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const headersList = await headers();
   const ipAddress = headersList.get("x-forwarded-for")?.split(",")[0].trim() || undefined;
@@ -58,8 +58,8 @@ export async function loginAction(
   cookieStore.delete(LOGIN_NEXT_COOKIE);
   const nextPath = safeNextPath(nextRaw);
 
-  if (!identifier || !password) {
-    return { message: "Please enter your employee ID/email and password." };
+  if (!staffCode || !password) {
+    return { message: "Please enter your employee ID and password." };
   }
 
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -75,7 +75,7 @@ export async function loginAction(
           },
         })
       : Promise.resolve(0),
-    findUserByIdentifier(identifier),
+    findUserByStaffCode(staffCode),
   ]);
 
   if (ipFailures >= 10) {

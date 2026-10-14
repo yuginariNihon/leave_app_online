@@ -399,7 +399,7 @@ model User {
 
   staff_id String @unique @db.Uuid
 
-  email String? @unique @db.VarChar(255)
+  email String? @db.VarChar(255)
 
   password_hash String? @db.Text
 

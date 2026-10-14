@@ -200,7 +200,6 @@ export async function sendLeaveCreatedEmail(leaveId: string): Promise<void> {
     intro: "มีคำขอลาใหม่รอการอนุมัติ",
     rows,
     cta: approverCta(leave.leave_id, step.approver_type),
-    loginCta: buildCta("/login", "เข้าสู่ระบบ"),
   });
 
   await sendEmail({ to: recipients, subject, body });
@@ -250,7 +249,6 @@ export async function sendLeaveNextApproverEmail(
     intro: `ใบลาของ ${escapeHtml(leave.staff.name)} ถึงคิวการอนุมัติของคุณแล้ว`,
     rows,
     cta: approverCta(leave.leave_id, step.approver_type),
-    loginCta: buildCta("/login", "เข้าสู่ระบบ"),
   });
 
   await sendEmail({ to: recipients, subject, body });
@@ -278,7 +276,6 @@ export async function sendLeaveApprovedEmail(leaveId: string): Promise<void> {
     intro: "ใบลาของคุณได้รับการอนุมัติครบทุกขั้นตอนแล้ว",
     rows,
     cta: buildCta(OWNER_ACTION_URL(leave.leave_id), "เปิดดูรายละเอียดใบลา"),
-    loginCta: buildCta("/login", "เข้าสู่ระบบ"),
   });
 
   await sendEmail({ to: ownerEmail, subject, body });
@@ -309,7 +306,6 @@ export async function sendLeaveCancelledEmail(leaveId: string): Promise<void> {
     intro: "ใบลาของคุณถูกยกเลิกแล้ว",
     rows: [...rows, ...extraRows],
     cta: buildCta(OWNER_ACTION_URL(leave.leave_id), "เปิดดูรายละเอียดใบลา"),
-    loginCta: buildCta("/login", "เข้าสู่ระบบ"),
   });
 
   await sendEmail({ to: ownerEmail, subject, body });
@@ -343,7 +339,6 @@ export async function sendLeaveRejectedEmail(
     intro: "ใบลาของคุณไม่ได้รับการอนุมัติ",
     rows: [...rows, ...reasonRows],
     cta: buildCta(OWNER_ACTION_URL(leave.leave_id), "เปิดดูรายละเอียดใบลา"),
-    loginCta: buildCta("/login", "เข้าสู่ระบบ"),
   });
 
   await sendEmail({ to: ownerEmail, subject, body });

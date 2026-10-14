@@ -73,7 +73,6 @@ export async function GET() {
       intro: variant.intro,
       rows: variant.rows,
       cta: variant.cta,
-      loginCta: { label: "เข้าสู่ระบบ", url: "#" },
     });
     return `<section style="margin:0 0 48px;">${title}${email}</section>`;
   }).join("");

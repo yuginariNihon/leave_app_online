@@ -5,15 +5,14 @@ import { hashPassword } from "@/lib/auth";
 import { NotFoundError } from "@/lib/errors";
 
 /**
- * Find user by email or employee ID (staff code), including active status and staff details.
+ * Find user by employee ID (staff code), including active status and staff details.
+ * Email is intentionally NOT accepted as a login identifier (emails may be
+ * shared by more than one user, so they are not unique).
  */
-export async function findUserByIdentifier(identifier: string) {
+export async function findUserByStaffCode(staffCode: string) {
   return prisma.user.findFirst({
     where: {
-      OR: [
-        { email: { equals: identifier, mode: "insensitive" } },
-        { staff: { staff_code: { equals: identifier, mode: "insensitive" } } },
-      ],
+      staff: { staff_code: { equals: staffCode, mode: "insensitive" } },
     },
     select: {
       user_id: true,

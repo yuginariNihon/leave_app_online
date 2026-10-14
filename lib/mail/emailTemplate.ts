@@ -20,7 +20,6 @@ export type RenderEmailOptions = {
   intro: string;
   rows: EmailRow[];
   cta?: EmailCta | null;
-  loginCta?: EmailCta | null;
   footer?: string;
 };
 
@@ -42,7 +41,6 @@ export function renderEmail({
   intro,
   rows,
   cta = null,
-  loginCta = null,
   footer = DEFAULT_FOOTER,
 }: RenderEmailOptions): string {
   const detailRows = rows
@@ -63,11 +61,6 @@ export function renderEmail({
   if (cta) {
     buttons.push(
       `<a href="${cta.url}" style="display:inline-block;background:${accent};color:#ffffff;text-decoration:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;">${cta.label}</a>`,
-    );
-  }
-  if (loginCta) {
-    buttons.push(
-      `<a href="${loginCta.url}" style="display:inline-block;background:#eef2ff;color:${accent};text-decoration:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #c7d2fe;">${loginCta.label}</a>`,
     );
   }
 

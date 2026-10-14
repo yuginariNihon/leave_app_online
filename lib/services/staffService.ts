@@ -6,8 +6,6 @@ import { randomBytes } from "crypto";
 import { ConflictError } from "@/lib/errors";
 import { computeDefaultMaxDays, yearsOfServiceFrom } from "@/lib/services/leaveQuotaService";
 
-export class StaffUpdateConflictError extends ConflictError {}
-
 export type StaffProfile = {
   name: string;
   staffCode: string;
@@ -293,17 +291,6 @@ export async function updateStaff(
 
   if (data.email !== undefined) {
     const newEmail = data.email?.trim() ?? null;
-
-    // Ensure the email is not already used by another user
-    if (newEmail) {
-      const emailOwner = await prisma.user.findUnique({
-        where: { email: newEmail },
-        select: { staff_id: true },
-      });
-      if (emailOwner && emailOwner.staff_id !== id) {
-        throw new StaffUpdateConflictError("อีเมลนี้ถูกใช้งานโดยพนักงานคนอื่นในระบบแล้ว");
-      }
-    }
 
     if (staff.user) {
       await prisma.user.update({
