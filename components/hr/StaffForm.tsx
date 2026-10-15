@@ -69,19 +69,19 @@ export function StaffForm({
       className="bg-white rounded-2xl border border-[#c6c6cd]/30 overflow-hidden"
       style={{ boxShadow: "0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 8px -1px rgba(15, 23, 42, 0.03)" }}
     >
-      <div className="bg-[#0F172A] p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex flex-row gap-3 items-center justify-center">
-          <div className="flex w-16 h-16 rounded-2xl bg-white/5 border border-white/10 items-center justify-center backdrop-blur-md">
-            <User className="w-7 h-7 text-white" />
+      <div className="bg-[#0F172A] p-6 sm:p-8 flex flex-row justify-between items-center gap-3 sm:gap-4">
+        <div className="flex flex-row gap-3 items-center min-w-0">
+          <div className="flex w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-white/5 border border-white/10 items-center justify-center backdrop-blur-md">
+            <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </div>
-          <div>
-            <h2 className="text-[28px] md:text-[32px] font-semibold text-white leading-9 md:leading-10 tracking-[-0.01em] mb-1">
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-[28px] md:text-[32px] font-semibold text-white leading-7 sm:leading-9 md:leading-10 tracking-[-0.01em] mb-1">
               {mode === "create" ? "เพิ่มรายชื่อพนักงาน" : "แก้ไขข้อมูลพนักงาน"}
             </h2>
             {staffCode && (
-              <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-1 rounded-full">
-                <BadgeInfo className="w-3.5 h-3.5 text-[#dae2fd]" />
-                <span className="text-sm font-semibold text-[#dae2fd] tracking-wide">
+              <div className="inline-flex max-w-full items-center gap-2 bg-white/10 px-3 sm:px-4 py-0.5 sm:py-1 rounded-full">
+                <BadgeInfo className="w-3.5 h-3.5 shrink-0 text-[#dae2fd]" />
+                <span className="text-xs sm:text-sm font-semibold text-[#dae2fd] tracking-wide truncate">
                   รหัสพนักงาน: {staffCode}
                 </span>
               </div>
@@ -89,7 +89,7 @@ export function StaffForm({
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {onBack && (
             <Button
               variant="ghost"

@@ -151,7 +151,7 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
         )*/}
 
         {/**For SUPER_ADMIN */}
-        {(user.roles.includes("SUPER_ADMIN")) && (
+        {/*(user.roles.includes("SUPER_ADMIN")) && (
           <div>
             <Button
               variant="ghost"
@@ -162,7 +162,7 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
               <IoSettings className="text-white !h-5 !w-5"/>
             </Button>
           </div>
-        )}
+        )*/}
 
         <div className={hasSidebar ? "hidden md:block" : ""}>
           <DropdownMenu>
