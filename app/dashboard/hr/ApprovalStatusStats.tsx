@@ -15,8 +15,8 @@ export function ApprovalStatusStats({ data }: { data: ApprovalStatusStat[] }) {
   const chartData = data.map((d) => ({ ...d, label: LABEL_MAP[d.status] ?? d.status }))
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-      <h3 className="font-semibold text-[#1a1a40] text-sm mb-2">สถานะคำขอทั้งหมด</h3>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+      <h3 className="font-semibold text-[#0F172A] mb-3">สถานะคำขอทั้งหมด</h3>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
           <Pie

@@ -13,8 +13,8 @@ import type { LeaveTrendItem } from "@/lib/services/dashboardService"
 
 export function LeaveTrendChart({ data }: { data: LeaveTrendItem[] }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-      <h3 className="font-semibold text-[#1a1a40] text-sm mb-2">แนวโน้มการลา (12 เดือน)</h3>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+      <h3 className="font-semibold text-[#0F172A] mb-3">แนวโน้มการลา (12 เดือน)</h3>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />

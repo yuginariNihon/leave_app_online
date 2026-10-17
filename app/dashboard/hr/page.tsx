@@ -1,155 +1,105 @@
-
 import { requireSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Suspense } from "react";
-import { ShieldCheck, History, List, CalendarDays } from "lucide-react";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { Reveal } from "@/components/Reveal";
 import { SectionSkeleton } from "./SectionSkeleton";
-import { KpiSection, TrendChartSection, TypePieChartSection, DeptComparisonSection, StatusStatsSection, PendingApprovalSection, TodaysLeaveSection, UpcomingLeaveSection, RecentActivitiesSection } from "./DashboardSections";
+import { DashboardHeader } from "./DashboardHeader";
+import {
+  KpiSection,
+  TrendChartSection,
+  TypePieChartSection,
+  DeptComparisonSection,
+  StatusStatsSection,
+  PendingApprovalSection,
+  LeaveTimelineSection,
+  RecentActivitiesSection,
+  SuperAdminStatsSection,
+} from "./DashboardSections";
 
 export default async function HrDashboardPage() {
   const user = await requireSessionUser();
   const isHR = user.roles.includes("HR") || user.roles.includes("SUPER_ADMIN");
   if (!isHR) redirect("/dashboard");
+  const isSuperAdmin = user.roles.includes("SUPER_ADMIN");
 
   return (
+    <div className="space-y-5">
+      <AppBreadcrumb items={[{ label: "Home", href: "/dashboard" }, { label: "Dashboard" }]} />
 
-    <div className="space-y-6 max-w-[1200px] mx-auto w-full">
-      <AppBreadcrumb
-        items={[{ label: "Home", href: "/dashboard" }, { label: "HR Dashboard" }]}
-        className="mb-4"
-      />
-      <div>
-        <h1 className="text-2xl font-bold text-[#1a1a40]">
-          สวัสดี, {user.name}
-        </h1>
-        <p className="text-slate-500 text-sm mt-1">
-          แผงควบคุมสำหรับเจ้าหน้าที่ทรัพยากรบุคคล
-        </p>
-      </div>
+      <DashboardHeader name={user.name} isSuperAdmin={isSuperAdmin} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Reveal>
-          <Link
-            href="/dashboard/approval-requests/hr"
-            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="font-semibold text-[#1a1a40]">อนุมัติคำขอลา (HR)</p>
-              <p className="text-sm text-slate-500">ตรวจสอบและอนุมัติคำขอลาที่รอดำเนินการ</p>
-            </div>
-          </Link>
-        </Reveal>
+      {isSuperAdmin && (
+        <Suspense fallback={<SectionSkeleton className="h-28" />}>
+          <Reveal>
+            <SuperAdminStatsSection />
+          </Reveal>
+        </Suspense>
+      )}
 
-        <Reveal delay={0.06}>
-          <Link
-            href="/dashboard/approval-requests/history?roleType=hr"
-            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
-              <History className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="font-semibold text-[#1a1a40]">ประวัติการอนุมัติ</p>
-              <p className="text-sm text-slate-500">ดูประวัติการอนุมัติทั้งหมด</p>
-            </div>
-          </Link>
-        </Reveal>
-
-        <Reveal delay={0.12}>
-          <Link
-            href="/dashboard/leave-history"
-            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
-              <List className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="font-semibold text-[#1a1a40]">รายการลา</p>
-              <p className="text-sm text-slate-500">ดูรายการคำขอลาทั้งหมด</p>
-            </div>
-          </Link>
-        </Reveal>
-
-        <Reveal delay={0.18}>
-          <Link
-            href="/dashboard/leave-calendar"
-            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex items-center gap-4"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#1a1a40] flex items-center justify-center">
-              <CalendarDays className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="font-semibold text-[#1a1a40]">ปฏิทินการลา</p>
-              <p className="text-sm text-slate-500">ดูปฏิทินการลาของพนักงาน</p>
-            </div>
-          </Link>
-        </Reveal>
-      </div>
-
-      <Suspense fallback={<SectionSkeleton className="h-48" />}>
+      <Suspense fallback={<SectionSkeleton className="h-44" />}>
         <Reveal>
           <KpiSection />
         </Reveal>
       </Suspense>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Suspense fallback={<SectionSkeleton className="h-72" />}>
-          <Reveal>
-            <TrendChartSection />
-          </Reveal>
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton className="h-72" />}>
-          <Reveal delay={0.06}>
-            <TypePieChartSection />
-          </Reveal>
-        </Suspense>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-8">
+          <Suspense fallback={<SectionSkeleton className="h-72" />}>
+            <Reveal>
+              <TrendChartSection />
+            </Reveal>
+          </Suspense>
+        </div>
+        <div className="lg:col-span-4">
+          <Suspense fallback={<SectionSkeleton className="h-72" />}>
+            <Reveal delay={0.06}>
+              <TypePieChartSection />
+            </Reveal>
+          </Suspense>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Suspense fallback={<SectionSkeleton className="h-72" />}>
-          <Reveal>
-            <DeptComparisonSection />
-          </Reveal>
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton className="h-72" />}>
-          <Reveal delay={0.06}>
-            <StatusStatsSection />
-          </Reveal>
-        </Suspense>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-8">
+          <Suspense fallback={<SectionSkeleton className="h-80" />}>
+            <Reveal>
+              <PendingApprovalSection />
+            </Reveal>
+          </Suspense>
+        </div>
+        <div className="lg:col-span-4">
+          <Suspense fallback={<SectionSkeleton className="h-80" />}>
+            <Reveal delay={0.06}>
+              <LeaveTimelineSection />
+            </Reveal>
+          </Suspense>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-6">
+          <Suspense fallback={<SectionSkeleton className="h-72" />}>
+            <Reveal>
+              <DeptComparisonSection />
+            </Reveal>
+          </Suspense>
+        </div>
+        <div className="lg:col-span-6">
+          <Suspense fallback={<SectionSkeleton className="h-72" />}>
+            <Reveal delay={0.06}>
+              <StatusStatsSection />
+            </Reveal>
+          </Suspense>
+        </div>
       </div>
 
       <Suspense fallback={<SectionSkeleton className="h-72" />}>
-        <Reveal>
-          <PendingApprovalSection />
-        </Reveal>
-      </Suspense>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Suspense fallback={<SectionSkeleton className="h-48" />}>
-          <Reveal>
-            <TodaysLeaveSection />
-          </Reveal>
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton className="h-48" />}>
-          <Reveal delay={0.06}>
-            <UpcomingLeaveSection />
-          </Reveal>
-        </Suspense>
-      </div>
-
-      <Suspense fallback={<SectionSkeleton className="h-64" />}>
         <Reveal>
           <RecentActivitiesSection />
         </Reveal>
       </Suspense>
     </div>
-
   );
 }

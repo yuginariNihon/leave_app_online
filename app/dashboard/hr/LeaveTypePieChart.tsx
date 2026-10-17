@@ -8,8 +8,8 @@ const COLORS = ["#1a1a40", "#6366f1", "#06b6d4", "#f59e0b", "#10b981", "#ef4444"
 
 export function LeaveTypePieChart({ data }: { data: LeaveTypeDistItem[] }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-      <h3 className="font-semibold text-[#1a1a40] text-sm mb-2">สัดส่วนประเภทการลา</h3>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
+      <h3 className="font-semibold text-[#0F172A] mb-3">สัดส่วนประเภทการลา</h3>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
           <Pie
