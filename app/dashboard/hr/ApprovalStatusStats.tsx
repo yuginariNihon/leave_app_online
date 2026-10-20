@@ -17,7 +17,7 @@ export function ApprovalStatusStats({ data }: { data: ApprovalStatusStat[] }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5">
       <h3 className="font-semibold text-[#0F172A] mb-3">สถานะคำขอทั้งหมด</h3>
-      <ResponsiveContainer width="100%" height={220}>
+      <ResponsiveContainer width="100%" height={220} debounce={120}>
         <PieChart>
           <Pie
             data={chartData}

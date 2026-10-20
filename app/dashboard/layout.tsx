@@ -13,18 +13,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <SidebarLayoutWrapper user={userProps}>
-      <div className="min-h-screen bg-background flex flex-col font-sans">
-        <MainHeader user={userProps} />
-        <div className="flex flex-1">
-          <ProgressProvider>
-            <SidebarMenu />
-            <DashboardContent>
-              {children}
-            </DashboardContent>
-          </ProgressProvider>
+      <ProgressProvider>
+        <SidebarMenu />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <MainHeader user={userProps} />
+          <DashboardContent>
+            {children}
+          </DashboardContent>
+          <MainFooter />
         </div>
-        <MainFooter />
-      </div>
+      </ProgressProvider>
     </SidebarLayoutWrapper>
   );
 }

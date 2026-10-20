@@ -12,7 +12,17 @@ type SidebarLayoutWrapperProps = {
 export function SidebarLayoutWrapper({ children, user }: SidebarLayoutWrapperProps) {
   return (
     <UserProvider user={user}>
-      <SidebarProvider className="contents">{children}</SidebarProvider>
+      <SidebarProvider
+        className="bg-background font-sans"
+        style={
+          {
+            "--sidebar-width": "280px",
+            "--sidebar-width-icon": "80px",
+          } as React.CSSProperties
+        }
+      >
+        {children}
+      </SidebarProvider>
     </UserProvider>
   );
 }
