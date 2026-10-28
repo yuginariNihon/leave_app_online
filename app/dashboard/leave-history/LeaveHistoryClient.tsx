@@ -5,7 +5,7 @@ import { useProgressRouter } from "@/components/ProgressBar";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { WarningBanner } from "@/components/ui/warning-banner";
 
 import { LeaveFilters } from "@/components/leave-history/LeaveFilters";
@@ -14,6 +14,8 @@ import { Pagination } from "@/components/leave-history/Pagination";
 import type { LeaveRecord } from "@/components/leave-history/types";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
+import { usePagination } from "@/hooks/usePagination";
+import { DataTable } from "@/components/shared/DataTable";
 import type { LeaveHistoryResult, LeaveHistoryDateField } from "@/lib/services/leaveService";
 import { apiFetch } from "@/lib/api";
 import { downloadFromUrl } from "@/lib/utils";
@@ -63,7 +65,6 @@ export default function LeaveHistoryClient({
 
   const [data, setData] = useState<LeaveRecord[]>(initialData.data as LeaveRecord[]);
   const [total, setTotal] = useState(initialData.total);
-  const [totalPages, setTotalPages] = useState(initialData.totalPages);
   const [approvedCount, setApprovedCount] = useState(initialData.approved);
   const [pendingCount, setPendingCount] = useState(initialData.pending);
   const [rejectedCount, setRejectedCount] = useState(initialData.rejected);
@@ -71,7 +72,13 @@ export default function LeaveHistoryClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [leaveTypeError] = useState("");
-  const [filtersVisible, setFiltersVisible] = useState(true);
+
+  const pagination = usePagination({
+    page: currentPage,
+    setPage: setCurrentPage,
+    initialTotalPages: initialData.totalPages,
+  });
+  const applyResult = pagination.applyResult;
 
   // Initial page data is rendered by the server, so skip the very first refetch.
   const skipFirstFetch = useRef(true);
@@ -121,7 +128,7 @@ export default function LeaveHistoryClient({
         if (!cancelled) {
           setData(json.data ?? []);
           setTotal(json.total ?? 0);
-          setTotalPages(json.totalPages ?? 0);
+          applyResult(json);
           setApprovedCount(json.approved ?? 0);
           setPendingCount(json.pending ?? 0);
           setRejectedCount(json.rejected ?? 0);
@@ -145,7 +152,7 @@ export default function LeaveHistoryClient({
     return () => {
       cancelled = true;
     };
-  }, [buildQuery, currentPage]);
+  }, [buildQuery, currentPage, applyResult]);
 
   const handleExportCSV = () => {
     const qs = `${buildQuery(1, true)}&stream=true`;
@@ -196,20 +203,8 @@ export default function LeaveHistoryClient({
 
         <WarningBanner message={leaveTypeError} className="mb-4" />
 
-        <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
-          <div className="px-4 py-3 md:hidden flex items-center justify-between border-b border-[#c8c5d0] bg-slate-50/50">
-            <span className="text-sm font-semibold text-slate-700">ตัวกรอง</span>
-            <Button
-              variant="ghost"
-              className="h-9 px-3 flex items-center gap-1 text-[#070235] font-semibold"
-              onClick={() => setFiltersVisible((v) => !v)}
-            >
-              {filtersVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              <span className="text-xs">{filtersVisible ? "ซ่อน" : "แสดง"}</span>
-            </Button>
-          </div>
-          <div className={`${filtersVisible ? "" : "hidden"} md:block`}>
-          <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
+        <DataTable
+          filters={
             <LeaveFilters
               searchTerm={searchTerm}
               onSearchChange={(v) => setFilter("searchTerm", v)}
@@ -234,24 +229,13 @@ export default function LeaveHistoryClient({
               onExportCSV={handleExportCSV}
               onSearchSubmit={submit}
             />
-          </div>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-20 text-[#47464f]">กำลังโหลด...</div>
-          ) : error ? (
-            <div className="flex justify-center items-center py-20 text-red-500">{error}</div>
-          ) : (
-            <>
-              <LeaveTable data={data} />
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </>
-          )}
-        </div>
+          }
+          loading={loading}
+          error={error}
+          pagination={<Pagination {...pagination.paginationProps} />}
+        >
+          <LeaveTable data={data} />
+        </DataTable>
       </main>
     </div>
   );

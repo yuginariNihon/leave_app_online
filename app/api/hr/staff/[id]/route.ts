@@ -5,7 +5,7 @@ import { apiErrorResponse } from "@/lib/errors";
 import { getStaffDetail, updateStaff, getStaffRoleNames } from "@/lib/services/leaveService";
 import { updateStaffSchema } from "@/lib/TypeSchema";
 import { logReadAccess } from "@/lib/services/auditService";
-import { readJson } from "@/lib/http";
+import { readJson, parseBody } from "@/lib/http";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
@@ -52,14 +52,7 @@ export async function PUT(
 
     const { id } = await params;
 
-    const body = await request.json();
-    const parsed = updateStaffSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: `ข้อมูลไม่ถูกต้อง: ${parsed.error.issues.map((e) => e.message).join(", ")}` },
-        { status: 400 },
-      );
-    }
+    const body = await parseBody(request, updateStaffSchema);
 
     const existing = await prisma.staffInfo.findUnique({
       where: { staff_id: id },
@@ -80,7 +73,7 @@ export async function PUT(
       }
     }
 
-    const updated = await updateStaff(id, parsed.data);
+    const updated = await updateStaff(id, body);
     return NextResponse.json({ data: updated });
   } catch (error) {
     return apiErrorResponse(error);

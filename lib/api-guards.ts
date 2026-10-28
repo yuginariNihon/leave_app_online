@@ -25,6 +25,21 @@ export async function requireAuth(): Promise<GuardResult> {
   return requireSession();
 }
 
+/**
+ * ต้องมีอย่างน้อยหนึ่ง role ในลิสต์ (เทียบแบบไม่สนตัวพิมพ์เล็ก/ใหญ่).
+ * ไม่มี SUPER_ADMIN bypass อัตโนมัติ — route ที่ต้องการให้ SUPER_ADMIN ผ่านต้องระบุเอง
+ * เพื่อไม่ให้สิทธิ์หลุดไปยัง route ใหม่โดยไม่ตั้งใจ
+ */
+export async function requireAnyRole(roles: readonly string[]): Promise<GuardResult> {
+  const auth = await requireSession();
+  if (auth.error) return auth;
+  const allowed = roles.map((role) => role.toUpperCase());
+  if (!auth.session.roles.some((role) => allowed.includes(role.toUpperCase()))) {
+    return { session: null, error: forbidden() };
+  }
+  return auth;
+}
+
 export async function requireHR(): Promise<GuardResult> {
   const auth = await requireSession();
   if (auth.error) return auth;

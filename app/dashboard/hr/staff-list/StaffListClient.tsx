@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
+import { usePagination } from "@/hooks/usePagination";
+import { DataTable } from "@/components/shared/DataTable";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,10 +44,16 @@ export default function StaffListClient({
 
   const [data, setData] = useState<StaffListItem[]>(initialData);
   const [total, setTotal] = useState(initialTotal);
-  const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [togglingIds, setTogglingIds] = useState<string[]>([]);
+
+  const pagination = usePagination({
+    page: currentPage,
+    setPage: setCurrentPage,
+    initialTotalPages: initialTotalPages,
+  });
+  const applyResult = pagination.applyResult;
 
   // Initial page data is rendered by the server, so skip the very first refetch.
   const skipFirstFetch = useRef(true);
@@ -98,7 +106,7 @@ export default function StaffListClient({
         if (!cancelled) {
           setData(json.data ?? []);
           setTotal(json.total ?? 0);
-          setTotalPages(json.totalPages ?? 0);
+          applyResult(json);
         }
       } catch (err) {
         if (!cancelled) {
@@ -111,7 +119,7 @@ export default function StaffListClient({
 
     fetchData();
     return () => { cancelled = true; };
-  }, [appliedFilters, currentPage, fetchKey]);
+  }, [appliedFilters, currentPage, fetchKey, applyResult]);
 
   return (
         <>
@@ -160,27 +168,15 @@ export default function StaffListClient({
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#c8c5d0] flex items-center justify-between bg-slate-50/50">
-            <h4 className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold uppercase text-[#47464f]">Master List</h4>
-            <span className="text-[13px] leading-[18px] text-[#47464f] italic">Showing {total} employees</span>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-20 text-[#47464f]">กำลังโหลด...</div>
-          ) : error ? (
-            <div className="flex justify-center items-center py-20 text-red-500">{error}</div>
-          ) : (
-            <>
-              <StaffTable data={data} onToggleActive={handleToggleActive} togglingIds={togglingIds} />
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </>
-          )}
-        </div>
+        <DataTable
+          title="Master List"
+          subtitle={`Showing ${total} employees`}
+          loading={loading}
+          error={error}
+          pagination={<Pagination {...pagination.paginationProps} />}
+        >
+          <StaffTable data={data} onToggleActive={handleToggleActive} togglingIds={togglingIds} />
+        </DataTable>
 
         </>
   );

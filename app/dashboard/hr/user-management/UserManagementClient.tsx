@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { DataTable } from "@/components/shared/DataTable";
+import { usePagination } from "@/hooks/usePagination";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -58,9 +60,15 @@ export default function UserManagementClient({
 
   const [users, setUsers] = useState<UserListItem[]>(initialUsers);
   const [total, setTotal] = useState(initialTotal);
-  const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const pagination = usePagination({
+    page,
+    setPage,
+    initialTotalPages,
+  });
+  const applyResult = pagination.applyResult;
 
 
 
@@ -99,13 +107,13 @@ export default function UserManagementClient({
       const d = json.data;
       setUsers(d.users ?? []);
       setTotal(d.total ?? 0);
-      setTotalPages(Math.ceil((d.total ?? 0) / 20) || 1);
+      applyResult({ totalPages: Math.ceil((d.total ?? 0) / 20) || 1 });
     } catch {
       setError("ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
     } finally {
       setLoading(false);
     }
-  }, [appliedFilters, page]);
+  }, [appliedFilters, page, applyResult]);
 
   useEffect(() => {
     // The first page comes from the server, so skip that refetch.
@@ -233,17 +241,12 @@ export default function UserManagementClient({
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#c8c5d0] flex items-center justify-between bg-slate-50/50">
-            <h4 className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold uppercase text-[#47464f]">User List</h4>
-            <span className="text-[13px] leading-[18px] text-[#47464f] italic">Showing {total} users</span>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-20 text-[#47464f]">กำลังโหลด...</div>
-          ) : error ? (
-            <div className="flex justify-center items-center py-20 text-red-500">{error}</div>
-          ) : (
+        <DataTable
+          title="User List"
+          subtitle={`Showing ${total} users`}
+          loading={loading}
+          error={error}
+        >
             <div className="overflow-x-auto">
               <Table className="table-fixed" containerClassName="max-h-[600px]">
                 <TableHeader className="sticky top-0 z-10 bg-[#1e1b4b]">
@@ -337,27 +340,26 @@ export default function UserManagementClient({
                 </TableBody>
               </Table>
             </div>
-          )}
-        </div>
+        </DataTable>
 
-        {totalPages > 1 && (
+        {pagination.totalPages > 1 && (
           <div className="flex items-center justify-center gap-4 mt-6">
             <Button
               variant="outline"
               size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={!pagination.canPrev}
+              onClick={pagination.goPrev}
             >
               ก่อนหน้า
             </Button>
             <span className="text-[14px] text-[#47464f]">
-              หน้า {page} จาก {totalPages}
+              หน้า {pagination.page} จาก {pagination.totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={!pagination.canNext}
+              onClick={pagination.goNext}
             >
               ถัดไป
             </Button>

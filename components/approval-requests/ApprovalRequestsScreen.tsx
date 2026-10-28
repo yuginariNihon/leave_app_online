@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Loader2, FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select,
@@ -27,6 +27,8 @@ import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
+import { usePagination } from "@/hooks/usePagination";
+import { DataTable } from "@/components/shared/DataTable";
 
 type Props = {
   variant: "approver" | "hr";
@@ -49,7 +51,6 @@ export function ApprovalRequestsScreen({
   const bulkUrl = isHr ? "/api/leaves/approvals/hr/bulk" : "/api/leaves/approvals/bulk";
 
   const [fetchKey, setFetchKey] = useState(0);
-  const [filtersVisible, setFiltersVisible] = useState(true);
 
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
@@ -68,7 +69,6 @@ export function ApprovalRequestsScreen({
 
   const [data, setData] = useState<ApprovalRequestItem[]>(initialData);
   const [total, setTotal] = useState(initialTotal);
-  const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -77,6 +77,13 @@ export function ApprovalRequestsScreen({
   const [pendingAction, setPendingAction] = useState<"approved" | "rejected" | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [selectValue, setSelectValue] = useState("");
+
+  const pagination = usePagination({
+    page: currentPage,
+    setPage: setCurrentPage,
+    initialTotalPages,
+  });
+  const applyResult = pagination.applyResult;
 
   const skipFirstFetch = useRef(true);
 
@@ -113,7 +120,7 @@ export function ApprovalRequestsScreen({
         if (!cancelled) {
           setData(json.data ?? []);
           setTotal(json.total ?? 0);
-          setTotalPages(json.totalPages ?? 0);
+          applyResult(json);
         }
       } catch (err) {
         if (!cancelled) {
@@ -133,7 +140,7 @@ export function ApprovalRequestsScreen({
     return () => {
       cancelled = true;
     };
-  }, [buildQuery, currentPage, fetchKey, pendingUrl]);
+  }, [buildQuery, currentPage, fetchKey, pendingUrl, applyResult]);
 
   const processApproval = async (
     approvalId: string,
@@ -211,20 +218,8 @@ export function ApprovalRequestsScreen({
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
-          <div className="px-4 py-3 md:hidden flex items-center justify-between border-b border-[#c8c5d0] bg-slate-50/50">
-            <span className="text-sm font-semibold text-slate-700">ตัวกรอง</span>
-            <Button
-              variant="ghost"
-              className="h-9 px-3 flex items-center gap-1 text-[#070235] font-semibold"
-              onClick={() => setFiltersVisible((v) => !v)}
-            >
-              {filtersVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              <span className="text-xs">{filtersVisible ? "ซ่อน" : "แสดง"}</span>
-            </Button>
-          </div>
-          <div className={`${filtersVisible ? "" : "hidden"} md:block`}>
-          <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
+        <DataTable
+          filters={
             <ApprovalFilters
               searchTerm={searchTerm}
               onSearchChange={(v) => setFilter("searchTerm", v)}
@@ -239,74 +234,64 @@ export function ApprovalRequestsScreen({
               onReset={handleResetFilters}
               onSearchSubmit={handleSearchSubmit}
             />
-          </div>
-          </div>
-
-          {selectedIds.length > 0 && (
-            <div className="flex items-center gap-3 px-6 py-3 bg-blue-50 border-b border-blue-200">
-              <span className="text-sm font-medium text-blue-700">
-                เลือก {selectedIds.length} รายการ
-              </span>
-              <div className="flex items-center gap-2 ml-auto">
-                <Select
-                  value={selectValue}
-                  onValueChange={(value) => {
-                    const action = value as "approved" | "rejected";
-                    setSelectValue(value);
-                    setPendingAction(action);
-                    if (action === "rejected") setRejectReason("");
-                    setConfirmOpen(true);
-                  }}
-                >
-                  <SelectTrigger className="w-[180px] !h-11 border-blue-200 bg-white rounded-lg">
-                    <SelectValue placeholder="เลือก action..." />
-                  </SelectTrigger>
-                  <SelectContent
-                    {...(isHr
-                      ? {}
-                      : { position: "popper" as const, side: "bottom" as const, avoidCollisions: false, sideOffset: 4 })}
+          }
+          toolbar={
+            selectedIds.length > 0 && (
+              <div className="flex items-center gap-3 px-6 py-3 bg-blue-50 border-b border-blue-200">
+                <span className="text-sm font-medium text-blue-700">
+                  เลือก {selectedIds.length} รายการ
+                </span>
+                <div className="flex items-center gap-2 ml-auto">
+                  <Select
+                    value={selectValue}
+                    onValueChange={(value) => {
+                      const action = value as "approved" | "rejected";
+                      setSelectValue(value);
+                      setPendingAction(action);
+                      if (action === "rejected") setRejectReason("");
+                      setConfirmOpen(true);
+                    }}
                   >
-                    <SelectItem value="approved">
-                      <span className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        อนุมัติทั้งหมด
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="rejected">
-                      <span className="flex items-center gap-2">
-                        <XCircle className="w-4 h-4 text-red-600" />
-                        ไม่อนุมัติทั้งหมด
-                      </span>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                    <SelectTrigger className="w-[180px] !h-11 border-blue-200 bg-white rounded-lg">
+                      <SelectValue placeholder="เลือก action..." />
+                    </SelectTrigger>
+                    <SelectContent
+                      {...(isHr
+                        ? {}
+                        : { position: "popper" as const, side: "bottom" as const, avoidCollisions: false, sideOffset: 4 })}
+                    >
+                      <SelectItem value="approved">
+                        <span className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          อนุมัติทั้งหมด
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="rejected">
+                        <span className="flex items-center gap-2">
+                          <XCircle className="w-4 h-4 text-red-600" />
+                          ไม่อนุมัติทั้งหมด
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-          )}
-
-          {loading ? (
-            <div className="flex justify-center items-center py-20 text-[#47464f]">กำลังโหลด...</div>
-          ) : error ? (
-            <div className="flex justify-center items-center py-20 text-red-500">{error}</div>
-          ) : (
-            <>
-              <ApprovalTable
-                data={data}
-                selectedIds={selectedIds}
-                onSelectChange={setSelectedIds}
-                onApprove={(id) => processApproval(id, "approved")}
-                onReject={(id) => processApproval(id, "rejected")}
-                processingIds={processingIds}
-                detailBasePath={isHr ? "/dashboard/approval-requests/hr/detail" : undefined}
-              />
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </>
-          )}
-        </div>
+            )
+          }
+          loading={loading}
+          error={error}
+          pagination={<Pagination {...pagination.paginationProps} />}
+        >
+          <ApprovalTable
+            data={data}
+            selectedIds={selectedIds}
+            onSelectChange={setSelectedIds}
+            onApprove={(id) => processApproval(id, "approved")}
+            onReject={(id) => processApproval(id, "rejected")}
+            processingIds={processingIds}
+            detailBasePath={isHr ? "/dashboard/approval-requests/hr/detail" : undefined}
+          />
+        </DataTable>
 
         <style>{`@keyframes dialogEnter{from{opacity:0;transform:scale(0.88) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
         <style>{`[data-slot="alert-dialog-overlay"]{backdrop-filter:blur(8px)!important;background-color:rgba(25,28,30,0.4)!important;animation-duration:400ms!important;animation-timing-function:cubic-bezier(0.16,1,0.3,1)!important}`}</style>

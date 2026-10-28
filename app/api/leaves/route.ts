@@ -10,10 +10,9 @@ import {
   createLeaveRequestSchema,
   type CreateLeaveRequestValues,
 } from "@/lib/TypeSchema";
-import { getSessionUser } from "@/lib/auth";
-import { apiErrorResponse, UnauthorizedError, ValidationError } from "@/lib/errors";
+import { requireAuth } from "@/lib/api-guards";
+import { apiErrorResponse, ValidationError } from "@/lib/errors";
 import { parseBody } from "@/lib/http";
-
 export const runtime = "nodejs";
 
 async function buildCreateLeaveRequestInput(
@@ -79,10 +78,8 @@ function serializeDataLeave(leave: Awaited<ReturnType<typeof createLeaveRequest>
 
 export async function POST(request: Request) {
   try {
-    const session = await getSessionUser();
-    if (!session || !session.staffId) {
-      throw new UnauthorizedError("Unauthorized. Please log in first.");
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     const input = await parseBody(request, createLeaveRequestSchema);
     const createInput = await buildCreateLeaveRequestInput(input, session.staffId);

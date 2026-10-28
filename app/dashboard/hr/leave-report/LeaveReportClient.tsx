@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Download, FileText, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Download, FileText, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,8 @@ import { statusTextMap } from "@/components/leave-history/types";
 import { formatLeaveDateRange, formatDays } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
+import { usePagination } from "@/hooks/usePagination";
+import { DataTable } from "@/components/shared/DataTable";
 import type { LeaveReportResult } from "@/lib/services/leaveService";
 
 type Props = {
@@ -60,14 +62,19 @@ export default function LeaveReportClient({
 
   const [data, setData] = useState(initialReport.data);
   const [total, setTotal] = useState(initialReport.total);
-  const [totalPages, setTotalPages] = useState(initialReport.totalPages);
   const [approvedCount, setApprovedCount] = useState(initialReport.approved);
   const [rejectedCount, setRejectedCount] = useState(initialReport.rejected);
   const [cancelledCount, setCancelledCount] = useState(initialReport.cancelled);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [pdfLoading, setPdfLoading] = useState(false);
-  const [filtersVisible, setFiltersVisible] = useState(true);
+
+  const pagination = usePagination({
+    page: currentPage,
+    setPage: setCurrentPage,
+    initialTotalPages: initialReport.totalPages,
+  });
+  const applyResult = pagination.applyResult;
 
   const departmentOptions = initialDepartmentOptions;
   const leaveTypeOptions = initialLeaveTypeOptions;
@@ -107,7 +114,7 @@ export default function LeaveReportClient({
         if (!cancelled) {
           setData(json.data ?? []);
           setTotal(json.total ?? 0);
-          setTotalPages(json.totalPages ?? 0);
+          applyResult(json);
           setApprovedCount(json.approved ?? 0);
           setRejectedCount(json.rejected ?? 0);
           setCancelledCount(json.cancelled ?? 0);
@@ -123,7 +130,7 @@ export default function LeaveReportClient({
 
     fetchData();
     return () => { cancelled = true; };
-  }, [buildQuery, currentPage]);
+  }, [buildQuery, currentPage, applyResult]);
 
   const handleExportCSV = () => {
     const params = new URLSearchParams();
@@ -174,20 +181,8 @@ export default function LeaveReportClient({
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
-          <div className="px-4 py-3 md:hidden flex items-center justify-between border-b border-[#c8c5d0] bg-slate-50/50">
-            <span className="text-sm font-semibold text-slate-700">ตัวกรอง</span>
-            <Button
-              variant="ghost"
-              className="h-9 px-3 flex items-center gap-1 text-[#070235] font-semibold"
-              onClick={() => setFiltersVisible((v) => !v)}
-            >
-              {filtersVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              <span className="text-xs">{filtersVisible ? "ซ่อน" : "แสดง"}</span>
-            </Button>
-          </div>
-          <div className={`${filtersVisible ? "" : "hidden"} md:block`}>
-          <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
+        <DataTable
+          filters={
             <div className="space-y-6 mb-2">
               <div className="flex flex-col md:flex-row items-start gap-4">
                 <div className="relative w-full md:w-64">
@@ -295,15 +290,11 @@ export default function LeaveReportClient({
                 </div>
               </div>
             </div>
-          </div>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-20 text-[#47464f]">กำลังโหลด...</div>
-          ) : error ? (
-            <div className="flex justify-center items-center py-20 text-red-500">{error}</div>
-          ) : (
-            <>
+          }
+          loading={loading}
+          error={error}
+          pagination={<Pagination {...pagination.paginationProps} />}
+        >
               <Table id="leave-report-table" containerClassName="overflow-auto max-h-[500px]">
                 <TableHeader className="sticky top-0 z-10 bg-[#1e1b4b]">
                   <TableRow className="hover:bg-transparent border-none">
@@ -355,14 +346,7 @@ export default function LeaveReportClient({
                   )}
                 </TableBody>
               </Table>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </>
-          )}
-        </div>
+        </DataTable>
 
         </>
   );

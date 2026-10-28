@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { downloadCsv, csvCell } from "@/lib/utils";
+import { useCsvExport } from "@/hooks/useCsvExport";
 import { apiFetch } from "@/lib/api";
 import type { DepartmentListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
@@ -74,25 +74,18 @@ export default function DepartmentsPage() {
     }
   };
 
+  const exportCsv = useCsvExport<DepartmentListItem>({
+    filename: "departments",
+    columns: ["รหัสแผนก", "ชื่อแผนก", "จำนวนส่วนงาน", "จำนวนพนักงาน", "สถานะ"],
+    toRow: (d) => [d.departmentCode, d.departmentName, d.sectionCount, d.staffCount, d.isActive ? "Active" : "Inactive"],
+  });
+
   const handleExport = () => {
     if (filtered.length === 0) {
       toast.error("ไม่มีข้อมูลให้ส่งออก");
       return;
     }
-    const rows = filtered.map((d) => [
-      csvCell(d.departmentCode),
-      csvCell(d.departmentName),
-      csvCell(d.sectionCount),
-      csvCell(d.staffCount),
-      csvCell(d.isActive ? "Active" : "Inactive"),
-    ]);
-    const csvContent = [
-      ["รหัสแผนก", "ชื่อแผนก", "จำนวนส่วนงาน", "จำนวนพนักงาน", "สถานะ"],
-      ...rows,
-    ]
-      .map((r) => r.join(","))
-      .join("\n");
-    downloadCsv(`departments_${new Date().toISOString().split("T")[0]}.csv`, `\uFEFF${csvContent}`);
+    exportCsv(filtered);
     toast.success(`ส่งออกข้อมูลแผนก ${filtered.length} รายการเรียบร้อย`);
   };
 

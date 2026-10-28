@@ -5,14 +5,14 @@ import { useSearchParams } from "next/navigation";
 
 
 import { WarningBanner } from "@/components/ui/warning-banner";
-import { Button } from "@/components/ui/button";
 import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters";
 import { ApprovalHistoryTable } from "@/components/approval-requests/ApprovalHistoryTable";
 import { Pagination } from "@/components/leave-history/Pagination";
-import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
+import { usePagination } from "@/hooks/usePagination";
+import { DataTable } from "@/components/shared/DataTable";
 import { apiFetch, ApiError } from "@/lib/api";
 
 type HistoryItem = {
@@ -35,7 +35,6 @@ type HistoryItem = {
 function ApprovalHistoryPageInner() {
 const searchParams = useSearchParams();
   const [fetchKey, setFetchKey] = useState(0);
-  const [filtersVisible, setFiltersVisible] = useState(true);
 
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
@@ -66,7 +65,8 @@ const searchParams = useSearchParams();
 
   const [data, setData] = useState<HistoryItem[]>([]);
   const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const pagination = usePagination({ page: currentPage, setPage: setCurrentPage });
+  const applyResult = pagination.applyResult;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [leaveTypeError, setLeaveTypeError] = useState("");
@@ -104,7 +104,7 @@ const json = await apiFetch<{ data?: { leaveTypes?: Array<{ id: string; label: s
         if (!cancelled) {
           setData(json.data ?? []);
           setTotal(json.total ?? 0);
-          setTotalPages(json.totalPages ?? 0);
+          applyResult(json);
         }
       } catch (err) {
         if (!cancelled) {
@@ -117,7 +117,7 @@ const json = await apiFetch<{ data?: { leaveTypes?: Array<{ id: string; label: s
 
     fetchData();
     return () => { cancelled = true; };
-  }, [appliedFilters, currentPage, fetchKey, roleType]);
+  }, [appliedFilters, currentPage, fetchKey, roleType, applyResult]);
 
 
 
@@ -138,20 +138,8 @@ const json = await apiFetch<{ data?: { leaveTypes?: Array<{ id: string; label: s
 
         <WarningBanner message={leaveTypeError} className="mb-4" />
 
-<div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
-          <div className="px-4 py-3 md:hidden flex items-center justify-between border-b border-[#c8c5d0] bg-slate-50/50">
-            <span className="text-sm font-semibold text-slate-700">ตัวกรอง</span>
-            <Button
-              variant="ghost"
-              className="h-9 px-3 flex items-center gap-1 text-[#070235] font-semibold"
-              onClick={() => setFiltersVisible((v) => !v)}
-            >
-              {filtersVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              <span className="text-xs">{filtersVisible ? "ซ่อน" : "แสดง"}</span>
-            </Button>
-          </div>
-          <div className={`${filtersVisible ? "" : "hidden"} md:block`}>
-          <div className="px-6 py-4 border-b border-[#c8c5d0] bg-slate-50/50">
+<DataTable
+          filters={
             <ApprovalFilters
               searchTerm={searchTerm}
               onSearchChange={(v) => setFilter("searchTerm", v)}
@@ -166,24 +154,13 @@ const json = await apiFetch<{ data?: { leaveTypes?: Array<{ id: string; label: s
               onReset={handleResetFilters}
               onSearchSubmit={handleSearchSubmit}
             />
-          </div>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-20 text-[#47464f]">กำลังโหลด...</div>
-          ) : error ? (
-            <div className="flex justify-center items-center py-20 text-red-500">{error}</div>
-          ) : (
-            <>
-              <ApprovalHistoryTable data={data} />
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </>
-          )}
-        </div>
+          }
+          loading={loading}
+          error={error}
+          pagination={<Pagination {...pagination.paginationProps} />}
+        >
+          <ApprovalHistoryTable data={data} />
+        </DataTable>
 
         </>
   );

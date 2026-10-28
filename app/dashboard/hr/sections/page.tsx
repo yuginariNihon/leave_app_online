@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { downloadCsv, csvCell } from "@/lib/utils";
+import { useCsvExport } from "@/hooks/useCsvExport";
 import { apiFetch } from "@/lib/api";
 import type { SectionListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
@@ -73,24 +73,18 @@ export default function SectionsPage() {
     }
   };
 
+  const exportCsv = useCsvExport<SectionListItem>({
+    filename: "sections",
+    columns: ["รหัสส่วนงาน", "ชื่อส่วนงาน", "แผนก", "สถานะ"],
+    toRow: (s) => [s.sectionCode, s.sectionName, s.departmentName, s.isActive ? "Active" : "Inactive"],
+  });
+
   const handleExport = () => {
     if (filtered.length === 0) {
       toast.error("ไม่มีข้อมูลให้ส่งออก");
       return;
     }
-    const rows = filtered.map((s) => [
-      csvCell(s.sectionCode),
-      csvCell(s.sectionName),
-      csvCell(s.departmentName),
-      csvCell(s.isActive ? "Active" : "Inactive"),
-    ]);
-    const csvContent = [
-      ["รหัสส่วนงาน", "ชื่อส่วนงาน", "แผนก", "สถานะ"],
-      ...rows,
-    ]
-      .map((r) => r.join(","))
-      .join("\n");
-    downloadCsv(`sections_${new Date().toISOString().split("T")[0]}.csv`, `\uFEFF${csvContent}`);
+    exportCsv(filtered);
     toast.success(`ส่งออกข้อมูลส่วนงาน ${filtered.length} รายการเรียบร้อย`);
   };
 
