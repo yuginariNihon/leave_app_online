@@ -10,6 +10,7 @@ import {
 } from "@/lib/mail/emailTemplate";
 import { getApproverContacts } from "@/lib/services/approverUtils";
 import { formatLeaveDateRange, timeFromDb } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 const LEAVE_PERIOD_LABELS: Record<string, string> = {
   full_day: "เต็มวัน",
@@ -48,7 +49,7 @@ function dedupeEmails(contacts: { email: string }[]): string[] {
 function schedule(task: () => Promise<void>): void {
   const run = () =>
     task().catch((error) => {
-      console.error("[leaveMailer] ส่งอีเมลไม่สำเร็จ:", error);
+      logger.error("leaveMailer", "ส่งอีเมลไม่สำเร็จ", error);
     });
 
   try {
@@ -187,8 +188,9 @@ export async function sendLeaveCreatedEmail(leaveId: string): Promise<void> {
   const recipients = dedupeEmails(stepContacts);
 
   if (recipients.length === 0) {
-    console.warn(
-      `[leaveMailer] No approver email found for leave ${leaveId}; skipped.`,
+    logger.warn(
+      "leaveMailer",
+      `No approver email found for leave ${leaveId}; skipped.`,
     );
     return;
   }
@@ -236,8 +238,9 @@ export async function sendLeaveNextApproverEmail(
   );
 
   if (recipients.length === 0) {
-    console.warn(
-      `[leaveMailer] No approver email for the current step of leave ${leaveId}; skipped.`,
+    logger.warn(
+      "leaveMailer",
+      `No approver email for the current step of leave ${leaveId}; skipped.`,
     );
     return;
   }
@@ -263,8 +266,9 @@ export async function sendLeaveApprovedEmail(leaveId: string): Promise<void> {
 
   const ownerEmail = leave.staff.user?.email?.trim();
   if (!ownerEmail) {
-    console.warn(
-      `[leaveMailer] Leave owner ${leave.staff_id} has no email; approved mail skipped.`,
+    logger.warn(
+      "leaveMailer",
+      `Leave owner ${leave.staff_id} has no email; approved mail skipped.`,
     );
     return;
   }
@@ -290,8 +294,9 @@ export async function sendLeaveCancelledEmail(leaveId: string): Promise<void> {
 
   const ownerEmail = leave.staff.user?.email?.trim();
   if (!ownerEmail) {
-    console.warn(
-      `[leaveMailer] Leave owner ${leave.staff_id} has no email; cancelled mail skipped.`,
+    logger.warn(
+      "leaveMailer",
+      `Leave owner ${leave.staff_id} has no email; cancelled mail skipped.`,
     );
     return;
   }
@@ -323,8 +328,9 @@ export async function sendLeaveRejectedEmail(
 
   const ownerEmail = leave.staff.user?.email?.trim();
   if (!ownerEmail) {
-    console.warn(
-      `[leaveMailer] Leave owner ${leave.staff_id} has no email; rejected mail skipped.`,
+    logger.warn(
+      "leaveMailer",
+      `Leave owner ${leave.staff_id} has no email; rejected mail skipped.`,
     );
     return;
   }

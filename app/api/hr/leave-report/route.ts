@@ -3,16 +3,49 @@ import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
 import { getLeaveReport } from "@/lib/services/leaveService";
 import { formatLeaveDateRange, formatDays } from "@/lib/utils";
+import { csvStreamResponse, parsePagination } from "@/lib/http";
 import { statusTextMap } from "@/components/leave-history/types";
 
 export const runtime = "nodejs";
 
 const PAGE_SIZE = 500;
 
-function csvCell(value: unknown): string {
-  const s = value === null || value === undefined ? "" : String(value);
-  const sanitized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
-  return `"${sanitized.replace(/"/g, '""')}"`;
+type LeaveReportCsvRow = {
+  staffCode: string;
+  staffName: string;
+  departmentName?: string | null;
+  leaveTypeName: string;
+  startDate: string | null;
+  endDate: string | null;
+  totalDays: string | null;
+  status: string;
+  leaveMode?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  hours?: string | null;
+};
+
+function buildLeaveReportCsvCells(r: LeaveReportCsvRow): string[] {
+  const isHour = r.leaveMode === "hour";
+  const daysLabel = isHour
+    ? r.totalDays
+      ? `${Number(r.totalDays)} วัน (คิดจากชั่วโมง ÷ 8)`
+      : ""
+    : r.totalDays
+      ? formatDays(r.totalDays)
+      : "";
+  return [
+    r.staffCode,
+    r.staffName,
+    r.departmentName ?? "",
+    r.leaveTypeName,
+    formatLeaveDateRange(r.startDate, r.endDate),
+    r.startTime ?? "",
+    r.endTime ?? "",
+    r.hours ?? "",
+    daysLabel,
+    statusTextMap[r.status as keyof typeof statusTextMap] ?? r.status,
+  ];
 }
 
 export async function GET(request: NextRequest) {
@@ -32,92 +65,37 @@ export async function GET(request: NextRequest) {
     };
 
     if (!stream) {
-      const result = await getLeaveReport({
-        ...baseFilters,
-        page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-        limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
-      });
+      const { page, limit } = parsePagination(searchParams, { defaultLimit: 20, maxLimit: 500 });
+      const result = await getLeaveReport({ ...baseFilters, page, limit });
       return NextResponse.json(result);
     }
 
-    const headers = [
-      "รหัสพนักงาน",
-      "ชื่อ-นามสกุล",
-      "แผนก",
-      "ประเภทการลา",
-      "วันที่ลา",
-      "เวลาเริ่ม",
-      "เวลาสิ้นสุด",
-      "จำนวนชั่วโมง",
-      "จำนวนวัน",
-      "สถานะ",
-    ];
-    const encoder = new TextEncoder();
-    const BOM = "﻿";
-
-    const readable = new ReadableStream<Uint8Array>({
-      async start(controller) {
-        controller.enqueue(encoder.encode(BOM + headers.map(csvCell).join(",") + "\n"));
-        try {
-          let page = 1;
-          while (true) {
-            const result = await getLeaveReport({ ...baseFilters, page, limit: PAGE_SIZE });
-            const rows = result.data as unknown as Array<{
-              staffCode: string;
-              staffName: string;
-              departmentName: string | null;
-              leaveTypeName: string;
-              startDate: string | null;
-              endDate: string | null;
-              totalDays: string | null;
-              status: string;
-              leaveMode?: string;
-              startTime?: string | null;
-              endTime?: string | null;
-              hours?: string | null;
-            }>;
-            if (!rows.length) break;
-            let chunk = "";
-            for (const r of rows) {
-              const isHour = r.leaveMode === "hour";
-              const daysLabel = isHour
-                ? r.totalDays
-                  ? `${Number(r.totalDays)} วัน (คิดจากชั่วโมง ÷ 8)`
-                  : ""
-                : r.totalDays
-                  ? formatDays(r.totalDays)
-                  : "";
-              const cells = [
-                csvCell(r.staffCode),
-                csvCell(r.staffName),
-                csvCell(r.departmentName ?? ""),
-                csvCell(r.leaveTypeName),
-                csvCell(formatLeaveDateRange(r.startDate, r.endDate)),
-                csvCell(r.startTime ?? ""),
-                csvCell(r.endTime ?? ""),
-                csvCell(r.hours ?? ""),
-                csvCell(daysLabel),
-                csvCell(statusTextMap[r.status as keyof typeof statusTextMap] ?? r.status),
-              ];
-              chunk += cells.join(",") + "\n";
-            }
-            controller.enqueue(encoder.encode(chunk));
-            if (rows.length < PAGE_SIZE) break;
-            page++;
+    return csvStreamResponse({
+      filename: "leave_report",
+      columns: [
+        "รหัสพนักงาน",
+        "ชื่อ-นามสกุล",
+        "แผนก",
+        "ประเภทการลา",
+        "วันที่ลา",
+        "เวลาเริ่ม",
+        "เวลาสิ้นสุด",
+        "จำนวนชั่วโมง",
+        "จำนวนวัน",
+        "สถานะ",
+      ],
+      rows: async function* () {
+        let page = 1;
+        while (true) {
+          const result = await getLeaveReport({ ...baseFilters, page, limit: PAGE_SIZE });
+          const rows = result.data as unknown as LeaveReportCsvRow[];
+          if (!rows.length) break;
+          for (const row of rows) {
+            yield buildLeaveReportCsvCells(row);
           }
-        } catch (err) {
-          controller.enqueue(encoder.encode(`\nError: ${(err as Error).message}\n`));
-        } finally {
-          controller.close();
+          if (rows.length < PAGE_SIZE) break;
+          page++;
         }
-      },
-    });
-
-    return new NextResponse(readable, {
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="leave_report_${new Date().toISOString().split("T")[0]}.csv"`,
-        "Cache-Control": "no-store",
       },
     });
   } catch (error) {

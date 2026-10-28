@@ -129,7 +129,6 @@ export function DatePicker({ value, onChange, min, max, holidays = [], placehold
               const disabled = isDisabled(dateStr);
               const selected = dateStr === value;
               const isToday = dateStr === todayStr;
-              const isSunday = new Date(dateStr + "T00:00:00").getDay() === 0;
 
               return (
                 <button

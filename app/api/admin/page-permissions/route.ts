@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { readJson } from "@/lib/http";
 import { getPagePermissions, updatePagePermission, seedDefaultPagePermissions } from "@/lib/services/rolePermissionService";
 
 export const runtime = "nodejs";
@@ -23,8 +24,7 @@ export async function PUT(request: NextRequest) {
     const auth = await requireSuperAdmin();
     if (auth.error) return auth.error;
 
-    const body = await request.json();
-    const { permissions } = body;
+    const { permissions } = await readJson<{ permissions?: unknown }>(request);
 
     if (!Array.isArray(permissions)) {
       return NextResponse.json({ error: "permissions (array) is required" }, { status: 400 });

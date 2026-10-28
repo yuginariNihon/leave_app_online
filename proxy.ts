@@ -32,8 +32,6 @@ function loginRedirect(request: NextRequest): NextResponse {
   return response;
 }
 
-const USER_PAGES: string[] = [];
-
 type CachedPageRoles = { roles: string[]; expiresAt: number };
 const pageRoleCache = new Map<string, CachedPageRoles>();
 
@@ -136,8 +134,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/dashboard") &&
     pathname !== "/dashboard" &&
     pathname !== "/dashboard/hr" &&
-    pathname !== "/dashboard/reset-password" &&
-    !USER_PAGES.some((p) => pathname.startsWith(p))
+    pathname !== "/dashboard/reset-password"
   ) {
     const match = PAGE_KEY_BY_PREFIX.find(([prefix]) => pathname.startsWith(prefix));
     if (match) {

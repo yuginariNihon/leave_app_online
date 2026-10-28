@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { parseBody, readJson } from "@/lib/http";
 import { getLeaveTypeById, updateLeaveType, toggleLeaveTypeActive } from "@/lib/services/leaveService";
 import { updateLeaveTypeSchema } from "@/lib/TypeSchema";
 
@@ -36,16 +37,8 @@ export async function PUT(
 
     const { id } = await params;
 
-    const body = await request.json();
-    const parsed = updateLeaveTypeSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues.map((e) => e.message).join(", ") },
-        { status: 400 },
-      );
-    }
-
-    const lt = await updateLeaveType(id, parsed.data);
+    const input = await parseBody(request, updateLeaveTypeSchema);
+    const lt = await updateLeaveType(id, input);
     return NextResponse.json({ data: lt });
   } catch (error) {
     return apiErrorResponse(error);
@@ -61,8 +54,7 @@ export async function PATCH(
     if (auth.error) return auth.error;
 
     const { id } = await params;
-    const body = await request.json();
-    const { isActive } = body;
+    const { isActive } = await readJson<{ isActive?: unknown }>(request);
 
     if (typeof isActive !== "boolean") {
       return NextResponse.json({ error: "isActive (boolean) is required" }, { status: 400 });

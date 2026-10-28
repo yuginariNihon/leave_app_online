@@ -1,6 +1,5 @@
 import { CheckCircle2, XCircle, Ban, Clock } from "lucide-react";
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
-import { formatDateTime } from "@/lib/utils";
 
 type LeaveDetailsHeaderProps = {
   title: string;
@@ -20,7 +19,6 @@ export function LeaveDetailsHeader({
   title,
   referenceId,
   status,
-  statusDate,
 }: LeaveDetailsHeaderProps) {
   const isApproved = status === LeaveStatus.approved;
   const isRejected = status === LeaveStatus.rejected;

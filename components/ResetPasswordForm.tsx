@@ -18,7 +18,7 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showAll, setShowAll] = useState(false);
+  const [showAll] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,7 +59,7 @@ export function ResetPasswordForm({ name, staffCode, departmentName, force }: Re
     setLoading(false);
     setSuccess(true);
     setTimeout(() => {
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     }, 1500);
   }
 

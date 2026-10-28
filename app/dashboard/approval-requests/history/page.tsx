@@ -117,7 +117,7 @@ const json = await apiFetch<{ data?: { leaveTypes?: Array<{ id: string; label: s
 
     fetchData();
     return () => { cancelled = true; };
-  }, [appliedFilters, currentPage, fetchKey]);
+  }, [appliedFilters, currentPage, fetchKey, roleType]);
 
 
 

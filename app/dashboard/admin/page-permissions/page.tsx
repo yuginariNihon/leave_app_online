@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { Shield, Save, Loader2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { toast } from "sonner";
-import { useUser } from "@/lib/user-context";
 import { apiFetch } from "@/lib/api";
 
 type PagePermission = {
@@ -25,8 +23,6 @@ type RoleOption = {
 };
 
 export default function PagePermissionsPage() {
-  const router = useRouter();
-  const { roles: userRoles } = useUser();
   const [fetchKey, setFetchKey] = useState(0);
 
   const [data, setData] = useState<PagePermission[]>([]);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSessionUser } from "@/lib/auth";
+import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
 import { getUserById, getUserRoleNames } from "@/lib/services/leaveService";
 
@@ -10,11 +10,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await requireSessionUser();
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const { session, error } = await requireHR();
+    if (error) return error;
 
     const { id } = await params;
 

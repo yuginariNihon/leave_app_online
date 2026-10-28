@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPendingApprovals } from "@/lib/services/approvalService";
 import { requireAuth } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { parsePagination } from "@/lib/http";
 import type { ApprovalFilters } from "@/lib/services/approvalService";
 
 export const runtime = "nodejs";
@@ -11,8 +12,7 @@ export async function GET(request: NextRequest) {
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get("page") ?? "1", 10);
-  const limit = parseInt(searchParams.get("limit") ?? "10", 10);
+  const { page, limit } = parsePagination(searchParams, { defaultLimit: 10 });
 
   const rawLeaveTypeId = searchParams.get("leaveTypeId");
   const leaveTypeId = (rawLeaveTypeId && rawLeaveTypeId !== "all" && rawLeaveTypeId !== "undefined") ? rawLeaveTypeId : undefined;

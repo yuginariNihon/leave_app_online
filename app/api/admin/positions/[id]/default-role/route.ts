@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { readJson } from "@/lib/http";
 
 export const runtime = "nodejs";
 
@@ -23,7 +24,7 @@ export async function PUT(
       return NextResponse.json({ error: "ไม่พบข้อมูลตำแหน่ง" }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await readJson<{ defaultRoleId?: unknown }>(request);
     const defaultRoleId = typeof body.defaultRoleId === "string" && body.defaultRoleId ? body.defaultRoleId : null;
 
     if (defaultRoleId) {

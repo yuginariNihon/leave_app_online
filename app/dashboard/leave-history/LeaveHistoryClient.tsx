@@ -16,6 +16,7 @@ import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import type { LeaveHistoryResult, LeaveHistoryDateField } from "@/lib/services/leaveService";
 import { apiFetch } from "@/lib/api";
+import { downloadFromUrl } from "@/lib/utils";
 
 type Props = {
   initialData: LeaveHistoryResult;
@@ -33,7 +34,7 @@ export default function LeaveHistoryClient({
   const router = useProgressRouter();
   const searchParams = useSearchParams();
 
-  const [leaveTypeOptions, setLeaveTypeOptions] = useState(initialTypeOptions);
+  const [leaveTypeOptions] = useState(initialTypeOptions);
   const monthStart = initialStartDate;
   const monthEnd = initialEndDate;
   const {
@@ -148,7 +149,7 @@ export default function LeaveHistoryClient({
 
   const handleExportCSV = () => {
     const qs = `${buildQuery(1, true)}&stream=true`;
-    window.location.href = `/api/leaves/history?${qs}`;
+    downloadFromUrl(`/api/leaves/history?${qs}`);
   };
 
   const requestResult = searchParams.get("requestResult");

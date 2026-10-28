@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hrBulkUpdateApprovalStatus } from "@/lib/services/approvalService";
 import { requireAuth } from "@/lib/api-guards";
+import { apiErrorResponse } from "@/lib/errors";
+import { parseBody } from "@/lib/http";
 
 const bulkApprovalSchema = z.object({
   approvalIds: z.array(z.string()).min(1),
@@ -15,19 +17,12 @@ export async function PATCH(request: NextRequest) {
   const { session, error } = await requireAuth();
   if (error) return error;
 
-  const body = await request.json();
-  const parsed = bulkApprovalSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request payload." }, { status: 400 });
-  }
-
-  const { approvalIds, status, comment } = parsed.data;
-
   try {
+    const { approvalIds, status, comment } = await parseBody(request, bulkApprovalSchema);
+
     await hrBulkUpdateApprovalStatus(approvalIds, session.staffId, status, comment);
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Failed to bulk update approvals." }, { status: 400 });
+  } catch (error) {
+    return apiErrorResponse(error);
   }
 }

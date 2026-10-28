@@ -2,7 +2,7 @@ import { getSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getPendingApprovals } from "@/lib/services/approvalService";
 import { getActiveLeaveOptions } from "@/lib/services/leaveService";
-import ApprovalRequestsClient from "./ApprovalRequestsClient";
+import { ApprovalRequestsScreen } from "@/components/approval-requests/ApprovalRequestsScreen";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,8 @@ export default async function ApprovalRequestsPage() {
   ]);
 
   return (
-    <ApprovalRequestsClient
+    <ApprovalRequestsScreen
+      variant="approver"
       initialData={initialData.data}
       initialTotal={initialData.total}
       initialTotalPages={initialData.totalPages}

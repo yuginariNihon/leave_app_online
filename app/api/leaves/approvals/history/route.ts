@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApprovalHistory } from "@/lib/services/approvalService";
 import { requireAuth } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { parsePagination } from "@/lib/http";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
 
@@ -13,6 +14,7 @@ export async function GET(request: NextRequest) {
     if (error) return error;
 
     const { searchParams } = request.nextUrl;
+    const { page, limit } = parsePagination(searchParams, { defaultLimit: 10 });
 
     const rawLeaveTypeId = searchParams.get("leaveTypeId");
     const leaveTypeId = (rawLeaveTypeId && rawLeaveTypeId !== "all" && rawLeaveTypeId !== "undefined") ? rawLeaveTypeId : undefined;
@@ -23,8 +25,8 @@ export async function GET(request: NextRequest) {
       startDate: searchParams.get("startDate") || undefined,
       endDate: searchParams.get("endDate") || undefined,
       roleType: (searchParams.get("roleType") as "approver" | "hr" | "all") || undefined,
-      page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 10,
+      page,
+      limit,
     });
 
     const headersList = await headers();

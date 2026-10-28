@@ -5,6 +5,7 @@ import { apiErrorResponse } from "@/lib/errors";
 import { getStaffDetail, updateStaff, getStaffRoleNames } from "@/lib/services/leaveService";
 import { updateStaffSchema } from "@/lib/TypeSchema";
 import { logReadAccess } from "@/lib/services/auditService";
+import { readJson } from "@/lib/http";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
@@ -95,8 +96,7 @@ export async function PATCH(
     if (error) return error;
 
     const { id } = await params;
-    const body = await request.json();
-    const { isActive } = body;
+    const { isActive } = await readJson<{ isActive?: unknown }>(request);
 
     if (typeof isActive !== "boolean") {
       return NextResponse.json({ error: "isActive (boolean) is required" }, { status: 400 });

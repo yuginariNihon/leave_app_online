@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { bulkUpdateApprovalStatus } from "@/lib/services/approvalService";
 import { requireAuth } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { parseBody } from "@/lib/http";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -16,24 +17,9 @@ export async function PATCH(request: NextRequest) {
   const { session, error } = await requireAuth();
   if (error) return error;
 
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
+    const { approvalIds, status, comment } = await parseBody(request, bulkApprovalSchema);
 
-  const parsed = bulkApprovalSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues.map((i) => i.message).join("; ") },
-      { status: 400 },
-    );
-  }
-
-  const { approvalIds, status, comment } = parsed.data;
-
-  try {
     await bulkUpdateApprovalStatus(approvalIds, session.staffId, status, comment);
     return NextResponse.json({ success: true });
   } catch (error) {

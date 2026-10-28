@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/api-guards";
 import { createLeaveRequestSchema } from "@/lib/TypeSchema";
 import { logReadAccess } from "@/lib/services/auditService";
 import { apiErrorResponse } from "@/lib/errors";
+import { parseBody } from "@/lib/http";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
@@ -47,21 +48,10 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    const body = await request.json();
-    const parsed = createLeaveRequestSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid leave request payload.",
-          details: parsed.error.flatten().fieldErrors,
-        },
-        { status: 400 },
-      );
-    }
+    const input = await parseBody(request, createLeaveRequestSchema);
 
     const { isStaffValid, isLeaveTypeValid, isLeaveCaseValid } =
-      await validateLeaveRequestDetails(session.staffId, parsed.data.leaveTypeId, parsed.data.leaveCaseId);
+      await validateLeaveRequestDetails(session.staffId, input.leaveTypeId, input.leaveCaseId);
 
     if (!isStaffValid) {
       return NextResponse.json({ error: "Invalid or inactive staffId." }, { status: 400 });
@@ -79,15 +69,15 @@ export async function PATCH(
     }
 
     await updateLeaveRequest(id, session.staffId, {
-      leaveTypeId: parsed.data.leaveTypeId,
-      leaveCaseId: parsed.data.leaveCaseId,
-      startDate: parsed.data.startDate,
-      endDate: parsed.data.endDate,
-      reason: parsed.data.reason,
-      leavePeriod: parsed.data.leavePeriod,
-      leaveMode: parsed.data.leaveMode,
-      startTime: parsed.data.startTime,
-      endTime: parsed.data.endTime,
+      leaveTypeId: input.leaveTypeId,
+      leaveCaseId: input.leaveCaseId,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      reason: input.reason,
+      leavePeriod: input.leavePeriod,
+      leaveMode: input.leaveMode,
+      startTime: input.startTime,
+      endTime: input.endTime,
     });
 
     return NextResponse.json({ success: true });

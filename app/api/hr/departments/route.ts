@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { parseBody } from "@/lib/http";
 import { getDepartments, createDepartment } from "@/lib/services/leaveService";
 import { createDepartmentSchema } from "@/lib/TypeSchema";
 
@@ -23,16 +24,8 @@ export async function POST(request: NextRequest) {
     const auth = await requireHR();
     if (auth.error) return auth.error;
 
-    const body = await request.json();
-    const parsed = createDepartmentSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues.map((e) => e.message).join(", ") },
-        { status: 400 },
-      );
-    }
-
-    const dept = await createDepartment(parsed.data);
+    const input = await parseBody(request, createDepartmentSchema);
+    const dept = await createDepartment(input);
     return NextResponse.json({ data: dept }, { status: 201 });
   } catch (error) {
     return apiErrorResponse(error);

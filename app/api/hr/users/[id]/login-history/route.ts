@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSessionUser } from "@/lib/auth";
+import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { parseLimit } from "@/lib/http";
 import { getUserLoginHistory } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -10,15 +11,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await requireSessionUser();
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const { error } = await requireHR();
+    if (error) return error;
 
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const limit = parseLimit(searchParams, { defaultLimit: 10, maxLimit: 100 });
 
     const history = await getUserLoginHistory(id, limit);
     return NextResponse.json({ data: history });

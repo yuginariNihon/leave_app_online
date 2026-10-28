@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse, ValidationError } from "@/lib/errors";
+import { readJson } from "@/lib/http";
 import { leaveQuotaAssignSchema } from "@/lib/TypeSchema";
 import { assignLeaveLimitToStaff } from "@/lib/services/leaveService";
 
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     const auth = await requireHR();
     if (auth.error) return auth.error;
 
-    const body = await request.json().catch(() => null);
+    const body = await readJson(request);
     const parsed = leaveQuotaAssignSchema.safeParse(body);
     if (!parsed.success) {
       throw new ValidationError(`ข้อมูลไม่ถูกต้อง: ${parsed.error.issues[0].message}`);

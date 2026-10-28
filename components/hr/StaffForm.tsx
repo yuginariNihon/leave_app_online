@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Phone, Mail, Check, Save, Loader2, BadgeInfo, User, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -54,9 +54,12 @@ export function StaffForm({
     defaultValues,
   });
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = form;
-  const selectedDept = watch("departmentId");
-  const selectedStatus = watch("employmentStatus");
+  const { register, handleSubmit, setValue, formState: { errors } } = form;
+  const selectedDept = useWatch({ control: form.control, name: "departmentId" });
+  const selectedStatus = useWatch({ control: form.control, name: "employmentStatus" });
+  const selectedPosition = useWatch({ control: form.control, name: "positionId" });
+  const selectedSection = useWatch({ control: form.control, name: "sectionId" });
+  const selectedEmploymentType = useWatch({ control: form.control, name: "employmentTypeId" });
 
   const filteredSections = masterData?.sections.filter(
     (s) => s.departmentId === selectedDept,
@@ -193,7 +196,7 @@ export function StaffForm({
               ตำแหน่ง
             </label>
             <Select
-              value={watch("positionId")}
+              value={selectedPosition}
               onValueChange={(v) => setValue("positionId", v, { shouldValidate: true })}
             >
               <SelectTrigger className="w-full !h-11 rounded-xl border-[#c6c6cd] text-base">
@@ -215,7 +218,7 @@ export function StaffForm({
               ส่วนงาน (SECTION)
             </label>
             <Select
-              value={watch("sectionId") ?? ""}
+              value={selectedSection ?? ""}
               onValueChange={(v) => setValue("sectionId", v || null)}
               disabled={filteredSections.length === 0}
             >
@@ -235,7 +238,7 @@ export function StaffForm({
               ประเภทพนักงาน
             </label>
             <Select
-              value={watch("employmentTypeId") ?? ""}
+              value={selectedEmploymentType ?? ""}
               onValueChange={(v) => setValue("employmentTypeId", v || null)}
             >
               <SelectTrigger className="w-full !h-11 rounded-xl border-[#c6c6cd] text-base">

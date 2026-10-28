@@ -3,6 +3,7 @@ import { getLeaveDetailById } from "@/lib/services/leaveService";
 import { requireAuth } from "@/lib/api-guards";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: detail });
   } catch (error) {
-    console.error("Failed to fetch leave detail", error);
+    logger.error("leaves", "detail fetch failed", error);
     if (error instanceof Error && error.message === "Forbidden") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

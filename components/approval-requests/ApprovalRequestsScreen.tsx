@@ -21,28 +21,33 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters";
 import { ApprovalTable } from "@/components/approval-requests/ApprovalTable";
-
 import { Pagination } from "@/components/leave-history/Pagination";
 import type { ApprovalRequestItem } from "@/lib/services/approvalService";
 import { apiFetch } from "@/lib/api";
-
 import { cn } from "@/lib/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 
 type Props = {
+  variant: "approver" | "hr";
   initialData: ApprovalRequestItem[];
   initialTotal: number;
   initialTotalPages: number;
   initialTypeOptions: Array<{ id: string; label: string }>;
 };
 
-export default function ApprovalRequestsClient({
+export function ApprovalRequestsScreen({
+  variant,
   initialData,
   initialTotal,
   initialTotalPages,
   initialTypeOptions,
 }: Props) {
+  const isHr = variant === "hr";
+  const pendingUrl = isHr ? "/api/leaves/approvals/hr-pending" : "/api/leaves/approvals/pending";
+  const decisionBase = isHr ? "/api/leaves/approvals/hr" : "/api/leaves/approvals";
+  const bulkUrl = isHr ? "/api/leaves/approvals/hr/bulk" : "/api/leaves/approvals/bulk";
+
   const [fetchKey, setFetchKey] = useState(0);
   const [filtersVisible, setFiltersVisible] = useState(true);
 
@@ -73,7 +78,6 @@ export default function ApprovalRequestsClient({
   const [rejectReason, setRejectReason] = useState("");
   const [selectValue, setSelectValue] = useState("");
 
-  // Initial page data is rendered by the server, so skip the very first refetch.
   const skipFirstFetch = useRef(true);
 
   const buildQuery = useCallback(
@@ -103,7 +107,7 @@ export default function ApprovalRequestsClient({
       try {
         const qs = buildQuery(currentPage);
         const json = await apiFetch<{ data: ApprovalRequestItem[]; total: number; totalPages: number }>(
-          `/api/leaves/approvals/pending?${qs}`,
+          `${pendingUrl}?${qs}`,
         );
 
         if (!cancelled) {
@@ -129,9 +133,7 @@ export default function ApprovalRequestsClient({
     return () => {
       cancelled = true;
     };
-  }, [buildQuery, currentPage, fetchKey]);
-
-
+  }, [buildQuery, currentPage, fetchKey, pendingUrl]);
 
   const processApproval = async (
     approvalId: string,
@@ -139,7 +141,7 @@ export default function ApprovalRequestsClient({
   ) => {
     setProcessingIds((prev) => [...prev, approvalId]);
     try {
-      await apiFetch(`/api/leaves/approvals/${approvalId}`, {
+      await apiFetch(`${decisionBase}/${approvalId}`, {
         method: "PATCH",
         body: JSON.stringify({ status }),
       });
@@ -170,7 +172,7 @@ export default function ApprovalRequestsClient({
 
     setProcessingIds((prev) => [...prev, ...selectedIds]);
     try {
-      await apiFetch(`/api/leaves/approvals/bulk`, {
+      await apiFetch(bulkUrl, {
         method: "PATCH",
         body: JSON.stringify({
           approvalIds: selectedIds,
@@ -198,14 +200,14 @@ export default function ApprovalRequestsClient({
         <>
 
         <AppBreadcrumb
-          items={[{ label: "Home", href: "/dashboard" }, { label: "Approvals" }]}
+          items={[{ label: "Home", href: "/dashboard" }, { label: isHr ? "HR Approvals" : "Approvals" }]}
           className="mb-4"
         />
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-md mb-6">
           <div>
-            <h1 className="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-[#070235]">รายการคำขอลา</h1>
-            <p className="text-[14px] leading-[20px] text-[#47464f]">Review and manage pending leave requests.</p>
+            <h1 className="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-[#070235]">{isHr ? "รายการคำขอลา (HR)" : "รายการคำขอลา"}</h1>
+            <p className="text-[14px] leading-[20px] text-[#47464f]">{isHr ? "Review and manage pending leave requests as HR." : "Review and manage pending leave requests."}</p>
           </div>
         </div>
 
@@ -259,7 +261,11 @@ export default function ApprovalRequestsClient({
                   <SelectTrigger className="w-[180px] !h-11 border-blue-200 bg-white rounded-lg">
                     <SelectValue placeholder="เลือก action..." />
                   </SelectTrigger>
-                  <SelectContent position="popper" side="bottom" avoidCollisions={false} sideOffset={4}>
+                  <SelectContent
+                    {...(isHr
+                      ? {}
+                      : { position: "popper" as const, side: "bottom" as const, avoidCollisions: false, sideOffset: 4 })}
+                  >
                     <SelectItem value="approved">
                       <span className="flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -291,6 +297,7 @@ export default function ApprovalRequestsClient({
                 onApprove={(id) => processApproval(id, "approved")}
                 onReject={(id) => processApproval(id, "rejected")}
                 processingIds={processingIds}
+                detailBasePath={isHr ? "/dashboard/approval-requests/hr/detail" : undefined}
               />
               <Pagination
                 currentPage={currentPage}

@@ -301,10 +301,10 @@ export default function ApprovalDetailNewPage() {
                   .map((a) => (
                     <div key={a.approvalId} className="relative flex gap-5">
                       <div className="w-[2px] bg-[#e2dfff] absolute left-2 top-5 bottom-[-20px]" />
-                      <div className={`w-4 h-4 shrink-0 rounded-full z-10 ${a.status === "approved" ? "bg-[#22c55e]" : "bg-[#ef4444]"}`} />
+                      <div className={`w-4 h-4 shrink-0 rounded-full z-10 ${a.status === "approved" ? "bg-[#22c55e]" : a.status === "cancelled" ? "bg-[#94a3b8]" : "bg-[#ef4444]"}`} />
                       <div>
                       <p className="font-bold text-sm">
-                        {a.status === "approved" ? "อนุมัติ" : "ไม่อนุมัติ"}
+                        {a.status === "approved" ? "อนุมัติ" : a.status === "cancelled" ? "ยกเลิกคำขอ" : "ไม่อนุมัติ"}
                         {a.approverName ? ` โดย ${a.approverName}` : ""}<br/>
                         {a.approverRole ? ` ( ${a.approverRole} )` : ""}
                       </p>

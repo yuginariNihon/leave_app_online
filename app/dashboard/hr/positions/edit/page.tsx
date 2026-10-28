@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowLeft, Briefcase, Loader2 } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { PositionForm } from "@/components/hr/positions/PositionForm";
 import type { CreatePositionValues, UpdatePositionValues } from "@/lib/TypeSchema";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { EntityFormPage } from "@/components/shared/EntityFormPage";
 import { apiFetch } from "@/lib/api";
 
 export default function EditPositionPage() {
@@ -25,7 +24,7 @@ export default function EditPositionPage() {
     if (!positionId) return;
     async function load() {
       try {
-const json = await apiFetch<{ data: { positionName: string; positionLevel?: number | null } }>(`/api/hr/positions/${positionId}`);
+        const json = await apiFetch<{ data: { positionName: string; positionLevel?: number | null } }>(`/api/hr/positions/${positionId}`);
         setDefaultValues({
           positionName: json.data.positionName,
           positionLevel: json.data.positionLevel,
@@ -46,7 +45,7 @@ const json = await apiFetch<{ data: { positionName: string; positionLevel?: numb
     setSubmitError("");
 
     try {
-await apiFetch(`/api/hr/positions/${positionId}`, {
+      await apiFetch(`/api/hr/positions/${positionId}`, {
         method: "PUT",
         body: JSON.stringify(values),
       });
@@ -61,71 +60,29 @@ await apiFetch(`/api/hr/positions/${positionId}`, {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <p className="text-[#45464d] text-sm">กำลังโหลด...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-      {submitting && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#F8FAFC]/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-12 h-12 animate-spin text-[#1a1a40]" />
-            <p className="font-bold text-[#1a1a40]">กำลังบันทึก...</p>
-          </div>
-        </div>
-      )}
-      <main className="flex-1 overflow-y-auto">
-        <section className="flex-1 px-4 md:px-10 py-8 md:py-12 bg-[#F8FAFC]">
-          <div className="max-w-4xl mx-auto">
-            <AppBreadcrumb
-                className="mb-6"
-                items={[
-                  { label: "Home", href: "/dashboard" },
-                  { label: "HR", href: "/dashboard/hr" },
-                  { label: "จัดการตำแหน่ง", href: "/dashboard/hr/positions" },
-                  { label: "แก้ไขตำแหน่ง" },
-                ]}
-              />
-
-            <div className="bg-[#1a1a40] text-white p-6 rounded-t-2xl">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex gap-3">
-                  <Briefcase className="w-6 h-6" />
-                  <h2 className="text-xl font-medium tracking-wide">แก้ไขตำแหน่ง</h2>
-                </div>
-                <div className="">
-                  <Button
-                    variant="ghost"
-                    className="flex items-center gap-2 text-white hover:text-[#100d41] rounded-lg bg-white/15 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => router.back()}
-                    disabled={submitting}
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">ย้อนกลับ</span>
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border-x border-b border-slate-200 p-8 shadow-sm rounded-b-2xl">
-              <PositionForm
-                mode="edit"
-                defaultValues={defaultValues}
-                isSubmitting={submitting}
-                isSuccess={success}
-                submitError={submitError}
-                onSubmit={onSubmit}
-                onCancel={() => router.back()}
-              />
-            </div>
-        </div>
-      </section>
-      </main>
-    </div>
+    <EntityFormPage
+      breadcrumb={[
+        { label: "Home", href: "/dashboard" },
+        { label: "HR", href: "/dashboard/hr" },
+        { label: "จัดการตำแหน่ง", href: "/dashboard/hr/positions" },
+        { label: "แก้ไขตำแหน่ง" },
+      ]}
+      title="แก้ไขตำแหน่ง"
+      icon={Briefcase}
+      loading={loading}
+      isSubmitting={submitting}
+      onBack={() => router.back()}
+    >
+      <PositionForm
+        mode="edit"
+        defaultValues={defaultValues}
+        isSubmitting={submitting}
+        isSuccess={success}
+        submitError={submitError}
+        onSubmit={onSubmit}
+        onCancel={() => router.back()}
+      />
+    </EntityFormPage>
   );
 }

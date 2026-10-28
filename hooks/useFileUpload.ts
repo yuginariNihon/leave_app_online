@@ -27,7 +27,7 @@ export function useFileUpload(): UseFileUploadResult {
 
     if (file.size > MAX_FILE_SIZE) {
       setFileError("ขนาดไฟล์ต้องไม่เกิน 5 MB");
-      try { e.target.value = ""; } catch (_err) {}
+      try { e.target.value = ""; } catch {}
       setFileName("Choose File...");
       return;
     }

@@ -25,6 +25,7 @@ import { Pagination } from "@/components/leave-history/Pagination";
 
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { apiFetch } from "@/lib/api";
+import { downloadFromUrl } from "@/lib/utils";
 
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
 import { statusTextMap } from "@/components/leave-history/types";
@@ -133,7 +134,7 @@ export default function LeaveReportClient({
     if (appliedFilters.endDate) params.set("endDate", appliedFilters.endDate);
     params.set("stream", "true");
 
-    window.location.href = `/api/hr/leave-report?${params.toString()}`;
+    downloadFromUrl(`/api/hr/leave-report?${params.toString()}`);
   };
 
   const exportPDF = async () => {

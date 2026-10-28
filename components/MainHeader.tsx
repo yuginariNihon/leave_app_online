@@ -12,8 +12,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Menu } from "lucide-react";
-import { IoSettings } from "react-icons/io5";
+import { Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { apiFetch } from "@/lib/api";
 
@@ -67,17 +66,6 @@ export function MainHeader({ user }: { user: MainHeaderUser }) {
       document.removeEventListener("visibilitychange", handleVisible);
     };
   }, []);
-
-  const openPending = () => {
-    const roles = user.roles;
-    if (roles.includes("HR") || roles.includes("SUPER_ADMIN")) {
-      router.push("/dashboard/approval-requests/hr");
-    } else if (roles.includes("APPROVER")) {
-      router.push("/dashboard/approval-requests");
-    } else {
-      router.push("/dashboard/leave-history");
-    }
-  };
 
   if (pathname?.startsWith("/login")) return null;
 

@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { cache } from "react";
+import { logger } from "@/lib/logger";
 
 export const SESSION_COOKIE_NAME = "leave_app_db_session";
 
@@ -120,7 +121,7 @@ async function getSessionUserImpl(): Promise<SessionUser | null> {
       expiresAt: session.expires_at.getTime(),
     };
   } catch (error) {
-    console.error("Error in getSessionUser:", error);
+    logger.error("auth", "getSessionUser failed", error);
     return null;
   }
 }
@@ -152,7 +153,7 @@ export async function deleteSession() {
         where: { token: hashToken(token) },
       });
     } catch (error) {
-      console.error("Error deleting session from DB:", error);
+      logger.error("auth", "deleteSession failed", error);
     }
   }
 

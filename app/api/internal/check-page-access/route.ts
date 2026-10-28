@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ allowed: hasAccess });
   } catch (error) {
-    console.error("Error in check-page-access:", error);
+    logger.error("check-page-access", "request failed", error);
     return NextResponse.json({ allowed: false }, { status: 500 });
   }
 }

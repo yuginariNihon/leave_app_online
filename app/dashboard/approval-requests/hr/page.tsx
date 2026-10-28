@@ -2,7 +2,7 @@ import { getSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getHrPendingApprovals } from "@/lib/services/approvalService";
 import { getActiveLeaveOptions } from "@/lib/services/leaveService";
-import HrApprovalRequestsClient from "./HrApprovalRequestsClient";
+import { ApprovalRequestsScreen } from "@/components/approval-requests/ApprovalRequestsScreen";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,8 @@ export default async function HrApprovalRequestsPage() {
   ]);
 
   return (
-    <HrApprovalRequestsClient
+    <ApprovalRequestsScreen
+      variant="hr"
       initialData={initialData.data}
       initialTotal={initialData.total}
       initialTotalPages={initialData.totalPages}

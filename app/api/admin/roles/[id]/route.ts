@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { readJson } from "@/lib/http";
 import { updateRoleName, toggleRoleActive } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -14,7 +15,7 @@ export async function PATCH(
     if (auth.error) return auth.error;
 
     const { id } = await params;
-    const body = await request.json();
+    const body = await readJson<{ roleName?: unknown; isActive?: unknown }>(request);
 
     if (typeof body.roleName === "string") {
       const data = await updateRoleName(id, body.roleName);

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/mail/sendEmail";
 import { requireHR } from "@/lib/api-guards";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -34,7 +35,7 @@ export async function POST() {
       message: `ส่งคำขออีเมลไปยัง ${recipient} สำเร็จ`,
     });
   } catch (error) {
-    console.error("Test email failed:", error);
+    logger.error("sendmail", "test email failed", error);
 
     return NextResponse.json(
       {

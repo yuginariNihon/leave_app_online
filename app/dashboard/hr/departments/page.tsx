@@ -2,23 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Pencil, Power, PowerOff, FileText, Download } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { downloadCsv, csvCell } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import type { DepartmentListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
+import {
+  ActiveStatusBadge,
+  CountPill,
+  EntityRowActions,
+  MasterDataListPage,
+  type MasterDataColumn,
+} from "@/components/shared/MasterDataListPage";
 
 export default function DepartmentsPage() {
   const router = useRouter();
@@ -102,123 +96,55 @@ export default function DepartmentsPage() {
     toast.success(`ส่งออกข้อมูลแผนก ${filtered.length} รายการเรียบร้อย`);
   };
 
+  const columns: MasterDataColumn<DepartmentListItem>[] = [
+    {
+      key: "code",
+      header: "รหัสแผนก",
+      className: "font-semibold text-[#070235]",
+      cell: (d) => d.departmentCode,
+    },
+    { key: "name", header: "ชื่อแผนก", cell: (d) => d.departmentName },
+    {
+      key: "sections",
+      header: "จำนวนส่วนงาน",
+      align: "center",
+      cell: (d) => <CountPill>{d.sectionCount}</CountPill>,
+    },
+    {
+      key: "staff",
+      header: "จำนวนพนักงาน",
+      align: "center",
+      cell: (d) => <CountPill>{d.staffCount}</CountPill>,
+    },
+    { key: "status", header: "สถานะ", cell: (d) => <ActiveStatusBadge isActive={d.isActive} /> },
+  ];
+
   return (
-        <>
-
-        <AppBreadcrumb
-          items={[{ label: "Home", href: "/dashboard" }, { label: "HR" }, { label: "จัดการแผนก" }]}
-          className="mb-4"
+    <MasterDataListPage
+      breadcrumb={[{ label: "Home", href: "/dashboard" }, { label: "HR" }, { label: "จัดการแผนก" }]}
+      title="จัดการแผนก"
+      subtitle="Manage departments and organizational units."
+      searchPlaceholder="ค้นหาชื่อแผนก..."
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      addLabel="Add Department"
+      onAdd={() => router.push("/dashboard/hr/departments/add")}
+      onExport={handleExport}
+      data={filtered}
+      loading={loading}
+      error={error}
+      emptyMessage="ไม่พบข้อมูลแผนก"
+      countText={(count) => `Showing ${count} departments`}
+      columns={columns}
+      rowKey={(d) => d.departmentId}
+      renderActions={(d) => (
+        <EntityRowActions
+          isActive={d.isActive}
+          toggling={togglingIds.includes(d.departmentId)}
+          onEdit={() => router.push(`/dashboard/hr/departments/edit?departmentId=${d.departmentId}`)}
+          onToggle={() => handleToggleActive(d.departmentId, d.isActive)}
         />
-
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-md mb-6">
-          <div>
-            <h1 className="text-[32px] font-bold leading-[40px] tracking-[-0.02em] text-[#070235]">จัดการแผนก</h1>
-            <p className="text-[14px] leading-[20px] text-[#47464f]">Manage departments and organizational units.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative w-full md:w-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#787680] w-[20px] h-[20px]" />
-              <Input
-                className="pl-10 h-11 border-[#c8c5d0] focus-visible:ring-secondary/20 rounded-lg text-[14px] w-full md:w-[200px]"
-                placeholder="ค้นหาชื่อแผนก..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleExport}
-              className="h-11 px-4 rounded-lg text-[12px] tracking-[0.05em] uppercase flex items-center gap-2 border-[#c8c5d0] text-[#47464f] hover:bg-slate-50 hover:text-[#070235]"
-            >
-              <Download className="w-[18px] h-[18px]" />
-              Export
-            </Button>
-            <Button
-              onClick={() => router.push("/dashboard/hr/departments/add")}
-              className="bg-[#6063ee] hover:bg-secondary text-white font-semibold rounded-lg h-11 px-4 text-[12px] tracking-[0.05em] uppercase flex items-center gap-2 shadow-sm"
-            >
-              <Plus className="w-[18px] h-[18px]" />
-              Add Department
-            </Button>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-[#c8c5d0] shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#c8c5d0] flex items-center justify-between bg-slate-50/50">
-            <h4 className="text-[12px] leading-[16px] tracking-[0.05em] font-semibold uppercase text-[#47464f]">Master List</h4>
-            <span className="text-[13px] leading-[18px] text-[#47464f] italic">Showing {filtered.length} departments</span>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-20 text-[#47464f]">กำลังโหลด...</div>
-          ) : error ? (
-            <div className="flex justify-center items-center py-20 text-red-500">{error}</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table containerClassName="max-h-[500px] overflow-y-auto">
-                <TableHeader className="sticky top-0 z-10 bg-[#1e1b4b]">
-                  <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">รหัสแผนก</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">ชื่อแผนก</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase text-center">จำนวนส่วนงาน</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase text-center">จำนวนพนักงาน</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase">สถานะ</TableHead>
-                    <TableHead className="text-white font-semibold px-6 py-4 text-[13px] leading-[16px] tracking-[0.02em] uppercase text-center">จัดการ</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="divide-y divide-[#c8c5d0]">
-                  {filtered.length > 0 ? (
-                    filtered.map((dept) => (
-                      <TableRow key={dept.departmentId} className="hover:bg-[#eff4ff]/30 transition-all duration-200">
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] font-semibold text-[#070235] whitespace-nowrap">{dept.departmentCode}</TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] whitespace-nowrap">{dept.departmentName}</TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] text-center whitespace-nowrap">
-                          <span className="bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-medium text-[13px]">{dept.sectionCount}</span>
-                        </TableCell>
-                        <TableCell className="px-6 py-4 text-[14px] leading-[20px] text-center whitespace-nowrap">
-                          <span className="bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-medium text-[13px]">{dept.staffCount}</span>
-                        </TableCell>
-                        <TableCell className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center gap-1 px-4 py-1 rounded-full text-[12px] leading-[16px] font-semibold tracking-[0.05em] whitespace-nowrap border ${dept.isActive ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-gray-100 text-black border-gray-300"}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${dept.isActive ? "bg-emerald-500" : "bg-gray-400"}`}></span>
-                            {dept.isActive ? "Active" : "Inactive"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-3">
-                            <Button
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#4648d4] hover:bg-[#4648d4]/10 transition-all"
-                              onClick={() => router.push(`/dashboard/hr/departments/edit?departmentId=${dept.departmentId}`)}
-                            >
-                              <Pencil className="w-[20px] h-[20px]" />
-                            </Button>
-                            <Button
-                              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#787680] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/10 transition-all"
-                              disabled={togglingIds.includes(dept.departmentId)}
-                              onClick={() => handleToggleActive(dept.departmentId, dept.isActive)}
-                            >
-                              {dept.isActive ? <PowerOff className="w-[20px] h-[20px]" /> : <Power className="w-[20px] h-[20px]" />}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-20 text-[#47464f]">
-                        <div className="flex flex-col items-center gap-2">
-                          <FileText className="w-10 h-10 opacity-20" />
-                          <span>ไม่พบข้อมูลแผนก</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-
-        </>
+      )}
+    />
   );
 }

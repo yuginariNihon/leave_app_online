@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSessionUser } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/errors";
+import { requireHR } from "@/lib/api-guards";
+import { apiErrorResponse, ValidationError } from "@/lib/errors";
+import { parsePagination, readJson } from "@/lib/http";
 import { getUserList, createUserRecord, getStaffRoleNames, getUserByStaffId } from "@/lib/services/leaveService";
 import { randomBytes } from "crypto";
 
@@ -8,18 +9,14 @@ export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireSessionUser();
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const { session, error } = await requireHR();
+    if (error) return error;
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || undefined;
     const isActiveParam = searchParams.get("isActive");
     const isActive = isActiveParam === "true" ? true : isActiveParam === "false" ? false : undefined;
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const { page, limit } = parsePagination(searchParams, { defaultLimit: 20 });
 
     const isSuperAdmin = session.roles.includes("SUPER_ADMIN");
     const result = await getUserList({ search, isActive, page, limit, excludeSuperAdmin: !isSuperAdmin });
@@ -31,17 +28,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireSessionUser();
-    const isHR = session.roles.includes("HR") || session.roles.includes("SUPER_ADMIN");
-    if (!isHR) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const { session, error } = await requireHR();
+    if (error) return error;
 
-    const body = await request.json();
-    const { staffId, email } = body;
-
+    const { staffId, email } = await readJson<{ staffId?: string; email?: string }>(request);
     if (!staffId || !email) {
-      return NextResponse.json({ error: "staffId and email are required" }, { status: 400 });
+      throw new ValidationError("staffId and email are required");
     }
 
     // HR cannot override the account of an existing SUPER_ADMIN or HR user

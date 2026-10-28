@@ -94,7 +94,7 @@ export default function StaffListClient({
         if (appliedFilters.departmentFilter !== "all") params.set("departmentId", appliedFilters.departmentFilter);
         params.set("page", String(currentPage));
 
-        const json = await apiFetch<{ data: StaffListItem[]; total: number; totalPages: number }>(`/api/hr/staff-list?${params}`);
+        const json = await apiFetch<{ data: StaffListItem[]; total: number; totalPages: number }>(`/api/hr/staff?${params}`);
         if (!cancelled) {
           setData(json.data ?? []);
           setTotal(json.total ?? 0);

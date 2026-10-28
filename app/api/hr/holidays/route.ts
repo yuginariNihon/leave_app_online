@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
+import { apiErrorResponse, ValidationError } from "@/lib/errors";
+import { readJson } from "@/lib/http";
 import { getHolidays, createHoliday } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -22,15 +23,16 @@ export async function POST(request: NextRequest) {
     const auth = await requireHR();
     if (auth.error) return auth.error;
 
-    const body = await request.json();
+    const body = await readJson<{ holidayName?: string; holidayDate?: string; isRecurring?: boolean }>(request);
     if (!body.holidayName || !body.holidayDate) {
-      return NextResponse.json(
-        { error: "holidayName and holidayDate are required" },
-        { status: 400 },
-      );
+      throw new ValidationError("holidayName and holidayDate are required");
     }
 
-    const holiday = await createHoliday(body);
+    const holiday = await createHoliday({
+      holidayName: body.holidayName,
+      holidayDate: body.holidayDate,
+      isRecurring: body.isRecurring,
+    });
     return NextResponse.json({ data: holiday }, { status: 201 });
   } catch (error) {
     return apiErrorResponse(error);

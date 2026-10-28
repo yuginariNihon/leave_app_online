@@ -39,7 +39,9 @@ function buildActivities(detail: LeaveDetailResponse) {
           ? "ได้รับอนุมัติแล้ว"
           : a.status === "rejected"
             ? "ไม่ได้รับอนุมัติ"
-            : "รอการพิจารณา";
+            : a.status === "cancelled"
+              ? "ยกเลิกคำขอ"
+              : "รอการพิจารณา";
 
       const suffix =
         a.status !== "pending"

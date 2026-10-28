@@ -169,11 +169,16 @@ export function downloadCsv(filename: string, csvContent: string) {
   URL.revokeObjectURL(url);
 }
 
-export function csvCell(value: string | number | null | undefined): string {
-  const s = value == null ? "" : String(value);
-  const sanitized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
-  return `"${sanitized.replace(/"/g, '""')}"`;
+export function downloadFromUrl(url: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
+
+export { csvCell } from "@/lib/csv";
 
 export function minutesToTime(minutes: number): string {
   const h = Math.floor(minutes / 60);

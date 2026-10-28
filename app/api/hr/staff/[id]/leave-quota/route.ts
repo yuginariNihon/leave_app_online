@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { readJson } from "@/lib/http";
 import { getLeaveRightsByStaffId } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -49,8 +50,9 @@ export async function PUT(
       return NextResponse.json({ error: "ไม่พบข้อมูลพนักงาน (อาจถูกลบไปแล้ว)" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { quotas } = body;
+    const { quotas } = await readJson<{
+      quotas?: Array<{ leaveTypeId: string; maxDays: number; usedDays: number; isActive?: boolean }>;
+    }>(request);
 
     if (!Array.isArray(quotas) || quotas.length === 0) {
       return NextResponse.json({ error: "ข้อมูลไม่ถูกต้อง: ไม่พบรายการสิทธิ์ลาที่จะบันทึก" }, { status: 400 });

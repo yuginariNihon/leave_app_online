@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { readJson } from "@/lib/http";
 import { getRoleManageList, createRole } from "@/lib/services/leaveService";
 import { seedDefaultPagePermissions } from "@/lib/services/rolePermissionService";
 import { prisma } from "@/lib/prisma";
@@ -31,8 +32,7 @@ export async function POST(request: NextRequest) {
     const auth = await requireSuperAdmin();
     if (auth.error) return auth.error;
 
-    const body = await request.json();
-    const { roleName } = body;
+    const { roleName } = await readJson<{ roleName?: unknown }>(request);
     if (typeof roleName !== "string") {
       return NextResponse.json({ error: "roleName (string) is required" }, { status: 400 });
     }

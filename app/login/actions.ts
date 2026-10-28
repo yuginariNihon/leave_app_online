@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { headers, cookies } from "next/headers";
 import { createSession, deleteSession } from "@/lib/auth";
-import { LOGIN_NEXT_COOKIE } from "@/lib/loginNextCookie";
+import { LOGIN_NEXT_COOKIE, safeNextPath } from "@/lib/loginNextCookie";
 import { prisma } from "@/lib/prisma";
 import {
   findUserByStaffCode,
@@ -17,25 +17,6 @@ export type LoginState = {
 };
 
 const RATE_LIMIT_DELAY_MS = 30_000;
-
-/**
- * The `next` cookie is untrusted input (anyone can write a cookie for the
- * domain). Only a path under /dashboard is ever accepted — this closes the
- * open-redirect vector (external URLs, protocol-relative //evil.com, etc.).
- */
-function safeNextPath(raw: string | undefined): string | null {
-  if (!raw) return null;
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(raw);
-  } catch {
-    return null;
-  }
-  if (!decoded.startsWith("/dashboard")) return null;
-  if (decoded.includes("//") || /[\\\r\n]/.test(decoded)) return null;
-  if (/^[a-z]+:/i.test(decoded)) return null;
-  return decoded;
-}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

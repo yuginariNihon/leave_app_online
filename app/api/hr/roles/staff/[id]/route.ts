@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { readJson } from "@/lib/http";
 import { getStaffRoleNames, updateStaffRoles } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";
@@ -14,8 +15,7 @@ export async function PATCH(
     if (error) return error;
 
     const { id } = await params;
-    const body = await request.json();
-    const { roles } = body;
+    const { roles } = await readJson<{ roles?: string[] }>(request);
 
     if (!Array.isArray(roles)) {
       return NextResponse.json({ error: "roles (string[]) is required" }, { status: 400 });

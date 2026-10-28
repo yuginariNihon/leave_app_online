@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export class AppError extends Error {
   readonly status: number;
@@ -48,7 +49,7 @@ export function apiErrorResponse(error: unknown): NextResponse {
   if (isAppError(error)) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
-  console.error("[API Error]", error);
+  logger.error("api", "unhandled error", error);
   return NextResponse.json(
     { error: "เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่อีกครั้ง" },
     { status: 500 }

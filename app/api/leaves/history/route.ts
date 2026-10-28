@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLeaveHistoryByStaffId, type LeaveHistoryDateField } from "@/lib/services/leaveService";
 import { requireAuth } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { csvStreamResponse, parsePagination } from "@/lib/http";
 import { formatDateOnly } from "@/lib/utils";
 import { statusTextMap } from "@/components/leave-history/types";
 
@@ -9,13 +10,7 @@ export const runtime = "nodejs";
 
 const PAGE_SIZE = 500;
 
-function csvCell(value: unknown): string {
-  const s = value === null || value === undefined ? "" : String(value);
-  const sanitized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
-  return `"${sanitized.replace(/"/g, '""')}"`;
-}
-
-function buildLeaveHistoryCsvRow(r: {
+function buildLeaveHistoryCsvCells(r: {
   createdAt: string | Date;
   startDate: string | null;
   endDate: string | null;
@@ -26,7 +21,7 @@ function buildLeaveHistoryCsvRow(r: {
   startTime?: string | null;
   endTime?: string | null;
   hours?: string | number | null;
-}): string {
+}): string[] {
   const dateLabel =
     r.startDate && r.endDate && r.startDate !== r.endDate
       ? `${formatDateOnly(r.startDate)} - ${formatDateOnly(r.endDate)}`
@@ -43,12 +38,12 @@ function buildLeaveHistoryCsvRow(r: {
         ? `${Number(r.totalDays)} วัน`
         : "";
   return [
-    csvCell(formatDateOnly(r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt)),
-    csvCell(dateLabel + timePart),
-    csvCell(r.leaveTypeName),
-    csvCell(days),
-    csvCell(statusTextMap[r.status as keyof typeof statusTextMap] ?? r.status),
-  ].join(",");
+    formatDateOnly(r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt),
+    dateLabel + timePart,
+    r.leaveTypeName,
+    days,
+    statusTextMap[r.status as keyof typeof statusTextMap] ?? r.status,
+  ];
 }
 
 export async function GET(request: NextRequest) {
@@ -77,70 +72,35 @@ export async function GET(request: NextRequest) {
 
     if (!stream) {
       const exportAll = searchParams.get("exportAll") === "true";
+      const { page, limit } = parsePagination(searchParams, { defaultLimit: 5, maxLimit: 500 });
       const result = await getLeaveHistoryByStaffId(session.staffId, {
         ...baseFilters,
-        page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
-        limit: exportAll ? undefined : searchParams.get("limit") ? Number(searchParams.get("limit")) : 5,
+        page,
+        limit: exportAll ? undefined : limit,
       });
       return NextResponse.json(result);
     }
 
     // Streaming CSV: page through the DB so we never hold the full dataset in memory.
-    const headers = [
-      "วันที่เขียนใบลา",
-      "วันที่ลา",
-      "ประเภทการลา",
-      "จำนวนวันที่ลา",
-      "สถานะ",
-    ];
-    const encoder = new TextEncoder();
-    const BOM = "﻿";
-
-    const readable = new ReadableStream<Uint8Array>({
-      async start(controller) {
-        controller.enqueue(encoder.encode(BOM + headers.map(csvCell).join(",") + "\n"));
-        try {
-          let page = 1;
-          while (true) {
-            const result = await getLeaveHistoryByStaffId(session.staffId, {
-              ...baseFilters,
-              page,
-              limit: PAGE_SIZE,
-            });
-            const rows = result.data as unknown as Array<{
-              createdAt: string | Date;
-              startDate: string | null;
-              endDate: string | null;
-              leaveTypeName: string;
-              totalDays?: string | number | null;
-              status: string;
-              leaveMode?: string;
-              startTime?: string | null;
-              endTime?: string | null;
-              hours?: string | number | null;
-            }>;
-            if (!rows.length) break;
-            let chunk = "";
-            for (const r of rows) {
-              chunk += buildLeaveHistoryCsvRow(r) + "\n";
-            }
-            controller.enqueue(encoder.encode(chunk));
-            if (rows.length < PAGE_SIZE) break;
-            page++;
+    return csvStreamResponse({
+      filename: "leave_history",
+      columns: ["วันที่เขียนใบลา", "วันที่ลา", "ประเภทการลา", "จำนวนวันที่ลา", "สถานะ"],
+      rows: async function* () {
+        let page = 1;
+        while (true) {
+          const result = await getLeaveHistoryByStaffId(session.staffId, {
+            ...baseFilters,
+            page,
+            limit: PAGE_SIZE,
+          });
+          const rows = result.data as unknown as Array<Parameters<typeof buildLeaveHistoryCsvCells>[0]>;
+          if (!rows.length) break;
+          for (const row of rows) {
+            yield buildLeaveHistoryCsvCells(row);
           }
-        } catch (err) {
-          controller.enqueue(encoder.encode(`\nError: ${(err as Error).message}\n`));
-        } finally {
-          controller.close();
+          if (rows.length < PAGE_SIZE) break;
+          page++;
         }
-      },
-    });
-
-    return new NextResponse(readable, {
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="leave_history_${new Date().toISOString().split("T")[0]}.csv"`,
-        "Cache-Control": "no-store",
       },
     });
   } catch (error) {

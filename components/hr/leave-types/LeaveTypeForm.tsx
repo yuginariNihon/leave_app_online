@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -27,19 +27,19 @@ export function LeaveTypeForm({
   onSubmit,
   onCancel,
 }: LeaveTypeFormProps) {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors: errs },
-  } = useForm<z.input<typeof createLeaveTypeSchema>, unknown, z.output<typeof createLeaveTypeSchema>>({
+  const form = useForm<z.input<typeof createLeaveTypeSchema>, unknown, z.output<typeof createLeaveTypeSchema>>({
     resolver: zodResolver(createLeaveTypeSchema),
     defaultValues: defaultValues ?? { leaveTypeName: "", maxDaysPerYear: null, isPaid: true, requiresAttachment: false },
   });
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors: errs },
+  } = form;
 
-  const isPaid = watch("isPaid");
-  const requiresAttachment = watch("requiresAttachment");
+  const isPaid = useWatch({ control: form.control, name: "isPaid" });
+  const requiresAttachment = useWatch({ control: form.control, name: "requiresAttachment" });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">

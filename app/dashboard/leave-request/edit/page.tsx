@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
@@ -121,6 +121,9 @@ export default function EditLeavePage() {
     return () => {
       cancelled = true;
     };
+    // Prefill runs once on mount; re-running on `form`/`searchParams` identity
+    // changes would overwrite edits the user has already made.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch holidays
@@ -131,12 +134,12 @@ export default function EditLeavePage() {
   }, []);
 
   // Watch form values
-  const startDate = form.watch("startDate");
-  const endDate = form.watch("endDate");
-  const leavePeriod = form.watch("leavePeriod");
-  const leaveMode = form.watch("leaveMode");
-  const startTime = form.watch("startTime");
-  const endTime = form.watch("endTime");
+  const startDate = useWatch({ control: form.control, name: "startDate" });
+  const endDate = useWatch({ control: form.control, name: "endDate" });
+  const leavePeriod = useWatch({ control: form.control, name: "leavePeriod" });
+  const leaveMode = useWatch({ control: form.control, name: "leaveMode" });
+  const startTime = useWatch({ control: form.control, name: "startTime" });
+  const endTime = useWatch({ control: form.control, name: "endTime" });
 
   const isHour = leaveMode === "hour";
 

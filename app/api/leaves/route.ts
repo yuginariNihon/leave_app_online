@@ -11,7 +11,8 @@ import {
   type CreateLeaveRequestValues,
 } from "@/lib/TypeSchema";
 import { getSessionUser } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/errors";
+import { apiErrorResponse, UnauthorizedError, ValidationError } from "@/lib/errors";
+import { parseBody } from "@/lib/http";
 
 export const runtime = "nodejs";
 
@@ -77,47 +78,17 @@ function serializeDataLeave(leave: Awaited<ReturnType<typeof createLeaveRequest>
 }
 
 export async function POST(request: Request) {
-  const session = await getSessionUser();
-  if (!session || !session.staffId) {
-    return NextResponse.json(
-      { error: "Unauthorized. Please log in first." },
-      { status: 401 },
-    );
-  }
-
-  let body: unknown;
-
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body." },
-      { status: 400 },
-    );
-  }
+    const session = await getSessionUser();
+    if (!session || !session.staffId) {
+      throw new UnauthorizedError("Unauthorized. Please log in first.");
+    }
 
-  const parsed = createLeaveRequestSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: "Invalid leave request payload.",
-        details: parsed.error.flatten().fieldErrors,
-      },
-      { status: 400 },
-    );
-  }
-
-  try {
-    const createInput = await buildCreateLeaveRequestInput(parsed.data, session.staffId);
+    const input = await parseBody(request, createLeaveRequestSchema);
+    const createInput = await buildCreateLeaveRequestInput(input, session.staffId);
 
     if ("error" in createInput) {
-      return NextResponse.json(
-        {
-          error: createInput.error,
-        },
-        { status: 400 },
-      );
+      throw new ValidationError(createInput.error);
     }
 
     const leave = await createLeaveRequest(createInput);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireHR } from "@/lib/api-guards";
 import { apiErrorResponse } from "@/lib/errors";
+import { readJson } from "@/lib/http";
 import { importStaff } from "@/lib/services/leaveService";
 import { importStaffSchema } from "@/lib/TypeSchema";
 
@@ -11,8 +12,7 @@ export async function POST(request: NextRequest) {
     const auth = await requireHR();
     if (auth.error) return auth.error;
 
-    const body = await request.json();
-    const { rows } = body as { rows: unknown[] };
+    const { rows } = await readJson<{ rows?: unknown[] }>(request);
 
     if (!Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json({ error: "กรุณาส่งข้อมูลพนักงานอย่างน้อย 1 รายการ" }, { status: 400 });
