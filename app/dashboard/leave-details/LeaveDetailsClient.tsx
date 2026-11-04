@@ -15,6 +15,7 @@ import { formatDateTime, currentSubmitTime } from "@/lib/utils";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
 import { apiFetch } from "@/lib/api";
+import { isAutoCancelReason } from "@/lib/autoCancel";
 
 function buildActivities(detail: LeaveDetailResponse) {
   const activities: Array<{ title: string; date: string; isCurrent: boolean; subtitle?: string }> =
@@ -28,7 +29,9 @@ function buildActivities(detail: LeaveDetailResponse) {
 
   if (detail.status === "cancelled") {
     activities.push({
-      title: "ยกเลิกคำขอ",
+      title: isAutoCancelReason(detail.cancelReason)
+        ? "ระบบยกเลิกอัตโนมัติ"
+        : "ยกเลิกคำขอ",
       date: "ปัจจุบัน",
       isCurrent: true,
     });

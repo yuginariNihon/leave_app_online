@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isCronRequestAuthorized } from "@/lib/cronAuth";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -6,7 +7,7 @@ export const runtime = "nodejs";
 const RETENTION_DAYS = 90;
 
 export async function GET(request: NextRequest) {
-  if (request.nextUrl.searchParams.get("secret") !== process.env.CRON_SECRET) {
+  if (!isCronRequestAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

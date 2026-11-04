@@ -6,6 +6,7 @@ import z from "zod";
 import { buildLeaveReferenceId, timeFromDb } from "@/lib/utils";
 import { APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
 import { ForbiddenError } from "@/lib/errors";
+import { isAutoCancelReason } from "@/lib/autoCancel";
 
 const SUPERVISOR_POSITION_NAMES = new Set([
   ...APPROVER_POSITION_NAMES.Supervisor,
@@ -515,10 +516,14 @@ export async function getLeaveDetailById(
 
       // ขั้นที่ถูกยกเลิกเพราะเจ้าของใบลายกเลิกเอง: `cancelled_at` ถูกเซ็ตที่ acted_at
       // แต่ approver_id ยังว่าง จึงต้องไม่แสดงชื่อว่า "รอดำเนินการ" (เหมือนยังรอพิจารณา)
+      // ถ้าเป็น `cancel_reason` ที่ระบบเขียน (auto-cancel) ให้แสดงว่า "ระบบ" ไม่ใช่เจ้าของ
       const isCancelledStep = a.approval_status === "cancelled";
+      const isAutoCancelled = isCancelledStep && isAutoCancelReason(leave.cancel_reason);
 
       const approverRole = isCancelledStep
-        ? "เจ้าของใบลา"
+        ? isAutoCancelled
+          ? "ระบบ"
+          : "เจ้าของใบลา"
         : isHRStep
           ? (APPROVER_TYPE_LABELS["HR"] ?? "HR")
           : (a.approver?.position?.position_name ?? (autoSkipRole || pendingRole));
@@ -528,7 +533,9 @@ export async function getLeaveDetailById(
         approverName:
           a.approver?.name ??
           (isCancelledStep
-            ? "ผู้ขอยกเลิก"
+            ? isAutoCancelled
+              ? "ระบบยกเลิกอัตโนมัติ"
+              : "ผู้ขอยกเลิก"
             : a.approval_status === "approved"
               ? "Auto-Skip"
               : "รอดำเนินการ"),

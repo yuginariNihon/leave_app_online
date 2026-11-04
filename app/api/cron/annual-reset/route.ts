@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isCronRequestAuthorized } from "@/lib/cronAuth";
 import { prisma } from "@/lib/prisma";
 import {
   computeDefaultMaxDays,
@@ -10,7 +11,7 @@ import {
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  if (request.nextUrl.searchParams.get("secret") !== process.env.CRON_SECRET) {
+  if (!isCronRequestAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

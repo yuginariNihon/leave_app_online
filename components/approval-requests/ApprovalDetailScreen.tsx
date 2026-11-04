@@ -34,6 +34,7 @@ import { formatThaiDate, formatDateTime } from "@/lib/utils";
 import type { LeaveDetailResponse } from "@/lib/services/leaveService";
 import { AppBreadcrumb } from "@/components/AppBreadcrumb";
 import { apiFetch } from "@/lib/api";
+import { isAutoCancelReason } from "@/lib/autoCancel";
 
 export type ApprovalDetailVariant = "approver" | "hr";
 
@@ -332,7 +333,13 @@ export function ApprovalDetailScreen({ variant }: { variant: ApprovalDetailVaria
                       <div className={`w-4 h-4 shrink-0 rounded-full z-10 ${a.status === "approved" ? "bg-[#22c55e]" : a.status === "cancelled" ? "bg-[#94a3b8]" : "bg-[#ef4444]"}`} />
                       <div>
                       <p className="font-bold text-sm">
-                        {a.status === "approved" ? "อนุมัติ" : a.status === "cancelled" ? "ยกเลิกคำขอ" : "ไม่อนุมัติ"}
+                        {a.status === "approved"
+                          ? "อนุมัติ"
+                          : a.status === "cancelled"
+                            ? isAutoCancelReason(detail.cancelReason)
+                              ? "ยกเลิกอัตโนมัติ"
+                              : "ยกเลิกคำขอ"
+                            : "ไม่อนุมัติ"}
                         {a.approverName ? ` โดย ${a.approverName}` : ""}<br/>
                         {a.approverRole ? ` ( ${a.approverRole} )` : ""}
                       </p>
