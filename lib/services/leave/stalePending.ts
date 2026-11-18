@@ -4,8 +4,12 @@ import {
   AUTO_CANCEL_DAYS_DEFAULT,
   autoCancelCutoff,
   autoCancelReason,
+  isStalePending,
+  waitingDays,
+  waitingSinceOf,
   shouldAutoCancel,
 } from "@/lib/autoCancel";
+import { timeFromDb } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
 import { scheduleLeaveCancelledEmail } from "@/lib/services/leaveMailerService";
@@ -192,5 +196,148 @@ export async function autoCancelStaleLeaves(
     leaveIds: cancelled,
     dryRun,
     truncated,
+  };
+}
+
+// ──────────────────────────────────────
+// รายการเตือน (READ-ONLY) — ใบที่ค้างอนุมัติเกิน N วัน ทุกขั้น
+// ไม่มีการเขียน DB ใด ๆ ทั้งสิ้น
+// ──────────────────────────────────────
+
+/** จำนวนแถวที่แสดงบน dashboard */
+export const STALE_PENDING_LIMIT = 5;
+
+/**
+ * จำนวนแถวสูงสุดที่กวาดจาก DB ต่อครั้ง
+ * (กรอง `created_at` หยาบที่ DB แล้วค่อยคัดด้วย `isStalePending` ใน JS
+ *  จึงต้องเผื่อจำนวนมากกว่าที่จะแสดง)
+ */
+export const STALE_PENDING_SCAN_LIMIT = 200;
+
+export type StalePendingItem = {
+  leaveId: string;
+  leaveNo: string | null;
+  staffName: string;
+  departmentName: string | null;
+  leaveTypeName: string;
+  caseName: string;
+  /** ขั้นที่กำลังรออยู่ (1 = ยังไม่มีใครอนุมัติเลย) */
+  currentLevel: number;
+  /** วันที่เข้าสู่ขั้นปัจจุบัน (ISO) */
+  waitingSince: string;
+  /** จำนวนวันที่ค้าง ณ ตอนคำนวณ */
+  waitingDays: number;
+  startDate: string;
+  endDate: string;
+  leaveMode: string;
+  startTime: string | null;
+  endTime: string | null;
+  hours: number | null;
+  totalDays: number;
+};
+
+export type StalePendingListResult = {
+  /** เกณฑ์ที่ใช้ (วัน) — ตัวเดียวกับ cron */
+  days: number;
+  items: StalePendingItem[];
+  /** true เมื่อมีใบตกค้างมากกว่าจำนวนที่แสดง */
+  hasMore: boolean;
+};
+
+/**
+ * ดึงใบลาที่ "ค้างอนุมัติเกิน N วัน" เพื่อแสดงเป็นการ์ดเตือนบน dashboard HR
+ *
+ * จุดเริ่มนับ: `acted_at` ของขั้นที่อนุมัติล่าสุด ?? `created_at`
+ * → ใบที่อนุมัติขั้น 1–2 แล้วแต่เพิ่งเข้าขั้น 3 เมื่อ 5 วัน จะไม่ถูกเตือน
+ *   (ถึงแม้จะยื่นใบมานานแล้ว) — ต่างจาก `autoCancelStaleLeaves` ที่ดูเฉพาะ
+ *   ใบขั้นแรกและนับจาก `created_at` (ซึ่งเท่ากันเพราะยังไม่มีใครอนุมัติ)
+ *
+ * กรองหยาบที่ DB ด้วย `created_at < cutoff` ได้อย่างปลอดภัย เพราะ
+ * `waitingSince >= created_at` เสมอ → ไม่มีใบที่ควรเตือนถูกตัดออก
+ */
+export async function getStalePendingLeaves(
+  options: { now?: Date; days?: number; limit?: number } = {},
+): Promise<StalePendingListResult> {
+  const now = options.now ?? new Date();
+  const days = resolveAutoCancelDays(options.days);
+  const limit = options.limit ?? STALE_PENDING_LIMIT;
+  const cutoff = autoCancelCutoff(now, days);
+
+  const rows = await prisma.dataLeave.findMany({
+    where: {
+      leave_status: LeaveStatus.pending,
+      created_at: { lt: cutoff },
+    },
+    select: {
+      leave_id: true,
+      leave_no: true,
+      leave_status: true,
+      created_at: true,
+      current_approval_level: true,
+      start_date: true,
+      end_date: true,
+      leave_mode: true,
+      start_time: true,
+      end_time: true,
+      hours: true,
+      total_days: true,
+      staff: {
+        select: {
+          name: true,
+          department: { select: { department_name: true } },
+        },
+      },
+      leaveType: { select: { leave_type_name: true } },
+      leaveCase: { select: { case_name: true } },
+      approvals: {
+        where: { approval_status: ApprovalStatus.approved, acted_at: { not: null } },
+        select: { acted_at: true },
+        orderBy: { approval_level: "desc" },
+        take: 1,
+      },
+    },
+    orderBy: { created_at: "asc" },
+    take: STALE_PENDING_SCAN_LIMIT,
+  });
+
+  const items: StalePendingItem[] = rows
+    .flatMap((row) => {
+      const lastApprovedAt = row.approvals[0]?.acted_at ?? null;
+      const state = {
+        leaveStatus: row.leave_status,
+        createdAt: row.created_at,
+        lastApprovedAt,
+      };
+      if (!isStalePending(state, now, days)) return [];
+
+      const waitingSince = waitingSinceOf(state);
+
+      return [
+        {
+          leaveId: row.leave_id,
+          leaveNo: row.leave_no,
+          staffName: row.staff.name,
+          departmentName: row.staff.department?.department_name ?? null,
+          leaveTypeName: row.leaveType.leave_type_name,
+          caseName: row.leaveCase.case_name,
+          currentLevel: row.current_approval_level,
+          waitingSince: waitingSince.toISOString(),
+          waitingDays: waitingDays(waitingSince, now),
+          startDate: row.start_date?.toISOString().split("T")[0] ?? "",
+          endDate: row.end_date?.toISOString().split("T")[0] ?? "",
+          leaveMode: row.leave_mode ?? "day",
+          startTime: row.start_time ? timeFromDb(row.start_time) : null,
+          endTime: row.end_time ? timeFromDb(row.end_time) : null,
+          hours: row.hours != null ? Number(row.hours) : null,
+          totalDays: Number(row.total_days ?? 0),
+        },
+      ];
+    })
+    .sort((a, b) => b.waitingDays - a.waitingDays);
+
+  return {
+    days,
+    items: items.slice(0, limit),
+    hasMore: items.length > limit,
   };
 }

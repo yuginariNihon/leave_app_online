@@ -14,6 +14,7 @@ import {
   StatusStatsSection,
   PendingApprovalSection,
   LeaveTimelineSection,
+  StalePendingSection,
   RecentActivitiesSection,
   SuperAdminStatsSection,
 } from "./DashboardSections";
@@ -94,6 +95,12 @@ export default async function HrDashboardPage() {
           </Suspense>
         </div>
       </div>
+
+      <Suspense fallback={<SectionSkeleton className="h-40" />}>
+        <Reveal>
+          <StalePendingSection />
+        </Reveal>
+      </Suspense>
 
       <Suspense fallback={<SectionSkeleton className="h-72" />}>
         <Reveal>

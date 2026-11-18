@@ -1,5 +1,5 @@
 import { getTodaysLeave, getUpcomingLeave, getLeaveTrendData, getLeaveTypeDistribution, getPendingApprovals, getRecentActivities, getDeptLeaveComparison, getApprovalStatusStats, getDashboardKpiData } from "@/lib/services/dashboardService";
-import { getRoleManageList, getUserList } from "@/lib/services/leaveService";
+import { getRoleManageList, getUserList, getStalePendingLeaves } from "@/lib/services/leaveService";
 import { getPagePermissions } from "@/lib/services/rolePermissionService";
 import { KpiCards } from "./KpiCards";
 import {
@@ -9,6 +9,7 @@ import {
   DeferredStatusStats,
 } from "./DeferredCharts";
 import { PendingApprovalTable } from "./PendingApprovalTable";
+import { StalePendingTable } from "./StalePendingTable";
 import { LeaveTimelineCard } from "./LeaveTimelineCard";
 import { RecentActivities } from "./RecentActivities";
 import { SuperAdminStats } from "./SuperAdminStats";
@@ -46,6 +47,16 @@ export async function PendingApprovalSection() {
 export async function LeaveTimelineSection() {
   const [todays, upcoming] = await Promise.all([getTodaysLeave(), getUpcomingLeave()]);
   return <LeaveTimelineCard todays={todays} upcoming={upcoming} />;
+}
+
+/**
+ * รายการเตือนใบลาค้างอนุมัติเกิน 30 วัน (อ่านอย่างเดียว)
+ *
+ * ไม่ใช้ `unstable_cache` เพราะเป็นรายการเตือน — ต้องสดเสมอ (1 query, อยู่ใน Suspense)
+ */
+export async function StalePendingSection() {
+  const data = await getStalePendingLeaves();
+  return <StalePendingTable {...data} />;
 }
 
 export async function RecentActivitiesSection() {
