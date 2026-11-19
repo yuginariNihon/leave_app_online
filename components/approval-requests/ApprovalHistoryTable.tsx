@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ApprovalStatus } from "@/lib/generated/prisma/enums";
-import { formatLeaveDateRange, formatDays, formatDateTime } from "@/lib/utils";
+import { formatLeaveDateRange, formatDays, formatDateTime } from "@/lib/core/utils";
 
 interface ApprovalHistoryItem {
   approvalId: string;

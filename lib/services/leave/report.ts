@@ -1,6 +1,6 @@
 import { LeaveStatus, Prisma } from "@/lib/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
-import { timeFromDb } from "@/lib/utils";
+import { prisma } from "@/lib/core/prisma";
+import { timeFromDb } from "@/lib/core/utils";
 
 export type LeaveReportRecord = {
   leaveId: string;

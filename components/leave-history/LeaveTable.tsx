@@ -13,7 +13,7 @@ import {
 import { StatusBadge } from "./StatusBadge";
 import type { LeaveRecord } from "./types";
 import { statusTextMap } from "./types";
-import { formatDateOnly, formatLeaveDateRange, formatDays } from "@/lib/utils";
+import { formatDateOnly, formatLeaveDateRange, formatDays } from "@/lib/core/utils";
 
 interface LeaveTableProps {
   data: LeaveRecord[];

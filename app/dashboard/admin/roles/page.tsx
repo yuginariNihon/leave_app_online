@@ -13,10 +13,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { toast } from "sonner";
 import { StaffRoleDialog } from "@/app/dashboard/admin/roles/StaffRoleDialog";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 type StaffWithRoles = {
   staffId: string;

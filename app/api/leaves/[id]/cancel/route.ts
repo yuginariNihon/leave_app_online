@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cancelLeaveRequest } from "@/lib/services/leaveService";
-import { requireAuth } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
+import { requireAuth } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
 
 export const runtime = "nodejs";
 

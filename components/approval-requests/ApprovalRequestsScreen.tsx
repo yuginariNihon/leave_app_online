@@ -23,9 +23,9 @@ import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters"
 import { ApprovalTable } from "@/components/approval-requests/ApprovalTable";
 import { Pagination } from "@/components/leave-history/Pagination";
 import type { ApprovalRequestItem } from "@/lib/services/approvalService";
-import { apiFetch } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { apiFetch } from "@/lib/core/api";
+import { cn } from "@/lib/core/utils";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import { usePagination } from "@/hooks/usePagination";
 import { DataTable } from "@/components/shared/DataTable";

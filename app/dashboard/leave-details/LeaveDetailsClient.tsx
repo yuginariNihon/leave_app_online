@@ -11,11 +11,11 @@ import { LeaveDetailsApprovalSidebar } from "@/components/leave-details/LeaveDet
 import { LeaveDetailsActions } from "@/components/leave-details/LeaveDetailsActions";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import type { LeaveDetailResponse } from "@/lib/services/leaveService";
-import { formatDateTime, currentSubmitTime } from "@/lib/utils";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { formatDateTime, currentSubmitTime } from "@/lib/core/utils";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
-import { apiFetch } from "@/lib/api";
-import { isAutoCancelReason } from "@/lib/autoCancel";
+import { apiFetch } from "@/lib/core/api";
+import { isAutoCancelReason } from "@/lib/policy/autoCancel";
 
 function buildActivities(detail: LeaveDetailResponse) {
   const activities: Array<{ title: string; date: string; isCurrent: boolean; subtitle?: string }> =

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCsvExport } from "@/hooks/useCsvExport";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 import type { SectionListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
 import {

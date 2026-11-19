@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import { StaffForm } from "@/components/hr/StaffForm";
 import { WarningBanner } from "@/components/ui/warning-banner";
 import type { StaffMasterData } from "@/lib/services/leaveService";
-import type { CreateStaffValues, UpdateStaffValues } from "@/lib/TypeSchema";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { apiFetch } from "@/lib/api";
+import type { CreateStaffValues, UpdateStaffValues } from "@/lib/schemas";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
+import { apiFetch } from "@/lib/core/api";
 import { Loader2 } from "lucide-react";
 
 export default function AddStaffPage() {

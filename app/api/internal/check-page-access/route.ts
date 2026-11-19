@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 import { getSessionUser } from "@/lib/auth";
-import { logger } from "@/lib/logger";
+import { logger } from "@/lib/core/logger";
 
 export const runtime = "nodejs";
 

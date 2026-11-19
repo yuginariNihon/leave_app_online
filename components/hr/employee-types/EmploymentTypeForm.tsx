@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Save, Loader2 } from "lucide-react";
-import { createEmploymentTypeSchema } from "@/lib/TypeSchema";
-import type { CreateEmploymentTypeValues, UpdateEmploymentTypeValues } from "@/lib/TypeSchema";
+import { createEmploymentTypeSchema } from "@/lib/schemas";
+import type { CreateEmploymentTypeValues, UpdateEmploymentTypeValues } from "@/lib/schemas";
 
 interface EmploymentTypeFormProps {
   mode: "create" | "edit";

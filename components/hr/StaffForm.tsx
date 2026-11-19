@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updateStaffSchema, createStaffSchema, type UpdateStaffValues, type CreateStaffValues } from "@/lib/TypeSchema";
+import { updateStaffSchema, createStaffSchema, type UpdateStaffValues, type CreateStaffValues } from "@/lib/schemas";
 import type { StaffMasterData } from "@/lib/services/leaveService";
 import { HelpSection } from "@/components/hr/HelpSection";
 

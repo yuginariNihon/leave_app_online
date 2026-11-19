@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Save, Loader2 } from "lucide-react";
-import { createDepartmentSchema, updateDepartmentSchema } from "@/lib/TypeSchema";
-import type { CreateDepartmentValues, UpdateDepartmentValues } from "@/lib/TypeSchema";
+import { createDepartmentSchema, updateDepartmentSchema } from "@/lib/schemas";
+import type { CreateDepartmentValues, UpdateDepartmentValues } from "@/lib/schemas";
 
 interface DepartmentFormProps {
   mode: "create" | "edit";

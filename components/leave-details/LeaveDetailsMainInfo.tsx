@@ -24,7 +24,7 @@ type LeaveDetailsMainInfoProps = {
   supervisor?: { name: string; role: string };
 };
 
-import { formatFullDate, formatFileSize, formatThaiShortDate } from "@/lib/utils";
+import { formatFullDate, formatFileSize, formatThaiShortDate } from "@/lib/core/utils";
 
 export function LeaveDetailsMainInfo({
   leaveTypeName,

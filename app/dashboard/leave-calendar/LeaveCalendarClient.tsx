@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useProgressRouter } from "@/components/ProgressBar";
+import { useProgressRouter } from "@/components/shared/ProgressBar";
 import { ChevronLeft, ChevronRight, User, Bell, Info, X, Sun, ArrowRight } from "lucide-react";
 
 import { WarningBanner } from "@/components/ui/warning-banner";
-import { useUser } from "@/lib/user-context";
-import { apiFetch, ApiError } from "@/lib/api";
+import { useUser } from "@/lib/context/user-context";
+import { apiFetch, ApiError } from "@/lib/core/api";
 
 type DayData = {
   date: string;

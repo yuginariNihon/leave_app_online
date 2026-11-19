@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { getLeaveDetailById } from "@/lib/services/leaveService";
-import { formatThaiShortDate, buildLeaveReferenceId } from "@/lib/utils";
+import { formatThaiShortDate, buildLeaveReferenceId } from "@/lib/core/utils";
 
 export const dynamic = "force-dynamic";
 

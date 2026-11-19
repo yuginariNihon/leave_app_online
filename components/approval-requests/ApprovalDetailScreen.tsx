@@ -30,11 +30,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { MdCancel } from "react-icons/md";
-import { formatThaiDate, formatDateTime } from "@/lib/utils";
+import { formatThaiDate, formatDateTime } from "@/lib/core/utils";
 import type { LeaveDetailResponse } from "@/lib/services/leaveService";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { apiFetch } from "@/lib/api";
-import { isAutoCancelReason } from "@/lib/autoCancel";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
+import { apiFetch } from "@/lib/core/api";
+import { isAutoCancelReason } from "@/lib/policy/autoCancel";
 
 export type ApprovalDetailVariant = "approver" | "hr";
 

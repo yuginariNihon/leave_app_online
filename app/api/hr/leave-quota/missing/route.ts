@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse, ValidationError } from "@/lib/errors";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse, ValidationError } from "@/lib/core/errors";
 import { getStaffMissingLeaveLimit } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";

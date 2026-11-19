@@ -22,8 +22,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { apiFetch } from "@/lib/api";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
+import { apiFetch } from "@/lib/core/api";
 import type { LeaveTypeListItem, MissingQuotaResult, AssignLeaveLimitResult } from "@/lib/services/leaveService";
 import { toast } from "sonner";
 

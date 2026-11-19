@@ -4,8 +4,8 @@ import { useState, useTransition, type CSSProperties, type ReactNode } from "rea
 import Image from "next/image";
 import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
-import { useProgressRouter } from "@/components/ProgressBar";
-import { useUser } from "@/lib/user-context";
+import { useProgressRouter } from "@/components/shared/ProgressBar";
+import { useUser } from "@/lib/context/user-context";
 import { logoutAction } from "@/app/login/actions";
 import {
   GitBranch, LayoutDashboard, ShieldCheck, History, Users, UserPlus, Upload,
@@ -24,9 +24,9 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { canAccessPage } from "@/lib/menu-config";
+import { canAccessPage } from "@/lib/policy/menu-config";
 
 const itemBase =
   "relative isolate !overflow-visible rounded-xl px-3 py-2.5 h-auto text-[14px] gap-3 group transition-all duration-150";

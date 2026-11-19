@@ -4,13 +4,13 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { headers, cookies } from "next/headers";
 import { createSession, deleteSession } from "@/lib/auth";
-import { LOGIN_NEXT_COOKIE, safeNextPath } from "@/lib/loginNextCookie";
-import { prisma } from "@/lib/prisma";
+import { LOGIN_NEXT_COOKIE, safeNextPath } from "@/lib/auth/loginNextCookie";
+import { prisma } from "@/lib/core/prisma";
 import {
   findUserByStaffCode,
   createLoginHistory,
   updateLastLogin,
-} from "@/lib/services/userService";
+} from "@/lib/services/admin/userService";
 
 export type LoginState = {
   message?: string;

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { UserProvider } from "@/lib/user-context";
+import { UserProvider } from "@/lib/context/user-context";
 
 type SidebarLayoutWrapperProps = {
   children: React.ReactNode;

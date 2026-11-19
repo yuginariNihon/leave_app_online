@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Save, Loader2 } from "lucide-react";
-import { createLeaveCaseSchema } from "@/lib/TypeSchema";
-import type { CreateLeaveCaseValues, UpdateLeaveCaseValues } from "@/lib/TypeSchema";
+import { createLeaveCaseSchema } from "@/lib/schemas";
+import type { CreateLeaveCaseValues, UpdateLeaveCaseValues } from "@/lib/schemas";
 
 interface LeaveCaseFormProps {
   mode: "create" | "edit";

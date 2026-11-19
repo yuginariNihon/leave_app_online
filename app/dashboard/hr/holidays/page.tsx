@@ -13,8 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { apiFetch } from "@/lib/api";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
+import { apiFetch } from "@/lib/core/api";
 import { toast } from "sonner";
 
 type HolidayItem = {

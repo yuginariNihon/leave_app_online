@@ -5,10 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, GitBranch, Plus, Trash2, GripVertical, Save, Loader2 } from "lucide-react";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { ApproverType } from "@/lib/generated/prisma/enums";
 import { HelpSection } from "@/components/hr/HelpSection";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 type StepFormItem = {
   key: string;

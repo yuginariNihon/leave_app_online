@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 import type { LeaveCaseListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
 import {

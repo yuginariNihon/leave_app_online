@@ -7,7 +7,7 @@ import {
   isUnconfiguredLeaveType,
   isVacationLeaveType,
   yearsOfServiceFrom,
-} from "@/lib/services/leaveQuotaService";
+} from "@/lib/services/leave/leaveQuotaService";
 
 describe("isVacationLeaveType", () => {
   it("matches only the annual leave type name", () => {

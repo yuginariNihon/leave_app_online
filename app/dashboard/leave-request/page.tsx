@@ -16,16 +16,16 @@ import {
 } from "@/components/ui/card";
 
 import { ArrowLeft, CalendarDays, Loader2 } from "lucide-react";
-import { currentSubmitTime } from "@/lib/utils";
+import { currentSubmitTime } from "@/lib/core/utils";
 
 import { LeaveForm } from "@/components/leave-request/LeaveForm";
 
-import { leaveFormSchema, LeaveFormValues } from "@/lib/TypeSchema";
+import { leaveFormSchema, LeaveFormValues } from "@/lib/schemas";
 import { useLeaveOptions } from "@/hooks/useLeaveOptions";
 import { WarningBanner, WarningBannerGroup } from "@/components/ui/warning-banner";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { ResultErrorOverlay } from "@/components/leave-request/ResultErrorOverlay";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 export type LeaveQuotaMap = Record<string, { usedDays: number; maxDays: number; remaining: number }>;
 

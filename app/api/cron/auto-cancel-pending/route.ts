@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isCronRequestAuthorized } from "@/lib/cronAuth";
-import { logger } from "@/lib/logger";
+import { isCronRequestAuthorized } from "@/lib/auth/cronAuth";
+import { logger } from "@/lib/core/logger";
 import { autoCancelStaleLeaves } from "@/lib/services/leave/stalePending";
 
 export const runtime = "nodejs";

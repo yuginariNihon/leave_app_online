@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
+import { prisma } from "@/lib/core/prisma";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
 import { getStaffDetail, updateStaff, getStaffRoleNames } from "@/lib/services/leaveService";
-import { updateStaffSchema } from "@/lib/TypeSchema";
+import { updateStaffSchema } from "@/lib/schemas";
 import { logReadAccess } from "@/lib/services/auditService";
-import { readJson, parseBody } from "@/lib/http";
+import { readJson, parseBody } from "@/lib/core/http";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";

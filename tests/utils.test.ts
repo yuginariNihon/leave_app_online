@@ -6,7 +6,7 @@ import {
   minutesToTime,
   parseDateOnly,
   timeFromDb,
-} from "@/lib/utils";
+} from "@/lib/core/utils";
 
 describe("csvCell", () => {
   it("wraps values in quotes and escapes inner quotes", () => {

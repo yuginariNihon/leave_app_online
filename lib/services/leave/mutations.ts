@@ -5,17 +5,17 @@ import {
   Prisma,
   LeavePeriod,
 } from "@/lib/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
-import { toDateOnly } from "@/lib/utils";
-import { allocateLeaveNo } from "@/lib/services/leaveNumberService";
-import { checkApproversExist } from "@/lib/services/approverUtils";
+import { prisma } from "@/lib/core/prisma";
+import { toDateOnly } from "@/lib/core/utils";
+import { allocateLeaveNo } from "@/lib/services/leave/leaveNumberService";
+import { checkApproversExist } from "@/lib/services/approval/approverUtils";
 import { updateUsedDaysOnApproval } from "@/lib/services/approvalService";
-import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
+import { invalidateDashboardKpi } from "@/lib/services/dashboard/dashboardService";
 import {
   scheduleLeaveCreatedEmail,
   scheduleLeaveCancelledEmail,
-} from "@/lib/services/leaveMailerService";
-import { ConflictError, NotFoundError } from "@/lib/errors";
+} from "@/lib/services/leave/leaveMailerService";
+import { ConflictError, NotFoundError } from "@/lib/core/errors";
 import { LeaveRequestValidationError } from "@/lib/services/leave/constants";
 import {
   assertValidLeaveDateRange,

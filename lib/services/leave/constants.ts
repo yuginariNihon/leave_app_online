@@ -1,4 +1,4 @@
-import { ValidationError } from "@/lib/errors";
+import { ValidationError } from "@/lib/core/errors";
 
 /** Validation error raised by leave business rules (mapped to HTTP 400). */
 export class LeaveRequestValidationError extends ValidationError {}

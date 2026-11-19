@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatDateOnly, formatLeaveDateRange, formatDays } from "@/lib/utils";
+import { formatDateOnly, formatLeaveDateRange, formatDays } from "@/lib/core/utils";
 import type { ApprovalRequestItem } from "@/lib/services/approvalService";
 
 interface ApprovalTableProps {

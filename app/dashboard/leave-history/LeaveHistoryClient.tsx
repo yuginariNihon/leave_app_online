@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useProgressRouter } from "@/components/ProgressBar";
+import { useProgressRouter } from "@/components/shared/ProgressBar";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,13 @@ import { LeaveFilters } from "@/components/leave-history/LeaveFilters";
 import { LeaveTable } from "@/components/leave-history/LeaveTable";
 import { Pagination } from "@/components/leave-history/Pagination";
 import type { LeaveRecord } from "@/components/leave-history/types";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import { usePagination } from "@/hooks/usePagination";
 import { DataTable } from "@/components/shared/DataTable";
 import type { LeaveHistoryResult, LeaveHistoryDateField } from "@/lib/services/leaveService";
-import { apiFetch } from "@/lib/api";
-import { downloadFromUrl } from "@/lib/utils";
+import { apiFetch } from "@/lib/core/api";
+import { downloadFromUrl } from "@/lib/core/utils";
 
 type Props = {
   initialData: LeaveHistoryResult;

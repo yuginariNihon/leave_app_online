@@ -1,6 +1,6 @@
 import { LeaveMode, LeavePeriod } from "@/lib/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
-import { toDateOnly, countInclusiveDays, timeFromDb } from "@/lib/utils";
+import { prisma } from "@/lib/core/prisma";
+import { toDateOnly, countInclusiveDays, timeFromDb } from "@/lib/core/utils";
 import {
   AFTERNOON_END,
   AFTERNOON_START,

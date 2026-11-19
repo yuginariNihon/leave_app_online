@@ -1,15 +1,15 @@
 import { ApprovalStatus, LeaveStatus, Prisma } from "@/lib/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
-import { checkApproverExists, checkApproverForStaff, checkApproverForStaffBatch } from "@/lib/services/approverUtils";
-import { getCachedWorkflow } from "@/lib/services/workflowCache";
-import { resolveDefaultMaxDays } from "@/lib/services/leaveQuotaService";
-import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
+import { prisma } from "@/lib/core/prisma";
+import { checkApproverExists, checkApproverForStaff, checkApproverForStaffBatch } from "@/lib/services/approval/approverUtils";
+import { getCachedWorkflow } from "@/lib/services/workflow/workflowCache";
+import { resolveDefaultMaxDays } from "@/lib/services/leave/leaveQuotaService";
+import { invalidateDashboardKpi } from "@/lib/services/dashboard/dashboardService";
 import {
   scheduleLeaveApprovedEmail,
   scheduleLeaveRejectedEmail,
   scheduleLeaveNextApproverEmail,
-} from "@/lib/services/leaveMailerService";
-import { NotFoundError, ConflictError, ValidationError, ForbiddenError, UnauthorizedError } from "@/lib/errors";
+} from "@/lib/services/leave/leaveMailerService";
+import { NotFoundError, ConflictError, ValidationError, ForbiddenError, UnauthorizedError } from "@/lib/core/errors";
 
 // ──────────────────────────────────────────────
 // Advance Helper
@@ -677,4 +677,4 @@ export async function hrBulkUpdateApprovalStatus(
   invalidateDashboardKpi();
 }
 
-export * from "@/lib/services/approvalQueries";
+export * from "@/lib/services/approval/approvalQueries";

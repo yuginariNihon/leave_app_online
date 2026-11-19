@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-guards";
+import { requireAuth } from "@/lib/auth/api-guards";
 import {
   getMyProfile,
   updateMyProfile,
 } from "@/lib/services/leaveService";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
-import { apiErrorResponse, NotFoundError } from "@/lib/errors";
-import { parseBody } from "@/lib/http";
-import { updateMyProfileSchema } from "@/lib/TypeSchema";
+import { apiErrorResponse, NotFoundError } from "@/lib/core/errors";
+import { parseBody } from "@/lib/core/http";
+import { updateMyProfileSchema } from "@/lib/schemas";
 
 export const runtime = "nodejs";
 

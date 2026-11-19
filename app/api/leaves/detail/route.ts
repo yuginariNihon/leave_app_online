@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLeaveDetailById } from "@/lib/services/leaveService";
-import { requireAuth } from "@/lib/api-guards";
+import { requireAuth } from "@/lib/auth/api-guards";
 import { logReadAccess } from "@/lib/services/auditService";
 import { headers } from "next/headers";
-import { logger } from "@/lib/logger";
+import { logger } from "@/lib/core/logger";
 
 export const runtime = "nodejs";
 

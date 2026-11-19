@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { getUnassignedLeaveTypeIds } from "@/lib/services/leaveQuotaService";
+import { requireAuth } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { getUnassignedLeaveTypeIds } from "@/lib/services/leave/leaveQuotaService";
 import { getLeaveRightsByStaffId } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";

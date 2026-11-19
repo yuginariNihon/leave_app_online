@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAnyRole } from "@/lib/api-guards";
+import { requireAnyRole } from "@/lib/auth/api-guards";
 import { getLeaveCalendar } from "@/lib/services/leaveService";
-import { apiErrorResponse } from "@/lib/errors";
+import { apiErrorResponse } from "@/lib/core/errors";
 
 export const runtime = "nodejs";
 

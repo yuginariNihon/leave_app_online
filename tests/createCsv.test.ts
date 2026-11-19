@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createCsv } from "@/lib/csv";
+import { createCsv } from "@/lib/core/csv";
 
 describe("createCsv", () => {
   it("starts with a UTF-8 BOM", () => {

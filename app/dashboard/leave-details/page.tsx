@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getLeaveDetailById, type LeaveDetailResponse } from "@/lib/services/leaveService";
 import { logReadAccess } from "@/lib/services/auditService";
-import { ForbiddenError } from "@/lib/errors";
+import { ForbiddenError } from "@/lib/core/errors";
 import LeaveDetailsClient from "./LeaveDetailsClient";
 
 export const dynamic = "force-dynamic";

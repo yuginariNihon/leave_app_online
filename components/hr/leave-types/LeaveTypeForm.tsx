@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Save, Loader2, Check } from "lucide-react";
-import { createLeaveTypeSchema } from "@/lib/TypeSchema";
-import type { CreateLeaveTypeValues, UpdateLeaveTypeValues } from "@/lib/TypeSchema";
+import { createLeaveTypeSchema } from "@/lib/schemas";
+import type { CreateLeaveTypeValues, UpdateLeaveTypeValues } from "@/lib/schemas";
 import z from "zod";
 
 interface LeaveTypeFormProps {

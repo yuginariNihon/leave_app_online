@@ -1,7 +1,7 @@
 
 import { requireSessionUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { ResetPasswordForm } from "@/components/ResetPasswordForm";
+import { prisma } from "@/lib/core/prisma";
+import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 
 export default async function ResetPasswordPage({
   searchParams,

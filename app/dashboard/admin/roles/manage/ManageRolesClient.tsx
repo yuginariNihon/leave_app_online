@@ -20,10 +20,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import type { RoleManageItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 const SYSTEM_ROLE_NAMES = ["SUPER_ADMIN", "HR", "APPROVER", "EMPLOYEE"];
 

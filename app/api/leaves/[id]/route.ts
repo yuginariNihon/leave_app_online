@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateLeaveRequest, validateLeaveRequestDetails, LeaveRequestValidationError } from "@/lib/services/leaveService";
 import { getLeaveDetailById } from "@/lib/services/leaveService";
-import { requireAuth } from "@/lib/api-guards";
-import { createLeaveRequestSchema } from "@/lib/TypeSchema";
+import { requireAuth } from "@/lib/auth/api-guards";
+import { createLeaveRequestSchema } from "@/lib/schemas";
 import { logReadAccess } from "@/lib/services/auditService";
-import { apiErrorResponse } from "@/lib/errors";
-import { parseBody } from "@/lib/http";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { parseBody } from "@/lib/core/http";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";

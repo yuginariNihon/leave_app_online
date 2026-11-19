@@ -6,9 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { WarningBanner } from "@/components/ui/warning-banner";
 import { Save, Loader2 } from "lucide-react";
-import { createSectionSchema, updateSectionSchema } from "@/lib/TypeSchema";
-import type { CreateSectionValues, UpdateSectionValues } from "@/lib/TypeSchema";
-import { apiFetch, ApiError } from "@/lib/api";
+import { createSectionSchema, updateSectionSchema } from "@/lib/schemas";
+import type { CreateSectionValues, UpdateSectionValues } from "@/lib/schemas";
+import { apiFetch, ApiError } from "@/lib/core/api";
 
 interface SectionFormProps {
   mode: "create" | "edit";

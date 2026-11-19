@@ -13,11 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LeaveFormValues } from "@/lib/TypeSchema";
+import { LeaveFormValues } from "@/lib/schemas";
 import type {
   LeaveCaseSelectOption,
   LeaveSelectOption,
-} from "@/lib/TypeSchema";
+} from "@/lib/schemas";
 
 interface LeaveFormProps {
   form: UseFormReturn<LeaveFormValues>;

@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Briefcase } from "lucide-react";
 import { PositionForm } from "@/components/hr/positions/PositionForm";
-import type { CreatePositionValues, UpdatePositionValues } from "@/lib/TypeSchema";
+import type { CreatePositionValues, UpdatePositionValues } from "@/lib/schemas";
 import { EntityFormPage } from "@/components/shared/EntityFormPage";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 export default function AddPositionPage() {
   const router = useRouter();

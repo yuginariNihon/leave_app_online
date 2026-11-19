@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Download, FileText, Pencil, Plus, Power, PowerOff, Search } from "lucide-react";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

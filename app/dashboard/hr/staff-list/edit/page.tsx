@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { StaffForm } from "@/components/hr/StaffForm";
 import type { StaffMasterData, StaffDetailData } from "@/lib/services/leaveService";
-import type { UpdateStaffValues } from "@/lib/TypeSchema";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { apiFetch } from "@/lib/api";
+import type { UpdateStaffValues } from "@/lib/schemas";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
+import { apiFetch } from "@/lib/core/api";
 
 export default function EditStaffPage() {
   const router = useRouter();

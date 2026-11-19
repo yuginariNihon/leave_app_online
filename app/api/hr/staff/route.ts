@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { parseBody, parsePagination } from "@/lib/http";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { parseBody, parsePagination } from "@/lib/core/http";
 import { createStaff, getStaffList } from "@/lib/services/leaveService";
 import { logReadAccess } from "@/lib/services/auditService";
-import { createStaffSchema } from "@/lib/TypeSchema";
+import { createStaffSchema } from "@/lib/schemas";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";

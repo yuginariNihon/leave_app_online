@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { readJson } from "@/lib/http";
-import { getPagePermissions, updatePagePermission, seedDefaultPagePermissions } from "@/lib/services/rolePermissionService";
+import { requireSuperAdmin } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { readJson } from "@/lib/core/http";
+import { getPagePermissions, updatePagePermission, seedDefaultPagePermissions } from "@/lib/services/admin/rolePermissionService";
 
 export const runtime = "nodejs";
 

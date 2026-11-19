@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { requireSessionUser, SESSION_COOKIE_NAME, hashPassword } from "@/lib/auth";
-import { apiErrorResponse } from "@/lib/errors";
+import { apiErrorResponse } from "@/lib/core/errors";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 import { cookies } from "next/headers";
 
 export const runtime = "nodejs";

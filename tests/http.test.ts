@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { ValidationError } from "@/lib/errors";
+import { ValidationError } from "@/lib/core/errors";
 import {
   csvStreamResponse,
   parseBody,
   parseLimit,
   parsePagination,
   readJson,
-} from "@/lib/http";
+} from "@/lib/core/http";
 
 function jsonRequest(body: string): Request {
   return new Request("http://localhost/api/test", {

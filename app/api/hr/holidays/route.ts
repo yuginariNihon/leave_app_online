@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse, ValidationError } from "@/lib/errors";
-import { readJson } from "@/lib/http";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse, ValidationError } from "@/lib/core/errors";
+import { readJson } from "@/lib/core/http";
 import { getHolidays, createHoliday } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";

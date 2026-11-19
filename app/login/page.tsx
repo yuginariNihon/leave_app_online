@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { LoginForm } from "@/components/LoginForm";
+import { LoginForm } from "@/components/auth/LoginForm";
 import { CalendarDays, Check } from "lucide-react";
 
 export default function LoginPage() {

@@ -4,7 +4,7 @@ const getSessionUser = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth", () => ({ getSessionUser }));
 
-const { requireAnyRole } = await import("@/lib/api-guards");
+const { requireAnyRole } = await import("@/lib/auth/api-guards");
 
 function session(roles: string[]) {
   return {

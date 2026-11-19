@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Layers } from "lucide-react";
 import { SectionForm } from "@/components/hr/sections/SectionForm";
-import type { CreateSectionValues, UpdateSectionValues } from "@/lib/TypeSchema";
+import type { CreateSectionValues, UpdateSectionValues } from "@/lib/schemas";
 import { EntityFormPage } from "@/components/shared/EntityFormPage";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 export default function AddSectionPage() {
   const router = useRouter();

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { parseBody } from "@/lib/http";
+import { prisma } from "@/lib/core/prisma";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { parseBody } from "@/lib/core/http";
 import { getPositions, createPosition } from "@/lib/services/leaveService";
-import { createPositionSchema } from "@/lib/TypeSchema";
+import { createPositionSchema } from "@/lib/schemas";
 
 export const runtime = "nodejs";
 

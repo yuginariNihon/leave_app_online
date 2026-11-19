@@ -1,0 +1,162 @@
+import { randomBytes, createHash } from "crypto";
+import bcrypt from "bcryptjs";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/core/prisma";
+import { cache } from "react";
+import { logger } from "@/lib/core/logger";
+
+export const SESSION_COOKIE_NAME = "leave_app_db_session";
+
+const SESSION_MAX_AGE_SECONDS = 60 * 60;
+
+/** Server-only password hashing (bcrypt) — keep out of client-bundled modules. */
+export function hashPassword(plain: string): Promise<string> {
+  return bcrypt.hash(plain, 10);
+}
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+export type SessionUser = {
+  userId: string;
+  staffId: string;
+  staffCode: string;
+  name: string;
+  email: string;
+  roles: string[];
+  forceChangePassword: boolean;
+  expiresAt: number;
+};
+
+type CreateSessionInput = Omit<SessionUser, "expiresAt">;
+
+/**
+ * Creates a stateful session in the database and stores the session token in cookies.
+ */
+export async function createSession(user: CreateSessionInput) {
+  const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000);
+  
+  // Extract client IP and User-Agent for security audit
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent") || undefined;
+  const ipAddress = headersList.get("x-forwarded-for")?.split(",")[0].trim() || undefined;
+
+  // Save session record to database (store SHA-256 hash only)
+  await prisma.session.create({
+    data: {
+      user_id: user.userId,
+      token: hashToken(token),
+      expires_at: expiresAt,
+      ip_address: ipAddress,
+      user_agent: userAgent,
+    },
+  });
+
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE_NAME, token, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  });
+}
+
+/**
+ * Retrieves the session from the database based on the cookie token.
+ * Uses React.cache() so multiple calls within the same render pass return the same result.
+ */
+async function getSessionUserImpl(): Promise<SessionUser | null> {
+  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const hashedToken = hashToken(token);
+    // Roles come back in the same round trip as the session — a separate
+    // staffRole query would cost another full DB round trip on every request
+    // (the DB is remote, so each one is ~100ms).
+    const session = await prisma.session.findUnique({
+      where: { token: hashedToken },
+      include: {
+        user: {
+          include: {
+            staff: {
+              include: {
+                staffRoles: {
+                  include: { role: { select: { role_name: true } } },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!session) {
+      return null;
+    }
+
+    // Check expiration
+    if (session.expires_at.getTime() < Date.now()) {
+      // Clean up expired session asynchronously
+      await prisma.session.delete({ where: { session_id: session.session_id } }).catch(() => {});
+      return null;
+    }
+
+    const staffRoles = session.user.staff?.staffRoles ?? [];
+
+    return {
+      userId: session.user_id,
+      staffId: session.user.staff.staff_id,
+      staffCode: session.user.staff.staff_code,
+      name: session.user.staff.name,
+      email: session.user.email ?? "",
+      roles: staffRoles.map((sr) => sr.role.role_name.toUpperCase()),
+      forceChangePassword: session.user.force_change_password,
+      expiresAt: session.expires_at.getTime(),
+    };
+  } catch (error) {
+    logger.error("auth", "getSessionUser failed", error);
+    return null;
+  }
+}
+
+export const getSessionUser = cache(getSessionUserImpl);
+
+/**
+ * Requires a session user to be logged in, otherwise redirects to the login page.
+ */
+export async function requireSessionUser() {
+  const user = await getSessionUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
+}
+
+/**
+ * Deletes the session from the database and removes the session cookie.
+ */
+export async function deleteSession() {
+  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
+
+  if (token) {
+    try {
+      await prisma.session.deleteMany({
+        where: { token: hashToken(token) },
+      });
+    } catch (error) {
+      logger.error("auth", "deleteSession failed", error);
+    }
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.delete(SESSION_COOKIE_NAME);
+}

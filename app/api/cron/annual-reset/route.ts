@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isCronRequestAuthorized } from "@/lib/cronAuth";
-import { prisma } from "@/lib/prisma";
+import { isCronRequestAuthorized } from "@/lib/auth/cronAuth";
+import { prisma } from "@/lib/core/prisma";
 import {
   computeDefaultMaxDays,
   isVacationLeaveType,
   loadVacationCarryOverMap,
   yearsOfServiceFrom,
-} from "@/lib/services/leaveQuotaService";
+} from "@/lib/services/leave/leaveQuotaService";
 
 export const runtime = "nodejs";
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { createCsv } from "@/lib/csv";
-import { downloadCsv } from "@/lib/utils";
+import { createCsv } from "@/lib/core/csv";
+import { downloadCsv } from "@/lib/core/utils";
 
 type UseCsvExportOptions<T> = {
   /** ชื่อไฟล์หลัก (จะเติมวันที่ให้อัตโนมัติ) เช่น `"departments"` → `departments_2026-10-28.csv` */

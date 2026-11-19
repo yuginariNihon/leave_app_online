@@ -1,4 +1,4 @@
-import SplashScreen from "@/components/OpenApp";
+import SplashScreen from "@/components/auth/OpenApp";
 
 export default function RootPage() {
   return <SplashScreen />;

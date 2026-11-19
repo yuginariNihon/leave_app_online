@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPendingApprovals } from "@/lib/services/approvalService";
-import { requireAuth } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { parsePagination } from "@/lib/http";
+import { requireAuth } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { parsePagination } from "@/lib/core/http";
 import type { ApprovalFilters } from "@/lib/services/approvalService";
 
 export const runtime = "nodejs";

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { parseBody } from "@/lib/http";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { parseBody } from "@/lib/core/http";
 import { getSections, createSection } from "@/lib/services/leaveService";
-import { createSectionSchema } from "@/lib/TypeSchema";
+import { createSectionSchema } from "@/lib/schemas";
 
 export const runtime = "nodejs";
 

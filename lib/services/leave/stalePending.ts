@@ -1,5 +1,5 @@
 import { ApprovalStatus, LeaveStatus } from "@/lib/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 import {
   AUTO_CANCEL_DAYS_DEFAULT,
   autoCancelCutoff,
@@ -8,11 +8,11 @@ import {
   waitingDays,
   waitingSinceOf,
   shouldAutoCancel,
-} from "@/lib/autoCancel";
-import { timeFromDb } from "@/lib/utils";
-import { logger } from "@/lib/logger";
-import { invalidateDashboardKpi } from "@/lib/services/dashboardService";
-import { scheduleLeaveCancelledEmail } from "@/lib/services/leaveMailerService";
+} from "@/lib/policy/autoCancel";
+import { timeFromDb } from "@/lib/core/utils";
+import { logger } from "@/lib/core/logger";
+import { invalidateDashboardKpi } from "@/lib/services/dashboard/dashboardService";
+import { scheduleLeaveCancelledEmail } from "@/lib/services/leave/leaveMailerService";
 
 /**
  * ยกเลิกใบลาอัตโนมัติเมื่อ "ค้างอนุมัติขั้นแรกเกิน N วัน"

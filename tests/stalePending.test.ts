@@ -6,7 +6,7 @@ import {
   autoCancelReason,
   isAutoCancelReason,
   shouldAutoCancel,
-} from "@/lib/autoCancel";
+} from "@/lib/policy/autoCancel";
 
 const NOW = new Date("2026-11-04T00:00:00.000Z");
 

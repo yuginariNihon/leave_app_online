@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { requireSuperAdmin } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
+import { requireSuperAdmin } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
 
 export const runtime = "nodejs";
 

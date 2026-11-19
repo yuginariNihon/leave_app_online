@@ -1,11 +1,11 @@
 import React from "react";
 import { requireSessionUser } from "@/lib/auth";
 import { SidebarLayoutWrapper } from "@/components/ui/sidebar-layout-wrapper";
-import { MainHeader } from "@/components/MainHeader";
-import { MainFooter } from "@/components/MainFooter";
+import { MainHeader } from "@/components/layout/MainHeader";
+import { MainFooter } from "@/components/layout/MainFooter";
 import { SidebarMenu } from "@/components/sidebar-menu/SidebarMenu";
-import DashboardContent from "@/components/DashboardContent";
-import { ProgressProvider } from "@/components/ProgressBar";
+import DashboardContent from "@/components/layout/DashboardContent";
+import { ProgressProvider } from "@/components/shared/ProgressBar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireSessionUser();

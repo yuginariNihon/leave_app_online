@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 import type { PositionListItem } from "@/lib/services/leaveService";
 import { toast } from "sonner";
 import {

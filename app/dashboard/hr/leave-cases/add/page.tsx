@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CaseSensitive } from "lucide-react";
 import { LeaveCaseForm } from "@/components/hr/leave-cases/LeaveCaseForm";
-import type { CreateLeaveCaseValues, UpdateLeaveCaseValues } from "@/lib/TypeSchema";
+import type { CreateLeaveCaseValues, UpdateLeaveCaseValues } from "@/lib/schemas";
 import { EntityFormPage } from "@/components/shared/EntityFormPage";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 export default function AddLeaveCasePage() {
   const router = useRouter();

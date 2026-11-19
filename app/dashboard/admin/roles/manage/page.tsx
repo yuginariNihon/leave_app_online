@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 import { getRoleManageList } from "@/lib/services/leaveService";
-import { seedDefaultPagePermissions } from "@/lib/services/rolePermissionService";
+import { seedDefaultPagePermissions } from "@/lib/services/admin/rolePermissionService";
 import ManageRolesClient from "./ManageRolesClient";
 
 export const dynamic = "force-dynamic";

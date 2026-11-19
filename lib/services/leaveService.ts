@@ -24,11 +24,11 @@ export * from "@/lib/services/leave/limits";
 export * from "@/lib/services/leave/stalePending";
 
 // Legacy hub re-exports (public surface unchanged).
-export * from "@/lib/services/staffService";
-export * from "@/lib/services/masterDataService";
-export * from "@/lib/services/roleService";
-export * from "@/lib/services/workflowService";
-export * from "@/lib/services/profileService";
-export * from "@/lib/services/userService";
-export * from "@/lib/services/leaveQuotaService";
-export { timeFromDb, minutesToTime } from "@/lib/utils";
+export * from "@/lib/services/staff/staffService";
+export * from "@/lib/services/master-data/masterDataService";
+export * from "@/lib/services/admin/roleService";
+export * from "@/lib/services/workflow/workflowService";
+export * from "@/lib/services/admin/profileService";
+export * from "@/lib/services/admin/userService";
+export * from "@/lib/services/leave/leaveQuotaService";
+export { timeFromDb, minutesToTime } from "@/lib/core/utils";

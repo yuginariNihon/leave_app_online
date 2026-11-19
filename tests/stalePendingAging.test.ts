@@ -4,7 +4,7 @@ import {
   waitingDays,
   waitingSinceOf,
   type StalePendingState,
-} from "@/lib/autoCancel";
+} from "@/lib/policy/autoCancel";
 
 const NOW = new Date("2026-11-18T00:00:00.000Z");
 

@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Tags } from "lucide-react";
 import { LeaveTypeForm } from "@/components/hr/leave-types/LeaveTypeForm";
-import type { CreateLeaveTypeValues, UpdateLeaveTypeValues } from "@/lib/TypeSchema";
+import type { CreateLeaveTypeValues, UpdateLeaveTypeValues } from "@/lib/schemas";
 import { EntityFormPage } from "@/components/shared/EntityFormPage";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 export default function EditLeaveTypePage() {
   const router = useRouter();

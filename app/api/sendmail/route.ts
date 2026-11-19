@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/mail/sendEmail";
-import { requireHR } from "@/lib/api-guards";
-import { logger } from "@/lib/logger";
+import { requireHR } from "@/lib/auth/api-guards";
+import { logger } from "@/lib/core/logger";
 
 export const runtime = "nodejs";
 

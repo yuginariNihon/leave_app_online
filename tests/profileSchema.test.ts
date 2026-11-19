@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { updateMyProfileSchema } from "@/lib/TypeSchema";
+import { updateMyProfileSchema } from "@/lib/schemas";
 
 describe("updateMyProfileSchema", () => {
   it("trims the name", () => {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { isCronRequestAuthorized } from "@/lib/cronAuth";
+import { isCronRequestAuthorized } from "@/lib/auth/cronAuth";
 
 const SECRET = "test-cron-secret";
 

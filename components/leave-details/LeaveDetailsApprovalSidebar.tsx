@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle2, XCircle, Clock, Ban, ListTodo, Calendar as CalendarIcon } from "lucide-react";
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
-import { formatThaiDateTime } from "@/lib/utils";
+import { formatThaiDateTime } from "@/lib/core/utils";
 
 type ApprovalItem = {
   approverName: string;

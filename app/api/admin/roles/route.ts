@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { readJson } from "@/lib/http";
+import { requireSuperAdmin } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { readJson } from "@/lib/core/http";
 import { getRoleManageList, createRole } from "@/lib/services/leaveService";
-import { seedDefaultPagePermissions } from "@/lib/services/rolePermissionService";
-import { prisma } from "@/lib/prisma";
+import { seedDefaultPagePermissions } from "@/lib/services/admin/rolePermissionService";
+import { prisma } from "@/lib/core/prisma";
 
 export const runtime = "nodejs";
 

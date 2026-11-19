@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
 import { getLeaveReport } from "@/lib/services/leaveService";
-import { formatLeaveDateRange, formatDays } from "@/lib/utils";
-import { csvStreamResponse, parsePagination } from "@/lib/http";
+import { formatLeaveDateRange, formatDays } from "@/lib/core/utils";
+import { csvStreamResponse, parsePagination } from "@/lib/core/http";
 import { statusTextMap } from "@/components/leave-history/types";
 
 export const runtime = "nodejs";

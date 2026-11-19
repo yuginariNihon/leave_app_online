@@ -23,13 +23,13 @@ import {
 import { StatusBadge } from "@/components/leave-history/StatusBadge";
 import { Pagination } from "@/components/leave-history/Pagination";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { apiFetch } from "@/lib/api";
-import { downloadFromUrl } from "@/lib/utils";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
+import { apiFetch } from "@/lib/core/api";
+import { downloadFromUrl } from "@/lib/core/utils";
 
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
 import { statusTextMap } from "@/components/leave-history/types";
-import { formatLeaveDateRange, formatDays } from "@/lib/utils";
+import { formatLeaveDateRange, formatDays } from "@/lib/core/utils";
 import { toast } from "sonner";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import { usePagination } from "@/hooks/usePagination";

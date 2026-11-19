@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Save, Loader2 } from "lucide-react";
-import { createPositionSchema } from "@/lib/TypeSchema";
-import type { CreatePositionValues, UpdatePositionValues } from "@/lib/TypeSchema";
+import { createPositionSchema } from "@/lib/schemas";
+import type { CreatePositionValues, UpdatePositionValues } from "@/lib/schemas";
 import z from "zod";
 
 interface PositionFormProps {

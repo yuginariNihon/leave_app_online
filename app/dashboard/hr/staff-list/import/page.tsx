@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, FileText, CheckCircle2, XCircle, AlertCircle, Loader2, Download } from "lucide-react";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { apiFetch, ApiError } from "@/lib/api";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
+import { apiFetch, ApiError } from "@/lib/core/api";
 
 type PreviewRow = Record<string, string>;
 

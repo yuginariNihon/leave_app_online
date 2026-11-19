@@ -1,18 +1,18 @@
 
 import { requireSessionUser } from "@/lib/auth";
-import { DashboardIntro } from "@/components/DashboardIntro";
-import { LeaveStatsCards } from "@/components/LeaveStatsCards";
-import { QuickActions } from "@/components/QuickActions";
-import { ProfileCard } from "@/components/ProfileCard";
-import { LeaveRights } from "@/components/LeaveRights";
-import { RecentLeaveList } from "@/components/RecentLeaveList";
+import { DashboardIntro } from "@/components/dashboard/DashboardIntro";
+import { LeaveStatsCards } from "@/components/dashboard/LeaveStatsCards";
+import { QuickActions } from "@/components/dashboard/QuickActions";
+import { ProfileCard } from "@/components/dashboard/ProfileCard";
+import { LeaveRights } from "@/components/dashboard/LeaveRights";
+import { RecentLeaveList } from "@/components/dashboard/RecentLeaveList";
 import {
   getStaffProfile,
   getDashboardLeaveStats,
   getActiveLeaveRightsByStaffId,
   getRecentLeavesByStaffId,
 } from "@/lib/services/leaveService";
-import { BottomActionBar } from "@/components/BottomActionBar";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { redirect } from "next/navigation";
 export default async function DashboardPage() {
   const user = await requireSessionUser();

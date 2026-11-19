@@ -1,12 +1,12 @@
 import { ApprovalStatus, LeaveStatus, Prisma } from "@/lib/generated/prisma/client";
 import type { ApproverType } from "@/lib/generated/prisma/enums";
-import { prisma } from "@/lib/prisma";
-import type { LeaveFormOptions } from "@/lib/TypeSchema";
+import { prisma } from "@/lib/core/prisma";
+import type { LeaveFormOptions } from "@/lib/schemas";
 import z from "zod";
-import { buildLeaveReferenceId, timeFromDb } from "@/lib/utils";
-import { APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approverUtils";
-import { ForbiddenError } from "@/lib/errors";
-import { isAutoCancelReason } from "@/lib/autoCancel";
+import { buildLeaveReferenceId, timeFromDb } from "@/lib/core/utils";
+import { APPROVER_TYPE_LABELS, APPROVER_POSITION_NAMES } from "@/lib/services/approval/approverUtils";
+import { ForbiddenError } from "@/lib/core/errors";
+import { isAutoCancelReason } from "@/lib/policy/autoCancel";
 
 const SUPERVISOR_POSITION_NAMES = new Set([
   ...APPROVER_POSITION_NAMES.Supervisor,

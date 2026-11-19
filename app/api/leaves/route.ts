@@ -9,10 +9,10 @@ import {
 import {
   createLeaveRequestSchema,
   type CreateLeaveRequestValues,
-} from "@/lib/TypeSchema";
-import { requireAuth } from "@/lib/api-guards";
-import { apiErrorResponse, ValidationError } from "@/lib/errors";
-import { parseBody } from "@/lib/http";
+} from "@/lib/schemas";
+import { requireAuth } from "@/lib/auth/api-guards";
+import { apiErrorResponse, ValidationError } from "@/lib/core/errors";
+import { parseBody } from "@/lib/core/http";
 export const runtime = "nodejs";
 
 async function buildCreateLeaveRequestInput(

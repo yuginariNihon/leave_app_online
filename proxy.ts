@@ -1,9 +1,9 @@
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { PAGE_KEY_BY_PREFIX } from "@/lib/menu-config";
-import { LOGIN_NEXT_COOKIE, LOGIN_NEXT_MAX_AGE_SECONDS } from "@/lib/loginNextCookie";
+import { prisma } from "@/lib/core/prisma";
+import { PAGE_KEY_BY_PREFIX } from "@/lib/policy/menu-config";
+import { LOGIN_NEXT_COOKIE, LOGIN_NEXT_MAX_AGE_SECONDS } from "@/lib/auth/loginNextCookie";
 
 const SESSION_COOKIE_NAME = "leave_app_db_session";
 

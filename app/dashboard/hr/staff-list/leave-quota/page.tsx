@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Save, ShieldCheck, Info, ArrowLeft, BadgeInfo } from "lucide-react";
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { Button } from "@/components/ui/button";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 import type { StaffDetailData, LeaveRightItem } from "@/lib/services/leaveService";
 
 type EditableRow = {

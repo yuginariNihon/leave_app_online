@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
+import { requireAuth } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
 import { getNotificationCount } from "@/lib/services/approvalService";
 
 export const runtime = "nodejs";

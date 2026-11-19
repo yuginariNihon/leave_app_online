@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { safeNextPath } from "@/lib/loginNextCookie";
+import { safeNextPath } from "@/lib/auth/loginNextCookie";
 
 describe("safeNextPath", () => {
   it("accepts dashboard paths with query strings", () => {

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLeaveHistoryByStaffId, type LeaveHistoryDateField } from "@/lib/services/leaveService";
-import { requireAuth } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { csvStreamResponse, parsePagination } from "@/lib/http";
-import { formatDateOnly } from "@/lib/utils";
+import { requireAuth } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { csvStreamResponse, parsePagination } from "@/lib/core/http";
+import { formatDateOnly } from "@/lib/core/utils";
 import { statusTextMap } from "@/components/leave-history/types";
 
 export const runtime = "nodejs";

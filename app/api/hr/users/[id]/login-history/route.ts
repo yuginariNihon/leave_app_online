@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { parseLimit } from "@/lib/http";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { parseLimit } from "@/lib/core/http";
 import { getUserLoginHistory } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";

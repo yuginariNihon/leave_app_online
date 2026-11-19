@@ -9,11 +9,11 @@ import { ApprovalFilters } from "@/components/approval-requests/ApprovalFilters"
 import { ApprovalHistoryTable } from "@/components/approval-requests/ApprovalHistoryTable";
 import { Pagination } from "@/components/leave-history/Pagination";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { useFilterWithApply } from "@/hooks/useFilterWithApply";
 import { usePagination } from "@/hooks/usePagination";
 import { DataTable } from "@/components/shared/DataTable";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, ApiError } from "@/lib/core/api";
 
 type HistoryItem = {
   approvalId: string;

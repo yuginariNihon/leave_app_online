@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { Shield, Save, Loader2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 type PagePermission = {
   pageResourceId: string;

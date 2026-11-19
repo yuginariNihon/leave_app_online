@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireSuperAdmin } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { readJson } from "@/lib/http";
+import { requireSuperAdmin } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { readJson } from "@/lib/core/http";
 import { updateRoleName, toggleRoleActive } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";

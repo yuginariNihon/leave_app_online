@@ -19,9 +19,9 @@ import { StaffTable } from "@/components/hr/StaffTable";
 import { Pagination } from "@/components/leave-history/Pagination";
 import type { StaffListItem } from "@/lib/services/leaveService";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { Button } from "@/components/ui/button";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 type Props = {
   initialData: StaffListItem[];

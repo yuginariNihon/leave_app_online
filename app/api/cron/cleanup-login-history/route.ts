@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isCronRequestAuthorized } from "@/lib/cronAuth";
-import { prisma } from "@/lib/prisma";
+import { isCronRequestAuthorized } from "@/lib/auth/cronAuth";
+import { prisma } from "@/lib/core/prisma";
 
 export const runtime = "nodejs";
 

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 import type {
   LeaveCaseSelectOption,
   LeaveSelectOption,
-} from "@/lib/TypeSchema";
+} from "@/lib/schemas";
 
 type UseLeaveOptionsResult = {
   leaveTypeOptions: LeaveSelectOption[];

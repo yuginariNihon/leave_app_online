@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
 import { getAvailableWorkflowPositions } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";

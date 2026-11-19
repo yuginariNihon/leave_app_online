@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { readJson } from "@/lib/http";
+import { prisma } from "@/lib/core/prisma";
+import { requireSuperAdmin } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { readJson } from "@/lib/core/http";
 
 export const runtime = "nodejs";
 

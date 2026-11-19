@@ -1,5 +1,5 @@
 import { Prisma } from "@/lib/generated/prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 import {
   computeDefaultMaxDays,
   getVacationEntitlement,
@@ -7,8 +7,8 @@ import {
   loadVacationCarryOverMap,
   yearsOfServiceFrom,
   VACATION_LEAVE_TYPE_NAME,
-} from "@/lib/services/leaveQuotaService";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+} from "@/lib/services/leave/leaveQuotaService";
+import { ConflictError, NotFoundError, ValidationError } from "@/lib/core/errors";
 
 export async function syncVacationLeaveLimit(
   staffId: string,

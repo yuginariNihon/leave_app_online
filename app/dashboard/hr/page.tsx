@@ -2,10 +2,10 @@ import { requireSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
-import { Reveal } from "@/components/Reveal";
-import { SectionSkeleton } from "./SectionSkeleton";
-import { DashboardHeader } from "./DashboardHeader";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
+import { Reveal } from "@/components/shared/Reveal";
+import { SectionSkeleton } from "./_components/SectionSkeleton";
+import { DashboardHeader } from "./_components/DashboardHeader";
 import {
   KpiSection,
   TrendChartSection,
@@ -17,7 +17,7 @@ import {
   StalePendingSection,
   RecentActivitiesSection,
   SuperAdminStatsSection,
-} from "./DashboardSections";
+} from "./_components/DashboardSections";
 
 export default async function HrDashboardPage() {
   const user = await requireSessionUser();

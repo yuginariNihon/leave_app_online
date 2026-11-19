@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hrBulkUpdateApprovalStatus } from "@/lib/services/approvalService";
-import { requireAuth } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { parseBody } from "@/lib/http";
+import { requireAuth } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { parseBody } from "@/lib/core/http";
 
 const bulkApprovalSchema = z.object({
   approvalIds: z.array(z.string()).min(1),

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse, ValidationError } from "@/lib/errors";
-import { parsePagination, readJson } from "@/lib/http";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse, ValidationError } from "@/lib/core/errors";
+import { parsePagination, readJson } from "@/lib/core/http";
 import { getUserList, createUserRecord, getStaffRoleNames, getUserByStaffId } from "@/lib/services/leaveService";
 import { randomBytes } from "crypto";
 

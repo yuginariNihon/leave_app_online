@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireHR } from "@/lib/api-guards";
-import { apiErrorResponse } from "@/lib/errors";
-import { readJson } from "@/lib/http";
+import { prisma } from "@/lib/core/prisma";
+import { requireHR } from "@/lib/auth/api-guards";
+import { apiErrorResponse } from "@/lib/core/errors";
+import { readJson } from "@/lib/core/http";
 import { getLeaveRightsByStaffId } from "@/lib/services/leaveService";
 
 export const runtime = "nodejs";

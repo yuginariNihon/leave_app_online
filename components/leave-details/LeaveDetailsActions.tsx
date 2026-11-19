@@ -6,7 +6,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Printer, XCircle, X, AlertTriangle, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LeaveStatus } from "@/lib/generated/prisma/enums";
-import { formatLeaveDateRange } from "@/lib/utils";
+import { formatLeaveDateRange } from "@/lib/core/utils";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,

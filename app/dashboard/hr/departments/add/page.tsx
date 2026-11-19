@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Building2 } from "lucide-react";
 import { DepartmentForm } from "@/components/hr/departments/DepartmentForm";
-import type { CreateDepartmentValues, UpdateDepartmentValues } from "@/lib/TypeSchema";
+import type { CreateDepartmentValues, UpdateDepartmentValues } from "@/lib/schemas";
 import { EntityFormPage } from "@/components/shared/EntityFormPage";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 export default function AddDepartmentPage() {
   const router = useRouter();

@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { UserCog } from "lucide-react";
 import { EmploymentTypeForm } from "@/components/hr/employee-types/EmploymentTypeForm";
-import type { CreateEmploymentTypeValues, UpdateEmploymentTypeValues } from "@/lib/TypeSchema";
+import type { CreateEmploymentTypeValues, UpdateEmploymentTypeValues } from "@/lib/schemas";
 import { EntityFormPage } from "@/components/shared/EntityFormPage";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 
 export default function EditEmployeeTypePage() {
   const router = useRouter();

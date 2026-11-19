@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-import { AppBreadcrumb } from "@/components/AppBreadcrumb";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { DataTable } from "@/components/shared/DataTable";
 import { usePagination } from "@/hooks/usePagination";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/core/api";
 import { toast } from "sonner";
 
 type UserListItem = {
